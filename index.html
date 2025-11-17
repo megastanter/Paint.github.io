@@ -7,190 +7,209 @@
 <style>
   body {
     margin: 0;
-    background-color: #FFE5B4; /* нежно персиковый */
     font-family: Arial, sans-serif;
+    background-color: #ffe5b4; /* нежно персиковый фон */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    height: 100vh;
   }
 
-  h1 {
-    margin: 20px 0;
-  }
-
-  /* Контейнер для инструментов */
+  /* Панель инструментов */
   .toolbar {
     display: flex;
-    gap: 10px;
+    padding: 10px;
+    background-color: #fff0e0; /* чуть светлее персиковый */
+    align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 10px;
   }
 
-  /* Стиль для кнопок инструментов */
-  button {
-    padding: 8px 12px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 4px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  .tool-button {
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  button:hover {
-    background-color: #f0f0f0;
-  }
-
-  /* Цветовые кнопки для выбора цвета */
-  .color-btn {
-    width: 30px;
-    height: 30px;
-    border: 2px solid #ccc;
-    border-radius: 50%;
-  }
-
-  /* Поле для рисования */
-  .drawing-area {
-    border: 8px solid #b8860b; /* темно-золотая рамка */
-    width: 90vw;
-    height: 70vh;
-    max-width: 1500px;
-    max-height: 1000px;
-    box-sizing: border-box;
-    margin: 20px 0;
+    margin: 5px;
+    padding: 8px 12px;
     background-color: #fff;
-    position: relative;
-    cursor: crosshair;
+    border: 2px solid #e0d3c2;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background-color 0.2s, transform 0.2s;
+  }
+
+  .tool-button:hover {
+    background-color: #f0e0d0;
+    transform: scale(1.05);
+  }
+
+  /* Цвета */
+  .colors {
+    display: flex;
+    margin-left: 10px;
+  }
+
+  .color-swatch {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    margin: 0 5px;
+    cursor: pointer;
+  }
+
+  /* Стиль для выбранного цвета */
+  .color-swatch.selected {
+    border: 3px solid #000;
+  }
+
+  /* Кисти */
+  .brushes {
+    display: flex;
+    margin-left: 10px;
+  }
+
+  /* Размер большого холста */
+  #canvasContainer {
+    flex: 1;
+    background-color: #fff;
+    overflow: auto;
+  }
+
+  canvas {
+    display: block;
+    width: 2000px; /* очень большое поле */
+    height: 1500px;
+    background-color: #fff;
   }
 </style>
 </head>
 <body>
 
-<h1>Painter</h1>
-
-<!-- Инструменты -->
+<!-- Панель инструментов -->
 <div class="toolbar">
-  <!-- Цвета -->
-  <button class="color-btn" style="background-color: red;" data-color="#FF0000" title="Красный"></button>
-  <button class="color-btn" style="background-color: yellow;" data-color="#FFFF00" title="Жёлтый"></button>
-  <button class="color-btn" style="background-color: blue;" data-color="#0000FF" title="Синий"></button>
-  <button class="color-btn" style="background-color: green;" data-color="#008000" title="Зелёный"></button>
-  <button class="color-btn" style="background-color: black;" data-color="#000000" title="Черный"></button>
-  <button class="color-btn" style="background-color: violet;" data-color="#EE82EE" title="Фиолетовый"></button>
-  <button class="color-btn" style="background-color: pink;" data-color="#FFC0CB" title="Розовый"></button>
-  <button class="color-btn" style="background-color: gold;" data-color="#FFD700" title="Золотой"></button>
-  <button class="color-btn" style="background-color: gray;" data-color="#808080" title="Серый"></button>
-  <button class="color-btn" style="background-color: silver;" data-color="#C0C0C0" title="Серебряный"></button>
+  <div class="brushes">
+    <div class="tool-button" data-brush="pencil" title="Карандаш">✏️</div>
+    <div class="tool-button" data-brush="ballpoint" title="Шариковая ручка">🖊️</div>
+    <div class="tool-button" data-brush="brush" title="Кисточка">🖌️</div>
+    <div class="tool-button" data-brush="marker" title="М marker">🖍️</div>
+    <div class="tool-button" data-brush="graffiti" title="Баллончик">🎨</div>
+  </div>
 
-  <!-- Инструменты для кистей -->
-  <button id="pencil" title="Карандаш">━</button>
-  <button id="ballpoint" title="Шариковая ручка">🖊️</button>
-  <button id="brush" title="Кисточка">🖌️</button>
-  <button id="marker" title="Фломастер">🖍️</button>
-  <button id="chalk" title="Мел">🧱</button>
+  <div class="colors">
+    <div class="color-swatch" style="background-color: #000000;" data-color="#000000" title="Черный"></div>
+    <div class="color-swatch" style="background-color: #ff0000;" data-color="#ff0000" title="Красный"></div>
+    <div class="color-swatch" style="background-color: #ffff00;" data-color="#ffff00" title="Желтый"></div>
+    <div class="color-swatch" style="background-color: #0000ff;" data-color="#0000ff" title="Синий"></div>
+    <div class="color-swatch" style="background-color: #008000;" data-color="#008000" title="Зеленый"></div>
+    <div class="color-swatch" style="background-color: #800080;" data-color="#800080" title="Фиолетовый"></div>
+    <div class="color-swatch" style="background-color: #ffc0cb;" data-color="#ffc0cb" title="Розовый"></div>
+    <div class="color-swatch" style="background-color: #ffd700;" data-color="#ffd700" title="Золотой"></div>
+    <div class="color-swatch" style="background-color: #c0c0c0;" data-color="#c0c0c0" title="Серый"></div>
+    <div class="color-swatch" style="background-color: #ffffff; border: 2px solid #ccc;" data-color="#ffffff" title="Белый"></div>
+  </div>
 
-  <!-- Ластик -->
-  <button id="eraser" title="Ластик">✎</button>
-
-  <!-- Полная очистка -->
-  <button id="clear" title="Очистить всё">🧹</button>
+  <div class="tool-button" id="eraser" title="Ластик">🧽</div>
+  <div class="tool-button" id="clear" title="Очистить">🧹 Очистить</div>
 </div>
 
-<!-- Поле для рисования -->
-<div class="drawing-area" id="drawing"></div>
+<!-- Контейнер с холстом -->
+<div id="canvasContainer">
+  <canvas id="drawingCanvas"></canvas>
+</div>
 
 <script>
-  const drawing = document.getElementById('drawing');
-  const colorButtons = document.querySelectorAll('.color-btn');
-  const eraserBtn = document.getElementById('eraser');
-  const clearBtn = document.getElementById('clear');
+  const canvas = document.getElementById('drawingCanvas');
+  const ctx = canvas.getContext('2d');
 
-  // Инструменты с настройками
-  const tools = {
-    pencil: { size: 2 },
-    ballpoint: { size: 2 },
-    brush: { size: 8 },
-    marker: { size: 6 },
-    chalk: { size: 4 },
+  // Установка размера холста
+  function resizeCanvas() {
+    canvas.width = 2000;
+    canvas.height = 1500;
+  }
+  resizeCanvas();
+
+  // Настройки по умолчанию
+  let currentColor = '#000000';
+  let currentBrush = 'pencil';
+  let isDrawing = false;
+  let lastX = 0;
+  let lastY = 0;
+  let lineWidth = 2;
+
+  // Определение кистей
+  const brushSizes = {
+    'pencil': 1,
+    'ballpoint': 2,
+    'brush': 8,
+    'marker': 6,
+    'graffiti': 15
   };
 
-  let currentColor = '#000000'; // по умолчанию черный
-  let currentTool = 'pencil';
-
-  // Установка цвета
-  colorButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentColor = btn.dataset.color;
+  // Обработка выбора цвета
+  document.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      swatch.classList.add('selected');
+      currentColor = swatch.dataset.color;
     });
   });
+  // По умолчанию выбран черный
+  document.querySelector('.color-swatch[data-color="#000000"]').classList.add('selected');
 
-  // Установка инструмента
-document.getElementById('pencil').addEventListener('click', () => { currentTool = 'pencil'; });
-document.getElementById('ballpoint').addEventListener('click', () => { currentTool = 'ballpoint'; });
-document.getElementById('brush').addEventListener('click', () => { currentTool = 'brush'; });
-document.getElementById('marker').addEventListener('click', () => { currentTool = 'marker'; });
-document.getElementById('chalk').addEventListener('click', () => { currentTool = 'chalk'; });
+  // Обработка выбора кисти
+  document.querySelectorAll('.tool-button[data-brush]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tool-button[data-brush]').forEach(b => b.style.borderColor = '#e0d3c2');
+      btn.style.borderColor = '#000';
+      currentBrush = btn.dataset.brush;
+    });
+  });
+  // Выбор кисти по умолчанию
+  document.querySelector('.tool-button[data-brush="pencil"]').style.borderColor = '#000';
 
-// Ластик
-eraserBtn.addEventListener('click', () => {
-  currentTool = 'eraser';
-  currentColor = '#FFFFFF'; // белый цвет для стирания
-});
+  // Обработка ластика
+  document.getElementById('eraser').addEventListener('click', () => {
+    currentColor = '#ffffff'; // белый как фон
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  });
 
-// Очистка поля
-clearBtn.addEventListener('click', () => {
-  drawing.innerHTML = '';
-});
+  // Обработка очистки
+  document.getElementById('clear').addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  });
 
-// Рисование длинных линий
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
+  // Рисование
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+  });
 
-drawing.addEventListener('mousedown', (e) => {
-  isDrawing = true;
-  const rect = drawing.getBoundingClientRect();
-  lastX = e.clientX - rect.left;
-  lastY = e.clientY - rect.top;
-  drawLine(lastX, lastY, lastX, lastY); // чтобы начать линию
-});
-drawing.addEventListener('mouseup', () => { isDrawing = false; });
-drawing.addEventListener('mouseleave', () => { isDrawing = false; });
-drawing.addEventListener('mousemove', (e) => {
-  if (!isDrawing) return;
-  const rect = drawing.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  drawLine(lastX, lastY, x, y);
-  lastX = x;
-  lastY = y;
-});
+  canvas.addEventListener('mouseup', () => {
+    isDrawing = false;
+  });
 
-function drawLine(x1, y1, x2, y2) {
-  const line = document.createElement('div');
-  line.style.position = 'absolute';
-  line.style.backgroundColor = currentColor;
+  canvas.addEventListener('mouseout', () => {
+    isDrawing = false;
+  });
 
-  // Вычисляем длину и угол линии
-  const length = Math.hypot(x2 - x1, y2 - y1);
-  const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isDrawing) return;
 
-  line.style.width = length + 'px';
-  line.style.height = '2px'; // высота линии
-  line.style.transformOrigin = '0 50%';
-  line.style.transform = `rotate(${angle}deg)`;
-  line.style.left = x1 + 'px';
-  line.style.top = y1 + 'px';
+    ctx.lineCap = 'round';
 
-  // Размер кисти
-  const size = tools[currentTool]?.size || 2;
-  line.style.height = size + 'px';
+    // Установка цвета
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = brushSizes[currentBrush];
 
-  drawing.appendChild(line);
-}
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+  });
 </script>
 
 </body>
