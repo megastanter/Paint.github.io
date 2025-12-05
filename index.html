@@ -4,94 +4,101 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>painter</title>
-<!-- Стиль под Windows 10 -->
+<!-- Стиль Windows 11 -->
 <style>
-body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f0f0;
-}
-header {
-  background: #0078D7;
-  color: #fff;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-}
-header h1 {
-  margin: 0;
-  font-size: 24px;
-}
-#toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  background: #e1e1e1;
-  padding: 5px;
-  overflow-x: auto;
-}
-button, select, input[type=color], input[type=range], input[type=file] {
-  margin: 2px;
-  padding: 5px 10px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  cursor: pointer;
-}
-button:hover {
-  background: #dcdcdc;
-}
-#canvas-container {
-  position: relative;
-  height: calc(100vh - 80px);
-  background: #fff;
-  overflow: hidden;
-}
-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-#layers-panel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: #fff;
-  border: 1px solid #999;
-  max-height: 90%;
-  width: 150px;
-  overflow-y: auto;
-  padding: 5px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-}
-.layer-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f3f3f3;
+  }
+
+  header {
+    background-color: #0067b8;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+  }
+
+  header h1 {
+    margin: 0;
+    color: white;
+    font-size: 24px;
+  }
+
+  #toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    background: #e1e1e1;
+    padding: 5px;
+  }
+
+  button, select, input[type=color], input[type=range], input[type=file] {
+    margin: 2px;
+    padding: 5px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #d0d0d0;
+  }
+
+  #canvas-container {
+    position: relative;
+    height: calc(100vh - 80px);
+    background: #fff;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  #layers-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 180px;
+    max-height: 80%;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #999;
+    padding: 5px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    font-size: 13px;
+  }
+
+  .layer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
 </style>
 </head>
 <body>
 <header>
-<h1>painter</h1>
+  <h1>painter</h1>
 </header>
 <div id="toolbar">
   <!-- Инструменты -->
-  <button id="toolPencil" title="Карандаш">Карандаш</button>
-  <button id="toolBrush" title="Кисть">Кисть</button>
-  <button id="toolEraser" title="Ластик">Ластик</button>
-  <button id="toolLine" title="Линия">Линия</button>
-  <button id="toolRect" title="Прямоугольник">Прямоугольник</button>
-  <button id="toolEllipse" title="Эллипс">Эллипс</button>
-  <button id="toolFill" title="Заливка">Заливка</button>
-  <button id="toolText" title="Текст">Текст</button>
-  <!-- Цвет -->
+  <button id="pencilBtn" title="Карандаш">Карандаш</button>
+  <button id="brushBtn" title="Кисть">Кисть</button>
+  <button id="eraserBtn" title="Ластик">Ластик</button>
+  <button id="lineBtn" title="Линия">Линия</button>
+  <button id="rectBtn" title="Прямоугольник">Прямоугольник</button>
+  <button id="ellipseBtn" title="Эллипс">Эллипс</button>
+  <button id="fillBtn" title="Заливка">Залить</button>
+  <button id="textBtn" title="Текст">Текст</button>
   <button id="colorBtn" title="Цвет">Цвет</button>
-  <input type="color" id="colorPicker" value="#000000" />
-  <!-- Размер кисти -->
+  <input type="color" id="colorPicker" value="#000000"/>
   <button id="brushSizeBtn" title="Размер кисти">Размер</button>
   <input type="range" min="1" max="50" value="5" id="brushSizeRange"/>
-  <!-- Функции -->
   <button id="undoBtn" title="Отмена">Отмена</button>
   <button id="redoBtn" title="Повтор">Повтор</button>
   <button id="saveBtn" title="Сохранить">Сохранить</button>
@@ -113,12 +120,11 @@ let layers = [];
 let currentLayer = null;
 let currentLayerIndex = 0;
 let isDrawing = false;
-let currentTool = 'pencil'; // инструмент
+let currentTool = 'pencil'; // выбранный инструмент
 let currentColor = document.getElementById('colorPicker').value;
 let brushSize = parseInt(document.getElementById('brushSizeRange').value);
 let startX = 0, startY = 0;
-let historyStack = [];
-let redoStack = [];
+let historyStack = [], redoStack = [];
 let mode = 'draw'; // или 'fill', 'text'
 let tempCanvas, tempCtx;
 let showLayers = false;
@@ -193,15 +199,15 @@ function draw() {
   });
 }
 
-// Выбор инструмента
-document.getElementById('toolPencil').onclick= ()=> { currentTool='pencil'; mode='draw'; };
-document.getElementById('toolBrush').onclick= ()=> { currentTool='brush'; mode='draw'; };
-document.getElementById('toolEraser').onclick= ()=> { currentTool='eraser'; mode='draw'; };
-document.getElementById('toolLine').onclick= ()=> { currentTool='line'; mode='draw'; };
-document.getElementById('toolRect').onclick= ()=> { currentTool='rect'; mode='draw'; };
-document.getElementById('toolEllipse').onclick= ()=> { currentTool='ellipse'; mode='draw'; };
-document.getElementById('toolFill').onclick= ()=> { currentTool='fill'; mode='fill'; };
-document.getElementById('toolText').onclick= ()=> { currentTool='text'; mode='text'; };
+// Инструменты
+document.getElementById('pencilBtn').onclick= ()=> { currentTool='pencil'; mode='draw'; };
+document.getElementById('brushBtn').onclick= ()=> { currentTool='brush'; mode='draw'; };
+document.getElementById('eraserBtn').onclick= ()=> { currentTool='eraser'; mode='draw'; };
+document.getElementById('lineBtn').onclick= ()=> { currentTool='line'; mode='draw'; };
+document.getElementById('rectBtn').onclick= ()=> { currentTool='rect'; mode='draw'; };
+document.getElementById('ellipseBtn').onclick= ()=> { currentTool='ellipse'; mode='draw'; };
+document.getElementById('fillBtn').onclick= ()=> { currentTool='fill'; mode='fill'; };
+document.getElementById('textBtn').onclick= ()=> { currentTool='text'; mode='text'; };
 
 // Цвет
 document.getElementById('colorBtn').onclick= ()=> { document.getElementById('colorPicker').click(); };
@@ -301,9 +307,9 @@ canvas.addEventListener('mouseup', e => {
   draw();
 });
 
-// Временные функции
+// Временные функции для фигур и эллипсов
 function drawTempShape(e,final=false) {
-  draw();
+  draw(); // очистить временные линии
   const ctx=getLayerCtx(currentLayer);
   ctx.lineWidth=brushSize;
   ctx.strokeStyle=currentColor;
@@ -364,7 +370,7 @@ function hexToRGBA(hex) {
   return [r,g,b,255];
 }
 
-// Кнопки функции
+// Работа с файлами
 document.getElementById('saveBtn').onclick= ()=> {
   draw();
   const dataURL=canvas.toDataURL('image/png');
@@ -415,7 +421,7 @@ function undo() {
   const data=historyStack.pop();
   const img=new Image();
   img.onload= ()=> {
-    clearLayers();
+    clearLayer(currentLayer);
     getLayerCtx(currentLayer).drawImage(img,0,0);
     draw();
   };
@@ -427,7 +433,7 @@ function redo() {
   const data=redoStack.pop();
   const img=new Image();
   img.onload= ()=> {
-    clearLayers();
+    clearLayer(currentLayer);
     getLayerCtx(currentLayer).drawImage(img,0,0);
     draw();
   };
