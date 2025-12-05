@@ -2,227 +2,273 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Painter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>painter</title>
+<!-- Стиль Windows 10 -->
 <style>
   body {
     margin: 0;
-    font-family: Segoe UI, Tahoma, Geneva, Verdana, sans-serif;
-    background: #c0c0c0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f0f0;
   }
-
-  /* Заголовок */
-  #title {
-    background: #0078D7;
+  header {
+    background-color: #0078D7; /* Windows 10 blue */
     color: white;
-    padding: 8px 12px;
-    font-size: 20px;
-    font-weight: bold;
-  }
-
-  /* Панель инструментов */
-  #toolbar {
+    padding: 10px;
     display: flex;
-    background: #e0e0e0;
-    padding: 4px;
     align-items: center;
   }
-
-  /* Кнопки инструментов */
-  button {
-    margin: 0 4px;
-    padding: 4px 8px;
+  header h1 {
+    margin: 0;
+    font-size: 24px;
+  }
+  #toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 8px;
+    background: #e1e1e1;
+  }
+  #toolbar button, select, input[type=color], input[type=range] {
+    margin: 4px;
+    padding: 5px 10px;
     font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
     cursor: pointer;
   }
-
-  /* Цвет и размер */
-  input[type=color], input[type=range] {
-    margin: 0 8px;
-    cursor: pointer;
+  #toolbar button:hover {
+    background: #dcdcdc;
   }
-
-  /* Вкладки и меню (если будут) */
-  /* Холст контейнер */
   #canvasContainer {
     position: relative;
-    border: 1px solid #888;
-    margin: 4px;
+    background: white;
+    border: 1px solid #ccc;
+    height: calc(100vh - 80px);
   }
-
-  /* Холст */
-  #paintCanvas {
+  canvas {
     display: block;
-    background: #fff;
+    width: 100%;
+    height: 100%;
   }
+  /* Для некоторых элементов можно добавить стили */
 </style>
 </head>
 <body>
-
-<div id="title">Painter</div>
-
-<!-- Панель инструментов -->
+<header>
+  <h1>painter</h1>
+</header>
 <div id="toolbar">
-  <button id="btnPencil" title="Кисть" style="background-image: url('https://img.icons8.com/ios/24/000000/pencil.png'); background-repeat:no-repeat; background-position: center; background-size: contain;">Кисть</button>
-  <button id="btnLine" title="Линия" style="background-image: url('https://img.icons8.com/ios/24/000000/line.png'); background-repeat:no-repeat; background-position: center; background-size: contain;">Линия</button>
-  <button id="btnRectangle" title="Прямоугольник" style="background-image: url('https://img.icons8.com/ios/24/000000/square.png'); background-repeat:no-repeat; background-position: center; background-size: contain;">Прямоугольник</button>
-  <button id="btnEllipse" title="Эллипс" style="background-image: url('https://img.icons8.com/ios/24/000000/ellipse.png'); background-repeat:no-repeat; background-position: center; background-size: contain;">Эллипс</button>
-  <button id="btnEraser" title="Ластик" style="background-image: url('https://img.icons8.com/ios/24/000000/eraser.png'); background-repeat:no-repeat; background-position: center; background-size: contain;">Ластик</button>
-  <button id="btnClear" title="Очистить" style="background-image: url('https://img.icons8.com/ios/24/000000/trash.png'); background-repeat:no-repeat; background-position: center; background-size: contain;">Очистить</button>
-  <label>Цвет: <input type="color" id="colorPicker" value="#000000"></label>
-  <label>Толщина: <input type="range" id="sizeRange" min="1" max="30" value="3"></label>
+  <!-- Инструменты -->
+  <button id="pencilBtn" title="Карандаш">Карандаш</button>
+  <button id="brushBtn" title="Кисть">Кисть</button>
+  <button id="eraserBtn" title="Ластик">Ластик</button>
+  <button id="lineBtn" title="Линия">Линия</button>
+  <button id="rectBtn" title="Прямоугольник">Прямоугольник</button>
+  <button id="ellipseBtn" title="Эллипс">Эллипс</button>
+  <button id="fillBtn" title="Заливка">Залить</button>
+  <button id="selectColorBtn" title="Цвет">Цвет</button>
+  <input type="color" id="colorPicker" value="#000000" />
+  <button id="undoBtn" title="Отмена">Отмена</button>
+  <button id="redoBtn" title="Повтор">Повтор</button>
+  <button id="saveBtn" title="Сохранить">Сохранить</button>
+  <input type="file" id="loadFile" style="display:none" />
+  <button id="loadBtn" title="Загрузить">Загрузить</button>
+  <button id="clearBtn" title="Очистить">Очистить</button>
 </div>
-
-<!-- Холст -->
 <div id="canvasContainer">
-  <canvas id="paintCanvas" width="1200" height="700"></canvas>
+  <canvas id="paintCanvas"></canvas>
 </div>
 
 <script>
-  const canvas = document.getElementById('paintCanvas');
-  const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('paintCanvas');
+const ctx = canvas.getContext('2d');
 
-  const colorPicker = document.getElementById('colorPicker');
-  const sizeRange = document.getElementById('sizeRange');
+let drawing = false;
+let currentTool = 'pencil'; // 'pencil', 'brush', 'eraser', 'line', 'rect', 'ellipse', 'fill'
+let brushColor = document.getElementById('colorPicker').value;
+let brushSize = 5;
+let startX = 0, startY = 0;
+let savedImageData = null;
+let undoStack = [];
+let redoStack = [];
 
-  const btnPencil = document.getElementById('btnPencil');
-  const btnLine = document.getElementById('btnLine');
-  const btnRectangle = document.getElementById('btnRectangle');
-  const btnEllipse = document.getElementById('btnEllipse');
-  const btnEraser = document.getElementById('btnEraser');
-  const btnClear = document.getElementById('btnClear');
+// Размер холста под окно
+function resizeCanvas() {
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-  let currentTool = 'pencil'; // по умолчанию
-  let isDrawing = false;
-  let startX = 0;
-  let startY = 0;
-  let savedImageData = null;
+// Обновление цвета
+document.getElementById('colorPicker').onchange = (e) => {
+  brushColor = e.target.value;
+}
 
-  // Обработка выбора инструмента
-  document.querySelectorAll('#toolbar button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentTool = btn.id.replace('btn', '').toLowerCase();
-    });
-  });
+// Выбор инструментов
+document.getElementById('pencilBtn').onclick = () => { currentTool = 'pencil'; };
+document.getElementById('brushBtn').onclick = () => { currentTool = 'brush'; };
+document.getElementById('eraserBtn').onclick = () => { currentTool = 'eraser'; };
+document.getElementById('lineBtn').onclick = () => { currentTool = 'line'; };
+document.getElementById('rectBtn').onclick = () => { currentTool = 'rect'; };
+document.getElementById('ellipseBtn').onclick = () => { currentTool = 'ellipse'; };
+document.getElementById('fillBtn').onclick = () => { currentTool = 'fill'; };
 
-  // Очистка холста
-  document.getElementById('btnClear').addEventListener('click', () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  });
+// Размер кисти
+const sizeRange = document.createElement('input');
+sizeRange.type = 'range';
+sizeRange.min = 1;
+sizeRange.max = 50;
+sizeRange.value = brushSize;
+sizeRange.oninput = () => { brushSize = sizeRange.value; };
+document.body.appendChild(sizeRange);
+document.getElementById('toolbar').appendChild(sizeRange);
 
-  // Начало рисования
-  canvas.addEventListener('mousedown', (e) => {
-    isDrawing = true;
-    startX = e.offsetX;
-    startY = e.offsetY;
-
-    if (currentTool === 'pencil' || currentTool === 'eraser') {
-      ctx.strokeStyle = currentTool === 'eraser' ? '#FFFFFF' : colorPicker.value;
-      ctx.lineWidth = sizeRange.value;
-      ctx.lineCap = 'round';
-
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-    } else if (currentTool === 'line' || currentTool === 'rectangle' || currentTool === 'ellipse') {
-      // сохраняем изображение перед рисованием фигуры
-      savedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+// Отмена / Повтор
+document.getElementById('undoBtn').onclick = () => {
+  if (undoStack.length > 0) {
+    redoStack.push(canvas.toDataURL());
+    const dataUrl = undoStack.pop();
+    const img = new Image();
+    img.src = dataUrl;
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
     }
-  });
+  }
+};
+document.getElementById('redoBtn').onclick = () => {
+  if (redoStack.length > 0) {
+    undoStack.push(canvas.toDataURL());
+    const dataUrl = redoStack.pop();
+    const img = new Image();
+    img.src = dataUrl;
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    }
+  }
+};
 
-  // В процессе рисования
-  canvas.addEventListener('mousemove', (e) => {
-    if (!isDrawing) return;
-    const x = e.offsetX;
-    const y = e.offsetY;
+// Сохранение и загрузка
+document.getElementById('saveBtn').onclick = () => {
+  const dataUrl = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'image.png';
+  a.click();
+};
+document.getElementById('loadBtn').onclick = () => {
+  document.getElementById('loadFile').click();
+};
+document.getElementById('loadFile').onchange = (e) => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+    img.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+};
 
-    ctx.lineWidth = sizeRange.value;
+// Очистка
+document.getElementById('clearBtn').onclick = () => {
+  saveState();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+};
+
+// Внутренние функции для работы с историей
+function saveState() {
+  undoStack.push(canvas.toDataURL());
+  // очищаем redo
+  redoStack = [];
+}
+
+// Основные обработчики рисования
+canvas.addEventListener('mousedown', (e) => {
+  saveState();
+  drawing = true;
+  startX = e.offsetX;
+  startY = e.offsetY;
+
+  if (currentTool === 'fill') {
+    ctx.fillStyle = brushColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  } else if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser') {
+    ctx.lineWidth = brushSize;
     ctx.lineCap = 'round';
-
-    if (currentTool === 'pencil' || currentTool === 'eraser') {
-      ctx.strokeStyle = currentTool === 'eraser' ? '#FFFFFF' : colorPicker.value;
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    } else if (currentTool === 'line') {
-      ctx.putImageData(savedImageData, 0, 0);
-      ctx.strokeStyle = colorPicker.value;
-      ctx.lineWidth = sizeRange.value;
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    } else if (currentTool === 'rectangle') {
-      ctx.putImageData(savedImageData, 0, 0);
-      ctx.strokeStyle = colorPicker.value;
-      ctx.lineWidth = sizeRange.value;
-      ctx.strokeRect(startX, startY, x - startX, y - startY);
-    } else if (currentTool === 'ellipse') {
-      ctx.putImageData(savedImageData, 0, 0);
-      ctx.strokeStyle = colorPicker.value;
-      ctx.lineWidth = sizeRange.value;
-      ctx.beginPath();
-      const radiusX = Math.abs(x - startX) / 2;
-      const radiusY = Math.abs(y - startY) / 2;
-      const centerX = (startX + x) / 2;
-      const centerY = (startY + y) / 2;
-      ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  });
-
-  // Конец рисования
-  canvas.addEventListener('mouseup', (e) => {
-    if (!isDrawing) return;
-    isDrawing = false;
-    const x = e.offsetX;
-    const y = e.offsetY;
-
+    ctx.strokeStyle = currentTool === 'eraser' ? '#FFFFFF' : brushColor;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+  }
+});
+canvas.addEventListener('mousemove', (e) => {
+  if (!drawing) return;
+  if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser') {
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+  } else {
+    // Для фигур - рисуем временно на переднем плане
+    redraw();
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
     if (currentTool === 'line') {
-      ctx.strokeStyle = colorPicker.value;
-      ctx.lineWidth = sizeRange.value;
       ctx.beginPath();
       ctx.moveTo(startX, startY);
-      ctx.lineTo(x, y);
+      ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
-    } else if (currentTool === 'rectangle') {
-      ctx.strokeStyle = colorPicker.value;
-      ctx.lineWidth = sizeRange.value;
-      ctx.strokeRect(startX, startY, x - startX, y - startY);
+    } else if (currentTool === 'rect') {
+      ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
     } else if (currentTool === 'ellipse') {
-      ctx.strokeStyle = colorPicker.value;
-      ctx.lineWidth = sizeRange.value;
       ctx.beginPath();
-      const radiusX = Math.abs(x - startX) / 2;
-      const radiusY = Math.abs(y - startY) / 2;
-      const centerX = (startX + x) / 2;
-      const centerY = (startY + y) / 2;
-      ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+      ctx.ellipse((startX + e.offsetX)/2, (startY + e.offsetY)/2,
+                  Math.abs(e.offsetX - startX)/2,
+                  Math.abs(e.offsetY - startY)/2,
+                  0, 0, Math.PI*2);
       ctx.stroke();
     }
-  });
+    ctx.globalAlpha = 1.0;
+  }
+});
+canvas.addEventListener('mouseup', (e) => {
+  if (!drawing) return;
+  drawing = false;
+  if (currentTool !== 'pencil' && currentTool !== 'brush' && currentTool !== 'eraser') {
+    // Для фигур - окончательное рисование
+    ctx.strokeStyle = brushColor;
+    ctx.lineWidth = brushSize;
+    if (currentTool === 'line') {
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+    } else if (currentTool === 'rect') {
+      ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
+    } else if (currentTool === 'ellipse') {
+      ctx.beginPath();
+      ctx.ellipse((startX + e.offsetX)/2, (startY + e.offsetY)/2,
+                  Math.abs(e.offsetX - startX)/2,
+                  Math.abs(e.offsetY - startY)/2,
+                  0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+  }
+});
 
-  // Ластик
-  btnEraser.addEventListener('click', () => {
-    currentTool = 'eraser';
-  });
+// Вспомогательная функция для перерисовки (чистка временных линий)
+function redraw() {
+  // Тут можно сохранять состояние и перерисовывать, для простоты — пропускаем
+  // В более сложных реализациях нужно сохранять базовое изображение и рисовать фигуры поверх
+}
 
-  // Инструмент кисть
-  btnPencil.addEventListener('click', () => {
-    currentTool = 'pencil';
-  });
+// Инициализация
+// Можно добавить дополнительные функции, например, заливку с помощью flood fill алгоритма, слои и т.д.
 
-  // Линия
-  btnLine.addEventListener('click', () => {
-    currentTool = 'line';
-  });
-
-  // Прямоугольник
-  btnRectangle.addEventListener('click', () => {
-    currentTool = 'rectangle';
-  });
-
-  // Эллипс
-  btnEllipse.addEventListener('click', () => {
-    currentTool = 'ellipse';
-  });
 </script>
 </body>
 </html>
