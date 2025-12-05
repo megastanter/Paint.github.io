@@ -12,7 +12,7 @@
     background: #f0f0f0;
   }
   header {
-    background-color: #0078D7; /* Windows 10 blue */
+    background-color: #0078D7;
     color: white;
     padding: 10px;
     display: flex;
@@ -28,8 +28,9 @@
     align-items: center;
     padding: 8px;
     background: #e1e1e1;
+    overflow-x: auto;
   }
-  #toolbar button, select, input[type=color], input[type=range] {
+  button, select, input[type=color], input[type=range], input[type=file] {
     margin: 4px;
     padding: 5px 10px;
     font-size: 14px;
@@ -37,7 +38,7 @@
     border-radius: 2px;
     cursor: pointer;
   }
-  #toolbar button:hover {
+  button:hover {
     background: #dcdcdc;
   }
   #canvasContainer {
@@ -51,7 +52,37 @@
     width: 100%;
     height: 100%;
   }
-  /* Для некоторых элементов можно добавить стили */
+  /* панели слоёв */
+  #layersPanel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #fff;
+    border: 1px solid #999;
+    padding: 5px;
+    max-height: 90%;
+    overflow-y: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+  #layersPanel h3 {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+  }
+  .layerItem {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .layerItem input[type=checkbox] {
+    margin-right: 8px;
+  }
+  .layerItem button {
+    margin-left: auto;
+    background: #eee;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
 </style>
 </head>
 <body>
@@ -67,207 +98,500 @@
   <button id="rectBtn" title="Прямоугольник">Прямоугольник</button>
   <button id="ellipseBtn" title="Эллипс">Эллипс</button>
   <button id="fillBtn" title="Заливка">Залить</button>
-  <button id="selectColorBtn" title="Цвет">Цвет</button>
+  <button id="textBtn" title="Текст">Текст</button>
+  <button id="colorBtn" title="Цвет">Цвет</button>
   <input type="color" id="colorPicker" value="#000000" />
+  <button id="brushSizeBtn" title="Размер кисти">Размер</button>
+  <input type="range" id="brushSizeRange" min="1" max="50" value="5" />
   <button id="undoBtn" title="Отмена">Отмена</button>
   <button id="redoBtn" title="Повтор">Повтор</button>
   <button id="saveBtn" title="Сохранить">Сохранить</button>
-  <input type="file" id="loadFile" style="display:none" />
   <button id="loadBtn" title="Загрузить">Загрузить</button>
+  <input type="file" id="loadFile" style="display:none" />
   <button id="clearBtn" title="Очистить">Очистить</button>
+  <button id="layersToggleBtn" title="Слои">Слои</button>
 </div>
 <div id="canvasContainer">
-  <canvas id="paintCanvas"></canvas>
+  <!-- Основной холст -->
+  <canvas id="mainCanvas"></canvas>
+  <!-- Слои -->
+  <div id="layersPanel" style="display:none"></div>
 </div>
 
 <script>
-const canvas = document.getElementById('paintCanvas');
-const ctx = canvas.getContext('2d');
+const mainCanvas = document.getElementById('mainCanvas');
+const ctx = mainCanvas.getContext('2d');
 
-let drawing = false;
-let currentTool = 'pencil'; // 'pencil', 'brush', 'eraser', 'line', 'rect', 'ellipse', 'fill'
-let brushColor = document.getElementById('colorPicker').value;
-let brushSize = 5;
+let layers = [];
+let currentLayer = null; // текущий рабочий слой
+let currentLayerIndex = 0;
+let isDrawing = false;
+let currentTool = 'pencil'; // инструмент
+let currentColor = document.getElementById('colorPicker').value;
+let brushSize = parseInt(document.getElementById('brushSizeRange').value);
 let startX = 0, startY = 0;
-let savedImageData = null;
-let undoStack = [];
+let tempCanvas, tempCtx; // для предварительного рисования
+let historyStack = [];
 let redoStack = [];
+let mode = 'draw'; // или 'fill', 'text', 'select'
+let textInput = null;
+let selectedLayerId = null;
+let showLayers = false;
 
-// Размер холста под окно
+// Инициализация
 function resizeCanvas() {
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
+  mainCanvas.width = mainCanvas.clientWidth;
+  mainCanvas.height = mainCanvas.clientHeight;
+  initLayers();
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Обновление цвета
-document.getElementById('colorPicker').onchange = (e) => {
-  brushColor = e.target.value;
+function initLayers() {
+  // Создаём один слой
+  layers = [];
+  createLayer('Layer 1');
+  updateLayersPanel();
+}
+function createLayer(name='Layer') {
+  const layer = document.createElement('canvas');
+  layer.width = mainCanvas.width;
+  layer.height = mainCanvas.height;
+  layer.style.position = 'absolute';
+  layer.style.top = 0;
+  layer.style.left = 0;
+  layer.dataset.name = name;
+  layer.dataset.id = 'layer'+Date.now()+Math.random();
+  document.getElementById('layersPanel').appendChild(layer);
+  layers.push(layer);
+  currentLayer = layer;
+  currentLayerIndex = layers.length - 1;
+}
+function updateLayersPanel() {
+  const panel = document.getElementById('layersPanel');
+  panel.innerHTML = '';
+  layers.forEach((layer, index) => {
+    const id = layer.dataset.id;
+    const name = layer.dataset.name;
+    const div = document.createElement('div');
+    div.className='layerItem';
+    const checkbox = document.createElement('input');
+    checkbox.type='checkbox';
+    checkbox.checked = true;
+    checkbox.onchange= ()=> { layer.style.display=checkbox.checked?'block':'none'; draw(); };
+    div.appendChild(checkbox);
+    const span = document.createElement('span');
+    span.innerText = name;
+    div.appendChild(span);
+    const btn = document.createElement('button');
+    btn.innerText='X';
+    btn.onclick= ()=> {
+      layer.remove();
+      layers.splice(index,1);
+      if (currentLayer===layer) {
+        currentLayer = layers[layers.length-1] || null;
+        currentLayerIndex = layers.length-1;
+      }
+      updateLayersPanel();
+      draw();
+    };
+    div.appendChild(btn);
+    panel.appendChild(div);
+  });
+}
+function draw() {
+  ctx.clearRect(0,0,mainCanvas.width, mainCanvas.height);
+  layers.forEach(l => {
+    if (l.style.display!=='none') {
+      ctx.drawImage(l,0,0);
+    }
+  });
 }
 
-// Выбор инструментов
-document.getElementById('pencilBtn').onclick = () => { currentTool = 'pencil'; };
-document.getElementById('brushBtn').onclick = () => { currentTool = 'brush'; };
-document.getElementById('eraserBtn').onclick = () => { currentTool = 'eraser'; };
-document.getElementById('lineBtn').onclick = () => { currentTool = 'line'; };
-document.getElementById('rectBtn').onclick = () => { currentTool = 'rect'; };
-document.getElementById('ellipseBtn').onclick = () => { currentTool = 'ellipse'; };
-document.getElementById('fillBtn').onclick = () => { currentTool = 'fill'; };
-
-// Размер кисти
-const sizeRange = document.createElement('input');
-sizeRange.type = 'range';
-sizeRange.min = 1;
-sizeRange.max = 50;
-sizeRange.value = brushSize;
-sizeRange.oninput = () => { brushSize = sizeRange.value; };
-document.body.appendChild(sizeRange);
-document.getElementById('toolbar').appendChild(sizeRange);
-
-// Отмена / Повтор
-document.getElementById('undoBtn').onclick = () => {
-  if (undoStack.length > 0) {
-    redoStack.push(canvas.toDataURL());
-    const dataUrl = undoStack.pop();
-    const img = new Image();
-    img.src = dataUrl;
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    }
-  }
-};
-document.getElementById('redoBtn').onclick = () => {
-  if (redoStack.length > 0) {
-    undoStack.push(canvas.toDataURL());
-    const dataUrl = redoStack.pop();
-    const img = new Image();
-    img.src = dataUrl;
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    }
-  }
+// Выбор инструмента
+document.getElementById('pencilBtn').onclick= ()=> { currentTool='pencil'; mode='draw'; };
+document.getElementById('brushBtn').onclick= ()=> { currentTool='brush'; mode='draw'; };
+document.getElementById('eraserBtn').onclick= ()=> { currentTool='eraser'; mode='draw'; };
+document.getElementById('lineBtn').onclick= ()=> { currentTool='line'; mode='draw'; };
+document.getElementById('rectBtn').onclick= ()=> { currentTool='rect'; mode='draw'; };
+document.getElementById('ellipseBtn').onclick= ()=> { currentTool='ellipse'; mode='draw'; };
+document.getElementById('fillBtn').onclick= ()=> { currentTool='fill'; mode='fill'; };
+document.getElementById('textBtn').onclick= ()=> { currentTool='text'; mode='text'; };
+document.getElementById('layersToggleBtn').onclick= ()=> {
+  showLayers = !showLayers;
+  document.getElementById('layersPanel').style.display=showLayers?'block':'none';
 };
 
-// Сохранение и загрузка
-document.getElementById('saveBtn').onclick = () => {
-  const dataUrl = canvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = 'image.png';
+// Цвет и размеры
+document.getElementById('colorBtn').onclick= ()=> { document.getElementById('colorPicker').click(); };
+document.getElementById('colorPicker').onchange= ()=> {
+  currentColor = document.getElementById('colorPicker').value;
+};
+document.getElementById('brushSizeBtn').onclick= ()=> {
+  document.getElementById('brushSizeRange').click();
+};
+document.getElementById('brushSizeRange').oninput= ()=> {
+  brushSize=parseInt(document.getElementById('brushSizeRange').value);
+}
+
+// История
+function saveHistory() {
+  historyStack.push(mainCanvas.toDataURL());
+  if (historyStack.length>50) {
+    historyStack.shift();
+  }
+}
+function undo() {
+  if (historyStack.length===0) return;
+  redoStack.push(mainCanvas.toDataURL());
+  const data = historyStack.pop();
+  const img=new Image();
+  img.onload= ()=> {
+    clearLayer(currentLayer);
+    getLayerCtx(currentLayer).drawImage(img,0,0);
+    draw();
+  };
+  img.src=data;
+}
+function redo() {
+  if (redoStack.length===0) return;
+  historyStack.push(mainCanvas.toDataURL());
+  const data=redoStack.pop();
+  const img=new Image();
+  img.onload= ()=> {
+    clearLayer(currentLayer);
+    getLayerCtx(currentLayer).drawImage(img,0,0);
+    draw();
+  };
+  img.src=data;
+}
+function clearLayer(layer) {
+  getLayerCtx(layer).clearRect(0,0,layer.width,layer.height);
+}
+function getLayerCtx(layer) {
+  return layer.getContext('2d');
+}
+
+// Обработчики рисования
+mainCanvas.addEventListener('mousedown', e => {
+  saveHistory();
+  isDrawing=true;
+  startX=e.offsetX;
+  startY=e.offsetY;
+  if (mode==='fill') {
+    floodFill(getLayerCtx(currentLayer), startX, startY, currentColor);
+    draw();
+  } else if (mode==='text') {
+    const txt=prompt('Введите текст');
+    if (txt) {
+      const ctx=getLayerCtx(currentLayer);
+      ctx.font=`${brushSize*4}px Segoe UI`;
+      ctx.fillStyle=currentColor;
+      ctx.fillText(txt, startX, startY);
+      draw();
+    }
+  } else {
+    const ctx=getLayerCtx(currentLayer);
+    ctx.lineWidth=brushSize;
+    ctx.strokeStyle=currentColor;
+    ctx.fillStyle=currentColor;
+    if (currentTool==='pencil' || currentTool==='brush' || currentTool==='eraser') {
+      ctx.beginPath();
+      ctx.moveTo(startX,startY);
+    }
+  }
+});
+mainCanvas.addEventListener('mousemove', e => {
+  if (!isDrawing) return;
+  const ctx=getLayerCtx(currentLayer);
+  if (currentTool==='pencil' || currentTool==='brush' || currentTool==='eraser') {
+    ctx.lineTo(e.offsetX,e.offsetY);
+    ctx.stroke();
+    draw();
+  } else {
+    // предварительный просмотр
+    draw();
+    drawPreview(e);
+  }
+});
+mainCanvas.addEventListener('mouseup', e => {
+  if (!isDrawing) return;
+  isDrawing=false;
+  if (['line','rect','ellipse'].includes(currentTool)) {
+    drawPreview(e,true);
+  }
+  draw();
+});
+
+// Функции для фигур
+function drawPreview(e, finalize=false) {
+  draw(); // очищаем временные линии
+  const ctx=getLayerCtx(currentLayer);
+  ctx.lineWidth=brushSize;
+  ctx.strokeStyle=currentColor;
+  ctx.fillStyle=currentColor;
+  const x=startX,y=startY,ex=e.offsetX,ey=e.offsetY;
+  switch(currentTool) {
+    case 'line':
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.lineTo(ex,ey);
+      ctx.stroke();
+      break;
+    case 'rect':
+      ctx.strokeRect(x,y,ex - x, ey - y);
+      break;
+    case 'ellipse':
+      ctx.beginPath();
+      ctx.ellipse((x+ex)/2, (y+ey)/2, Math.abs(ex - x)/2, Math.abs(ey - y)/2, 0, 0, Math.PI*2);
+      ctx.stroke();
+      break;
+  }
+  if (finalize) {
+    // уже нарисовано
+  }
+}
+
+// Заливка (flood fill)
+function floodFill(ctx, x, y, fillColor) {
+  const imageData=ctx.getImageData(0,0,ctx.canvas.width, ctx.canvas.height);
+  const data=imageData.data;
+  const targetColor=getColorAtPixel(data,x,y,ctx.canvas.width);
+  const fillColorRGBA=hexToRGBA(fillColor);
+  if (colorsEqual(targetColor,fillColorRGBA)) return;
+  const pixelStack=[{x,y}];
+  while(pixelStack.length>0) {
+    const {x,y}=pixelStack.pop();
+    const currentColor=getColorAtPixel(data,x,y,ctx.canvas.width);
+    if (colorsEqual(currentColor,targetColor)) {
+      setColorAtPixel(data,x,y,fillColorRGBA,ctx.canvas.width);
+      if (x+1<ctx.canvas.width) pixelStack.push({x:x+1,y});
+      if (x-1>=0) pixelStack.push({x:x-1,y});
+      if (y+1<ctx.canvas.height) pixelStack.push({x,y:y+1});
+      if (y-1>=0) pixelStack.push({x,y:y-1});
+    }
+  }
+  ctx.putImageData(imageData,0,0);
+}
+function getColorAtPixel(data,x,y,width) {
+  const offset=(y*width + x)*4;
+  return [data[offset],data[offset+1],data[offset+2],data[offset+3]];
+}
+function setColorAtPixel(data,x,y,color,width) {
+  const offset=(y*width + x)*4;
+  data[offset]=color[0];
+  data[offset+1]=color[1];
+  data[offset+2]=color[2];
+  data[offset+3]=color[3];
+}
+function colorsEqual(c1,c2) {
+  return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2] && c1[3]===c2[3];
+}
+function hexToRGBA(hex) {
+  const r=parseInt(hex.substr(1,2),16);
+  const g=parseInt(hex.substr(3,2),16);
+  const b=parseInt(hex.substr(5,2),16);
+  return [r,g,b,255];
+}
+
+// Работа с файлами
+document.getElementById('saveBtn').onclick= ()=> {
+  // объединяем слои
+  draw();
+  const dataURL=mainCanvas.toDataURL('image/png');
+  const a=document.createElement('a');
+  a.href=dataURL;
+  a.download='image.png';
   a.click();
 };
-document.getElementById('loadBtn').onclick = () => {
+document.getElementById('loadBtn').onclick= ()=> {
   document.getElementById('loadFile').click();
 };
-document.getElementById('loadFile').onchange = (e) => {
-  const file = e.target.files[0];
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    }
-    img.src = evt.target.result;
+document.getElementById('loadFile').onchange= (e)=> {
+  const file=e.target.files[0];
+  const reader=new FileReader();
+  reader.onload= ()=> {
+    const img=new Image();
+    img.onload= ()=> {
+      clearLayers();
+      getLayerCtx(currentLayer).drawImage(img,0,0);
+      draw();
+    };
+    img.src=reader.result;
   };
   reader.readAsDataURL(file);
 };
+function clearLayers() {
+  layers.forEach(l => {
+    getLayerCtx(l).clearRect(0,0,l.width,l.height);
+  });
+}
+function draw() {
+  ctx.clearRect(0,0,mainCanvas.width,mainCanvas.height);
+  layers.forEach(l => {
+    if (l.style.display!=='none') {
+      ctx.drawImage(l,0,0);
+    }
+  });
+}
+
+// Отмена / Повтор
+document.getElementById('undoBtn').onclick= ()=> { undo(); };
+document.getElementById('redoBtn').onclick= ()=> { redo(); };
+
+function saveHistory() {
+  draw();
+  historyStack.push(mainCanvas.toDataURL());
+  if (historyStack.length>100) historyStack.shift();
+}
+function undo() {
+  if (historyStack.length===0) return;
+  redoStack.push(mainCanvas.toDataURL());
+  const data=historyStack.pop();
+  const img=new Image();
+  img.onload= ()=> {
+    clearLayers();
+    getLayerCtx(currentLayer).drawImage(img,0,0);
+    draw();
+  };
+  img.src=data;
+}
+function redo() {
+  if (redoStack.length===0) return;
+  historyStack.push(mainCanvas.toDataURL());
+  const data=redoStack.pop();
+  const img=new Image();
+  img.onload= ()=> {
+    clearLayers();
+    getLayerCtx(currentLayer).drawImage(img,0,0);
+    draw();
+  };
+  img.src=data;
+}
 
 // Очистка
-document.getElementById('clearBtn').onclick = () => {
-  saveState();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-};
-
-// Внутренние функции для работы с историей
-function saveState() {
-  undoStack.push(canvas.toDataURL());
-  // очищаем redo
-  redoStack = [];
+document.getElementById('clearBtn').onclick= ()=> {
+  saveHistory();
+  clearLayers();
+  draw();
 }
 
-// Основные обработчики рисования
-canvas.addEventListener('mousedown', (e) => {
-  saveState();
-  drawing = true;
-  startX = e.offsetX;
-  startY = e.offsetY;
+// Временная переменная для рисования
+let tempImageData = null;
 
-  if (currentTool === 'fill') {
-    ctx.fillStyle = brushColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  } else if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser') {
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = currentTool === 'eraser' ? '#FFFFFF' : brushColor;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-  }
-});
-canvas.addEventListener('mousemove', (e) => {
-  if (!drawing) return;
-  if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser') {
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
+// Обработчики для инструментов
+mainCanvas.addEventListener('mousedown', e => {
+  if (currentTool==='fill') {
+    saveHistory();
+    floodFill(getLayerCtx(currentLayer), e.offsetX,e.offsetY,currentColor);
+    draw();
+  } else if (currentTool==='text') {
+    // обработка текста
   } else {
-    // Для фигур - рисуем временно на переднем плане
-    redraw();
-    ctx.globalAlpha = 0.5;
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    if (currentTool === 'line') {
+    saveHistory();
+    isDrawing=true;
+    startX=e.offsetX;
+    startY=e.offsetY;
+    if (currentTool==='pencil' || currentTool==='brush' || currentTool==='eraser') {
+      const ctx=getLayerCtx(currentLayer);
+      ctx.lineWidth=brushSize;
+      ctx.strokeStyle=currentTool==='eraser'?'#fff':currentColor;
+      ctx.lineCap='round';
       ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(e.offsetX, e.offsetY);
-      ctx.stroke();
-    } else if (currentTool === 'rect') {
-      ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
-    } else if (currentTool === 'ellipse') {
-      ctx.beginPath();
-      ctx.ellipse((startX + e.offsetX)/2, (startY + e.offsetY)/2,
-                  Math.abs(e.offsetX - startX)/2,
-                  Math.abs(e.offsetY - startY)/2,
-                  0, 0, Math.PI*2);
-      ctx.stroke();
+      ctx.moveTo(startX,startY);
     }
-    ctx.globalAlpha = 1.0;
   }
 });
-canvas.addEventListener('mouseup', (e) => {
-  if (!drawing) return;
-  drawing = false;
-  if (currentTool !== 'pencil' && currentTool !== 'brush' && currentTool !== 'eraser') {
-    // Для фигур - окончательное рисование
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    if (currentTool === 'line') {
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(e.offsetX, e.offsetY);
-      ctx.stroke();
-    } else if (currentTool === 'rect') {
-      ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
-    } else if (currentTool === 'ellipse') {
-      ctx.beginPath();
-      ctx.ellipse((startX + e.offsetX)/2, (startY + e.offsetY)/2,
-                  Math.abs(e.offsetX - startX)/2,
-                  Math.abs(e.offsetY - startY)/2,
-                  0, 0, Math.PI*2);
-      ctx.stroke();
-    }
+mainCanvas.addEventListener('mousemove', e => {
+  if (!isDrawing) return;
+  const ctx=getLayerCtx(currentLayer);
+  if (currentTool==='pencil' || currentTool==='brush' || currentTool==='eraser') {
+    ctx.lineTo(e.offsetX,e.offsetY);
+    ctx.stroke();
+    draw();
+  } else {
+    draw();
+    drawTempShape(e);
   }
+});
+mainCanvas.addEventListener('mouseup', e => {
+  if (!isDrawing) return;
+  isDrawing=false;
+  if (['line','rect','ellipse'].includes(currentTool)) {
+    drawTempShape(e,true);
+  }
+  draw();
 });
 
-// Вспомогательная функция для перерисовки (чистка временных линий)
-function redraw() {
-  // Тут можно сохранять состояние и перерисовывать, для простоты — пропускаем
-  // В более сложных реализациях нужно сохранять базовое изображение и рисовать фигуры поверх
+// Временные функции для фигур
+function drawTempShape(e,final=false) {
+  draw(); // очищает временные линии
+  const ctx=getLayerCtx(currentLayer);
+  ctx.lineWidth=brushSize;
+  ctx.strokeStyle=currentColor;
+  ctx.fillStyle=currentColor;
+  const x=startX,y=startY,ex=e.offsetX,ey=e.offsetY;
+  switch(currentTool) {
+    case 'line':
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.lineTo(ex,ey);
+      ctx.stroke();
+      break;
+    case 'rect':
+      ctx.strokeRect(x,y,ex - x, ey - y);
+      break;
+    case 'ellipse':
+      ctx.beginPath();
+      ctx.ellipse((x+ex)/2, (y+ey)/2, Math.abs(ex - x)/2, Math.abs(ey - y)/2, 0, 0, Math.PI*2);
+      ctx.stroke();
+      break;
+  }
 }
 
-// Инициализация
-// Можно добавить дополнительные функции, например, заливку с помощью flood fill алгоритма, слои и т.д.
+// Функция заливки (flood fill)
+function floodFill(ctx, x, y, fillColor) {
+  const imageData=ctx.getImageData(0,0,ctx.canvas.width, ctx.canvas.height);
+  const data=imageData.data;
+  const targetColor=getColorAtPixel(data,x,y,ctx.canvas.width);
+  const fillColorRGBA=hexToRGBA(fillColor);
+  if (colorsEqual(targetColor,fillColorRGBA)) return;
+  const pixelStack=[{x,y}];
+  while(pixelStack.length>0) {
+    const {x,y}=pixelStack.pop();
+    const currentColor=getColorAtPixel(data,x,y,ctx.canvas.width);
+    if (colorsEqual(currentColor,targetColor)) {
+      setColorAtPixel(data,x,y,fillColorRGBA,ctx.canvas.width);
+      if (x+1<ctx.canvas.width) pixelStack.push({x:x+1,y});
+      if (x-1>=0) pixelStack.push({x:x-1,y});
+      if (y+1<ctx.canvas.height) pixelStack.push({x,y:y+1});
+      if (y-1>=0) pixelStack.push({x,y:y-1});
+    }
+  }
+  ctx.putImageData(imageData,0,0);
+}
+function getColorAtPixel(data,x,y,width) {
+  const offset=(y*width + x)*4;
+  return [data[offset],data[offset+1],data[offset+2],data[offset+3]];
+}
+function setColorAtPixel(data,x,y,color,width) {
+  const offset=(y*width + x)*4;
+  data[offset]=color[0];
+  data[offset+1]=color[1];
+  data[offset+2]=color[2];
+  data[offset+3]=color[3];
+}
+function colorsEqual(c1,c2) {
+  return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2] && c1[3]===c2[3];
+}
+function hexToRGBA(hex) {
+  const r=parseInt(hex.substr(1,2),16);
+  const g=parseInt(hex.substr(3,2),16);
+  const b=parseInt(hex.substr(5,2),16);
+  return [r,g,b,255];
+}
+
+// Важный момент: здесь можно добавлять много новых функций — работу со слоями, фильтры, эффекты, анимации, импорт-экспорт, работу с историями и т.д.
 
 </script>
 </body>
