@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Paint Windows 10</title>
+<title>Painter</title>
 <!-- Стиль Windows 10 -->
 <style>
 body {
@@ -72,31 +72,31 @@ canvas {
 </style>
 </head>
 <body>
-<header><h1>Paint</h1></header>
+<header><h1>Painter</h1></header>
 <div id="toolbar">
   <!-- Инструменты -->
-  <button id="pencil">Карандаш</button>
-  <button id="brush">Кисть</button>
-  <button id="eraser">Ластик</button>
-  <button id="line">Линия</button>
-  <button id="rect">Прямоугольник</button>
-  <button id="ellipse">Эллипс</button>
-  <button id="fill">Заливка</button>
-  <button id="text">Текст</button>
+  <button id="pencil" title="Карандаш">Карандаш</button>
+  <button id="brush" title="Кисть">Кисть</button>
+  <button id="eraser" title="Ластик">Ластик</button>
+  <button id="line" title="Линия">Линия</button>
+  <button id="rect" title="Прямоугольник">Прямоугольник</button>
+  <button id="ellipse" title="Эллипс">Эллипс</button>
+  <button id="fill" title="Заливка">Залить</button>
+  <button id="text" title="Текст">Текст</button>
   <!-- Цвет -->
-  <button id="color">Цвет</button>
+  <button id="color" title="Цвет">Цвет</button>
   <input type="color" id="colorPicker" value="#000000"/>
-  <!-- Размер кисти -->
-  <button id="size">Размер</button>
+  <!-- Размер -->
+  <button id="size" title="Размер">Размер</button>
   <input type="range" min="1" max="50" value="5" id="sizeRange"/>
   <!-- Функции -->
-  <button id="undo">Отмена</button>
-  <button id="redo">Повтор</button>
-  <button id="save">Сохранить</button>
-  <button id="load">Загрузить</button>
+  <button id="undo" title="Отмена">Отмена</button>
+  <button id="redo" title="Повтор">Повтор</button>
+  <button id="save" title="Сохранить">Сохранить</button>
+  <button id="load" title="Загрузить">Загрузить</button>
   <input type="file" id="fileInput" style="display:none"/>
-  <button id="layersBtn">Слои</button>
-  <button id="clear">Очистить</button>
+  <button id="layersBtn" title="Слои">Слои</button>
+  <button id="clear" title="Очистить">Очистить</button>
 </div>
 <div id="canvas-container">
   <canvas id="canvas"></canvas>
@@ -104,20 +104,20 @@ canvas {
 </div>
 
 <script>
-/* Инициализация */
+// Инициализация
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 let layers = [];
 let currentLayer = null;
 let isDrawing = false;
-let currentTool = 'pencil'; // инструмент
+let currentTool = 'pencil'; // выбранный инструмент
 let currentColor = document.getElementById('colorPicker').value;
 let brushSize = parseInt(document.getElementById('sizeRange').value);
-let startX, startY;
+let startX=0, startY=0;
 let history = [], redoStack=[];
 
-// Создаем слой
+// Создаём слой
 function createLayer(name='Layer') {
   const layer = document.createElement('canvas');
   layer.width = canvas.width;
@@ -137,7 +137,6 @@ function initLayers() {
   updateLayers();
 }
 function updateLayers() {
-  // Обновление панели слоёв
   const panel = document.getElementById('layers-panel');
   panel.innerHTML='';
   layers.forEach((l,i) => {
@@ -170,7 +169,7 @@ function updateLayers() {
   });
 }
 
-// Рисование
+// Основные функции
 function draw() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
   layers.forEach(l => {
@@ -203,7 +202,7 @@ document.getElementById('sizeRange').oninput= ()=> {
 };
 
 // История
-function saveState() {
+function saveHistory() {
   draw();
   history.push(canvas.toDataURL());
   if (history.length>200) history.shift();
@@ -233,131 +232,7 @@ function redo() {
   img.src=data;
 }
 
-function saveHistory() {
-  draw();
-  history.push(canvas.toDataURL());
-  if (history.length>300) history.shift();
-}
-function clearLayer(layer) {
-  getLayerCtx(layer).clearRect(0,0,layer.width,layer.height);
-}
-function getLayerCtx(layer) {
-  return layer.getContext('2d');
-}
-
-// Мыши
-canvas.addEventListener('mousedown', e => {
-  saveHistory();
-  isDrawing=true;
-  startX=e.offsetX;
-  startY=e.offsetY;
-  if (currentTool==='fill') {
-    floodFill(getLayerCtx(currentLayer), startX, startY, currentColor);
-    draw();
-  } else if (currentTool==='text') {
-    const txt=prompt('Введите текст');
-    if (txt) {
-      const ctx=getLayerCtx(currentLayer);
-      ctx.font=`${brushSize*4}px Segoe UI`;
-      ctx.fillStyle=currentColor;
-      ctx.fillText(txt, startX, startY);
-      draw();
-    }
-  } else {
-    const ctx=getLayerCtx(currentLayer);
-    ctx.lineWidth=brushSize;
-    ctx.strokeStyle=currentColor;
-    ctx.fillStyle=currentColor;
-    if (currentTool==='pencil'||currentTool==='brush'||currentTool==='eraser') {
-      ctx.beginPath(); ctx.moveTo(startX,startY);
-    }
-  }
-});
-canvas.addEventListener('mousemove', e => {
-  if (!isDrawing) return;
-  const ctx=getLayerCtx(currentLayer);
-  if (currentTool==='pencil'||currentTool==='brush'||currentTool==='eraser') {
-    ctx.lineTo(e.offsetX,e.offsetY);
-    ctx.stroke();
-    draw();
-  } else {
-    draw();
-    drawTempShape(e);
-  }
-});
-canvas.addEventListener('mouseup', e => {
-  if (!isDrawing) return;
-  isDrawing=false;
-  if (['line','rect','ellipse'].includes(currentTool)) {
-    drawTempShape(e,true);
-  }
-  draw();
-});
-
-// Временные функции для фигур и эллипсов
-function drawTempShape(e,final=false) {
-  draw(); // очистить временные линии
-  const ctx=getLayerCtx(currentLayer);
-  ctx.lineWidth=brushSize;
-  ctx.strokeStyle=currentColor;
-  ctx.fillStyle=currentColor;
-  const x=startX,y=startY,ex=e.offsetX,ey=e.offsetY;
-  switch(currentTool) {
-    case 'line':
-      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(ex,ey); ctx.stroke();
-      break;
-    case 'rect':
-      ctx.strokeRect(x,y,ex - x, ey - y);
-      break;
-    case 'ellipse':
-      ctx.beginPath();
-      ctx.ellipse((x+ex)/2, (y+ey)/2, Math.abs(ex - x)/2, Math.abs(ey - y)/2, 0, 0, Math.PI*2);
-      ctx.stroke();
-      break;
-  }
-}
-function floodFill(ctx, x, y, fillColor) {
-  const imageData=ctx.getImageData(0,0,ctx.canvas.width, ctx.canvas.height);
-  const data=imageData.data;
-  const targetColor=getColorAtPixel(data,x,y,ctx.canvas.width);
-  const fillRGBA=hexToRGBA(fillColor);
-  if (colorsEqual(targetColor,fillRGBA)) return;
-  const stack=[{x,y}];
-  while(stack.length>0) {
-    const {x,y}=stack.pop();
-    const currentColor=getColorAtPixel(data,x,y,ctx.canvas.width);
-    if (colorsEqual(currentColor,targetColor)) {
-      setColorAtPixel(data,x,y,fillRGBA,ctx.canvas.width);
-      if (x+1<ctx.canvas.width) stack.push({x:x+1,y});
-      if (x-1>=0) stack.push({x:x-1,y});
-      if (y+1<ctx.canvas.height) stack.push({x,y:y+1});
-      if (y-1>=0) stack.push({x,y:y-1});
-    }
-  }
-  ctx.putImageData(imageData,0,0);
-}
-function getColorAtPixel(data,x,y,width) {
-  const offset=(y*width + x)*4;
-  return [data[offset],data[offset+1],data[offset+2],data[offset+3]];
-}
-function setColorAtPixel(data,x,y,color,width) {
-  const offset=(y*width + x)*4;
-  data[offset]=color[0];
-  data[offset+1]=color[1];
-  data[offset+2]=color[2];
-  data[offset+3]=color[3];
-}
-function colorsEqual(c1,c2) {
-  return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2] && c1[3]===c2[3];
-}
-function hexToRGBA(hex) {
-  const r=parseInt(hex.substr(1,2),16);
-  const g=parseInt(hex.substr(3,2),16);
-  const b=parseInt(hex.substr(5,2),16);
-  return [r,g,b,255];
-}
-
-// Загрузка и сохранение
+// Работа с файлами
 document.getElementById('save').onclick= ()=> {
   draw();
   const dataURL=canvas.toDataURL('image/png');
@@ -433,7 +308,7 @@ document.getElementById('clear').onclick= ()=> {
   draw();
 }
 
-// Обработка мыши и инструментов (рисование линий, эллипсов, прямоугольников)
+// Обработка мыши и фигуры
 canvas.addEventListener('mousedown', e => {
   saveHistory();
   isDrawing=true;
@@ -483,7 +358,7 @@ canvas.addEventListener('mouseup', e => {
 });
 
 function drawPreviewShape(e,final=false) {
-  draw(); // чистим временные линии
+  draw();
   const ctx=getLayerCtx(currentLayer);
   ctx.lineWidth=brushSize;
   ctx.strokeStyle=currentColor;
