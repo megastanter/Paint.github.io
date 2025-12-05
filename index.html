@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Painter</title>
-<!-- Стиль Windows 10 -->
 <style>
 body {
   margin: 0;
@@ -74,19 +73,15 @@ canvas {
 <body>
 <header><h1>Painter</h1></header>
 <div id="toolbar">
-  <!-- Инструменты -->
   <button id="pencil" title="Карандаш">Карандаш</button>
   <button id="brush" title="Кисть">Кисть</button>
   <button id="eraser" title="Ластик">Ластик</button>
   <button id="fill" title="Заливка">Залить</button>
   <button id="text" title="Текст">Текст</button>
-  <!-- Цвет -->
   <button id="color" title="Цвет">Цвет</button>
   <input type="color" id="colorPicker" value="#000000"/>
-  <!-- Размер -->
   <button id="size" title="Размер">Размер</button>
   <input type="range" min="1" max="50" value="5" id="sizeRange"/>
-  <!-- Функции -->
   <button id="undo" title="Отмена">Отмена</button>
   <button id="redo" title="Повтор">Повтор</button>
   <button id="save" title="Сохранить">Сохранить</button>
@@ -101,7 +96,6 @@ canvas {
 </div>
 
 <script>
-// Инициализация
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -114,7 +108,7 @@ let brushSize = parseInt(document.getElementById('sizeRange').value);
 let startX=0, startY=0;
 let history = [], redoStack=[];
 
-// Создаём слой
+// Создать слой
 function createLayer(name='Layer') {
   const layer = document.createElement('canvas');
   layer.width = canvas.width;
@@ -166,7 +160,7 @@ function updateLayers() {
   });
 }
 
-// Основные функции
+// Основная функция рисования
 function draw() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
   layers.forEach(l => {
@@ -180,9 +174,6 @@ function draw() {
 document.getElementById('pencil').onclick= ()=> { currentTool='pencil'; };
 document.getElementById('brush').onclick= ()=> { currentTool='brush'; };
 document.getElementById('eraser').onclick= ()=> { currentTool='eraser'; };
-document.getElementById('line').onclick= ()=> { currentTool='line'; };
-document.getElementById('rect').onclick= ()=> { currentTool='rect'; };
-document.getElementById('ellipse').onclick= ()=> { currentTool='ellipse'; };
 document.getElementById('fill').onclick= ()=> { currentTool='fill'; };
 document.getElementById('text').onclick= ()=> { currentTool='text'; };
 
@@ -235,7 +226,7 @@ document.getElementById('save').onclick= ()=> {
   const dataURL=canvas.toDataURL('image/png');
   const a=document.createElement('a');
   a.href=dataURL;
-  a.download='image.png';
+  a.download='painter.png';
   a.click();
 };
 document.getElementById('load').onclick= ()=> {
@@ -305,7 +296,7 @@ document.getElementById('clear').onclick= ()=> {
   draw();
 }
 
-// Обработка мыши и фигуры
+// Обработка мыши
 canvas.addEventListener('mousedown', e => {
   saveHistory();
   isDrawing=true;
@@ -348,7 +339,8 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('mouseup', e => {
   if (!isDrawing) return;
   isDrawing=false;
-  if (['line','rect','ellipse'].includes(currentTool)) {
+  if (['fill','text'].includes(currentTool)) return;
+  if (['line','rect'].includes(currentTool)) {
     drawPreviewShape(e,true);
   }
   draw();
@@ -368,15 +360,10 @@ function drawPreviewShape(e,final=false) {
     case 'rect':
       ctx.strokeRect(x,y,ex - x, ey - y);
       break;
-    case 'ellipse':
-      ctx.beginPath();
-      ctx.ellipse((x+ex)/2, (y+ey)/2, Math.abs(ex - x)/2, Math.abs(ey - y)/2, 0, 0, Math.PI*2);
-      ctx.stroke();
-      break;
   }
 }
 
-// Функции заливки
+// Заливка
 function floodFill(ctx, x, y, fillColor) {
   const imageData=ctx.getImageData(0,0,ctx.canvas.width, ctx.canvas.height);
   const data=imageData.data;
@@ -418,7 +405,7 @@ function hexToRGBA(hex) {
   return [r,g,b,255];
 }
 
-// Настройка канваса
+// Настройки холста
 function resizeCanvas() {
   canvas.width=canvas.clientWidth;
   canvas.height=canvas.clientHeight;
@@ -427,9 +414,12 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// Инициализация
-initLayers();
-
+function initLayers() {
+  layers.forEach(l=>l.remove());
+  layers = [];
+  createLayer('Layer 1');
+  updateLayers();
+}
 </script>
 </div>
 </body>
