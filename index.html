@@ -3,230 +3,265 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Geometry Dash Maximalism</title>
+<title>ШколоЧат</title>
 <style>
   body {
     margin: 0;
-    background: linear-gradient(135deg, #111, #222);
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-  }
-  #header {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #141E30, #243B55);
+    color: #fff;
     display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background: rgba(0,0,0,0.7);
-    position: fixed;
-    width: 100%;
-    z-index: 10;
-  }
-  #skins, #levels {
-    display: flex;
-    gap: 10px;
-  }
-  button {
-    background: #fff;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 4px;
-    transition: background 0.3s;
-  }
-  button:hover {
-    background: #ddd;
-  }
-  #gameContainer {
-    position: relative;
-    width: 100vw;
+    flex-direction: column;
     height: 100vh;
   }
-  canvas {
-    display: block;
+
+  header {
+    padding: 20px;
+    background: rgba(0,0,0,0.8);
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px #000;
   }
-  /* Стиль для максимализма */
+
+  #auth {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    gap: 15px;
+  }
+
+  #auth input, #auth select {
+    padding: 10px;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+  }
+
+  #chatContainer {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  #userList {
+    width: 280px;
+    background: rgba(0,0,0,0.7);
+    padding: 10px;
+    overflow-y: auto;
+    border-right: 2px solid #fff;
+  }
+
+  #userList h3 {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .user {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: background 0.3s;
+  }
+
+  .user:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 12px;
+    object-fit: cover;
+    border: 2px solid #fff;
+  }
+
+  #messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0,0,0,0.4);
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  .message {
+    margin-bottom: 15px;
+    padding: 10px 14px;
+    border-radius: 15px;
+    background: rgba(255,255,255,0.1);
+    max-width: 70%;
+    line-height: 1.4;
+    transition: background 0.3s;
+  }
+
+  .message:hover {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .message.self {
+    background: rgba(255,255,255,0.2);
+    align-self: flex-end;
+  }
+
+  #sendMessage {
+    display: flex;
+    padding: 10px;
+    border-top: 2px solid #fff;
+  }
+
+  #messageInput {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1em;
+    background: #fff;
+    color: #000;
+  }
+
+  #sendBtn {
+    padding: 10px 20px;
+    margin-left: 12px;
+    border: none;
+    border-radius: 25px;
+    background: #FF5722;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  #sendBtn:hover {
+    background: #E64A19;
+  }
+
+  /* Максималистский стиль, яркие цвета, тени, градиенты */
 </style>
 </head>
 <body>
-<div id="header">
-  <div id="skins">
-    <button data-skin="red">Красный</button>
-    <button data-skin="blue">Синий</button>
-    <button data-skin="green">Зеленый</button>
-    <button data-skin="gold">Золото</button>
+
+<header>ШколоЧат</header>
+
+<!-- Регистрация / авторизация -->
+<div id="auth">
+  <input type="text" id="username" placeholder="Введите имя" />
+  <select id="avatarSelect">
+    <option value="https://i.imgur.com/8Km9tLL.png">🐱 Кот</option>
+    <option value="https://i.imgur.com/2nCt3Sbl.png">🐶 Собака</option>
+    <option value="https://i.imgur.com/3K7K0Ok.png">🦊 Лиса</option>
+    <option value="https://i.imgur.com/7bXk2g6.png">🦁 Лев</option>
+    <option value="https://i.imgur.com/8Km9tLL.png">🐱 Кот</option>
+    <option value="https://i.imgur.com/2nCt3Sbl.png">🐶 Собака</option>
+  </select>
+  <button id="loginBtn">Войти</button>
+</div>
+
+<!-- Основной чат -->
+<div id="chat" style="display:none; flex:1; flex-direction:row; height: calc(100vh - 70px);">
+  <div id="userList">
+    <h3>Пользователи</h3>
+    <!-- сюда добавим список пользователей -->
   </div>
-  <div id="levels">
-    <button data-level="1">Уровень 1</button>
-    <button data-level="2">Уровень 2</button>
-    <button data-level="3">Уровень 3</button>
-    <button data-level="4">Уровень 4</button>
+  <div style="flex:1; display:flex; flex-direction:column;">
+    <div id="messages"></div>
+    <div id="sendMessage">
+      <input type="text" id="messageInput" placeholder="Введите сообщение..." />
+      <button id="sendBtn">Отправить</button>
+    </div>
   </div>
 </div>
-<div id="gameContainer">
-  <canvas id="gameCanvas"></canvas>
-</div>
+
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const loginBtn = document.getElementById('loginBtn');
+const usernameInput = document.getElementById('username');
+const avatarSelect = document.getElementById('avatarSelect');
+const authDiv = document.getElementById('auth');
+const chatDiv = document.getElementById('chat');
 
-let width = window.innerWidth;
-let height = window.innerHeight;
-canvas.width = width;
-canvas.height = height;
+let currentUser = null;
+let users = [];
+let messages = [];
 
-window.addEventListener('resize', () => {
-  width = window.innerWidth;
-  height = window.innerHeight;
-  canvas.width = width;
-  canvas.height = height;
-});
+const userListDiv = document.getElementById('userList');
+const messagesDiv = document.getElementById('messages');
+const messageInput = document.getElementById('messageInput');
 
-// Цветовые схемы для скинов
-const skins = {
-  red: { color: '#FF4136' },
-  blue: { color: '#0074D9' },
-  green: { color: '#2ECC40' },
-  gold: { color: '#FFDC00' }
-};
-
-let currentSkin = 'red';
-
-// Обработка выбора скина
-document.querySelectorAll('#skins button').forEach(btn => {
-  btn.onclick = () => {
-    currentSkin = btn.dataset.skin;
-  };
-});
-
-// Уровни (можно расширять)
-const levels = {
-  1: { obstacleCount: 5, speed: 6, difficulty: 1 },
-  2: { obstacleCount: 8, speed: 7, difficulty: 2 },
-  3: { obstacleCount: 12, speed: 8, difficulty: 3 },
-  4: { obstacleCount: 15, speed: 9, difficulty: 4 }
-};
-
-let currentLevel = 1;
-
-// Обработка выбора уровня
-document.querySelectorAll('#levels button').forEach(btn => {
-  btn.onclick = () => {
-    currentLevel = parseInt(btn.dataset.level);
-    resetGame();
-  };
-});
-
-// Основные параметры
-let player = {
-  x: 50,
-  y: height - 100,
-  size: 40,
-  dy: 0,
-  gravity: 0.8,
-  jumpStrength: -15,
-  onGround: false,
-  color: skins[currentSkin].color
-};
-
-let obstacles = [];
-let obstacleTimer = 0;
-let gameOver = false;
-let score = 0;
-let levelData = levels[currentLevel];
-
-function resetGame() {
-  obstacles = [];
-  obstacleTimer = 0;
-  gameOver = false;
-  score = 0;
-  player.x = 50;
-  player.y = height - 100;
-  player.dy = 0;
-  levelData = levels[currentLevel];
+function addUser(user) {
+  users.push(user);
+  updateUserList();
 }
 
-// Обработка прыжка
-document.addEventListener('keydown', (e) => {
-  if ((e.code === 'Space' || e.code === 'ArrowUp') && player.onGround && !gameOver) {
-    player.dy = player.jumpStrength;
-    player.onGround = false;
-  }
-});
+function updateUserList() {
+  userListDiv.innerHTML = '<h3>Пользователи</h3>';
+  users.forEach(u => {
+    const userDiv = document.createElement('div');
+    userDiv.className = 'user';
+    userDiv.innerHTML = `<img src="${u.avatar}" class="avatar" /> ${u.name}`;
+    userDiv.onclick = () => {
+      alert('Вы выбрали пользователя: ' + u.name);
+    };
+    userListDiv.appendChild(userDiv);
+  });
+}
 
-// Основной цикл
-function gameLoop() {
-  if (gameOver) {
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = 'white';
-    ctx.font = '48px Arial';
-    ctx.fillText('Игра окончена', width / 2 - 150, height / 2);
-    ctx.font = '24px Arial';
-    ctx.fillText(`Очки: ${score}`, width / 2 - 50, height / 2 + 40);
-    ctx.fillText(`Нажмите F5 для перезапуска`, width / 2 - 130, height / 2 + 80);
+function addMessage(msg) {
+  messages.push(msg);
+  renderMessages();
+}
+
+function renderMessages() {
+  messagesDiv.innerHTML = '';
+  messages.forEach(msg => {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message' + (msg.sender === currentUser.name ? ' self' : '');
+    msgDiv.innerHTML = `<strong>${msg.sender}</strong>: ${msg.text}`;
+    messagesDiv.appendChild(msgDiv);
+  });
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+document.getElementById('loginBtn').onclick = () => {
+  const name = usernameInput.value.trim();
+  if (!name) {
+    alert('Введите имя');
     return;
   }
+  const avatar = avatarSelect.value;
+  currentUser = { name, avatar };
+  addUser(currentUser);
+  authDiv.style.display = 'none';
+  document.getElementById('chat').style.display = 'flex';
+};
 
-  ctx.clearRect(0, 0, width, height);
+// Отправка сообщений
+document.getElementById('sendBtn').onclick = sendMessage;
+document.getElementById('messageInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendMessage();
+});
 
-  // Обновление игрока
-  player.dy += levelData.gravity;
-  player.y += player.dy;
-  if (player.y + player.size > height - 20) {
-    player.y = height - 20 - player.size;
-    player.dy = 0;
-    player.onGround = true;
-  }
-
-  // Рисуем игрока
-  ctx.fillStyle = skins[currentSkin].color;
-  ctx.fillRect(player.x, player.y, player.size, player.size);
-
-  // Создание препятствий
-  obstacleTimer++;
-  const obstacleInterval = Math.max(50 - levelData.difficulty * 5, 20);
-  if (obstacleTimer > obstacleInterval) {
-    const obstacleHeight = 20 + Math.random() * 50;
-    obstacles.push({
-      x: width,
-      y: height - 20 - obstacleHeight,
-      width: 20 + Math.random() * 20,
-      height: obstacleHeight
-    });
-    obstacleTimer = 0;
-  }
-
-  // Обновление препятствий
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    obstacles[i].x -= levelData.speed;
-    ctx.fillStyle = '#FF851B'; // оранжевые препятствия
-    ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
-    // Столкновение
-    if (
-      player.x < obstacles[i].x + obstacles[i].width &&
-      player.x + player.size > obstacles[i].x &&
-      player.y < obstacles[i].y + obstacles[i].height &&
-      player.y + player.size > obstacles[i].y
-    ) {
-      gameOver = true;
-    }
-    if (obstacles[i].x + obstacles[i].width < 0) {
-      obstacles.splice(i, 1);
-      score++;
-    }
-  }
-
-  // Надписи
-  ctx.fillStyle = 'white';
-  ctx.font = '20px Arial';
-  ctx.fillText(`Очки: ${score}`, 20, 30);
-  ctx.fillText(`Уровень: ${currentLevel}`, 20, 60);
-
-  requestAnimationFrame(gameLoop);
+function sendMessage() {
+  const text = messageInput.value.trim();
+  if (!text || !currentUser) return;
+  const msg = { sender: currentUser.name, text };
+  addMessage(msg);
+  messageInput.value = '';
 }
 
-// Запуск
-gameLoop();
+// Имитация входящих сообщений от других пользователей
+setInterval(() => {
+  if (users.length > 1) {
+    const randUser = users[Math.floor(Math.random() * users.length)];
+    if (randUser !== currentUser) {
+      addMessage({ sender: randUser.name, text: 'Привет! Это автоматическое сообщение.' });
+    }
+  }
+}, 20000);
 </script>
 </body>
 </html>
