@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Максимально точная копия BeamNG (база)</title>
+<title>Рабочий пример 3D с физикой мягких тел и WebGL</title>
 <style>
   body { margin: 0; overflow: hidden; }
   canvas { display: block; }
@@ -11,6 +11,7 @@
 </head>
 <body>
 
+<!-- Загрузка Three.js и Ammo.js -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ammo.js/builds/ammo.wasm.js"></script>
 
@@ -19,37 +20,31 @@ let scene, camera, renderer;
 let physicsWorld;
 let rigidBodies = [];
 let softBodies = [];
-let tempTransform;
+let tmpTransform;
 
 init();
-animate();
 
-function init() {
-  // Инициализация сцены
+async function init() {
   scene = new THREE.Scene();
 
-  // Камера
   camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.2, 2000);
   camera.position.set(0, 20, 50);
-  camera.lookAt(0, 0, 0);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+  dirLight.position.set(10, 20, 10);
+  scene.add(dirLight);
 
-  // Освещение
-  const light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(10, 20, 10);
-  scene.add(light);
-
-  // Рендерер
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // Инициализация Ammo.js
-  Ammo().then(function(AmmoLib) {
-    Ammo = AmmoLib;
-    setupPhysics();
-    createSceneObjects();
-    window.addEventListener('resize', onWindowResize, false);
-  });
+  await Ammo(); // Ждем инициализацию Ammo.js
+
+  setupPhysics();
+  createScene();
+
+  window.addEventListener('resize', onWindowResize);
+  animate();
 }
 
 function setupPhysics() {
@@ -58,13 +53,16 @@ function setupPhysics() {
   const broadphase = new Ammo.btDbvtBroadphase();
   const solver = new Ammo.btSequentialImpulseConstraintSolver();
   const softBodySolver = new Ammo.btDefaultSoftBodySolver();
-  physicsWorld = new Ammo.btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softBodySolver);
+
+  physicsWorld = new Ammo.btSoftRigidDynamicsWorld(
+    dispatcher, broadphase, solver, collisionConfiguration, softBodySolver
+  );
   physicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
   physicsWorld.getWorldInfo().set_m_gravity(new Ammo.btVector3(0, -9.82, 0));
-  tempTransform = new Ammo.btTransform();
+  tmpTransform = new Ammo.btTransform();
 }
 
-function createSceneObjects() {
+function createScene() {
   // Создаем землю
   const groundSize = 100;
   const groundGeo = new THREE.BoxGeometry(groundSize, 1, groundSize);
@@ -73,73 +71,89 @@ function createSceneObjects() {
   groundMesh.position.y = -0.5;
   scene.add(groundMesh);
 
-  // Физика земли
   const groundShape = new Ammo.btBoxShape(new Ammo.btVector3(groundSize/2, 0.5, groundSize/2));
   const groundBody = new Ammo.btRigidBody(
     new Ammo.btRigidBodyConstructionInfo(0, new Ammo.btDefaultMotionState(), groundShape, new Ammo.btVector3(0,0,0))
   );
   physicsWorld.addRigidBody(groundBody);
 
-  // Создаем мягкий объект (например, сетку из мягких тел)
-  createSoftBodyBox();
+  // Создаем жесткий куб
+  createRigidBox(0, 2, 0, 2, 2, 2, 0xff0000);
 
-  // Создаем твердый блок
-  createRigidBox(0, 2, 0, 2, 2, 2);
+  // Создаем мягкое тело: сетку из мягких элементов
+  createSoftBodyBox(0, 8, 0, 4, 4, 4);
 }
 
-function createRigidBox(x, y, z, sx, sy, sz) {
-  const boxGeo = new THREE.BoxGeometry(sx, sy, sz);
-  const boxMat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-  const boxMesh = new THREE.Mesh(boxGeo, boxMat);
-  boxMesh.position.set(x, y, z);
-  scene.add(boxMesh);
+// Создание жесткого блока
+function createRigidBox(x, y, z, sx, sy, sz, colorHex) {
+  const geo = new THREE.BoxGeometry(sx, sy, sz);
+  const mat = new THREE.MeshStandardMaterial({ color: colorHex });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  scene.add(mesh);
 
-  const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(sx/2, sy/2, sz/2));
+  const shape = new Ammo.btBoxShape(new Ammo.btVector3(sx/2, sy/2, sz/2));
   const mass = 10;
   const localInertia = new Ammo.btVector3(0,0,0);
-  boxShape.calculateLocalInertia(mass, localInertia);
-  const motionState = new Ammo.btDefaultMotionState(new Ammo.btTransform(
-    new Ammo.btQuaternion(0,0,0,1), new Ammo.btVector3(x,y,z)
+  shape.calculateLocalInertia(mass, localInertia);
+  const ms = new Ammo.btDefaultMotionState(new Ammo.btTransform(
+    new Ammo.btQuaternion(0,0,0,1),
+    new Ammo.btVector3(x,y,z)
   ));
-  const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, boxShape, localInertia);
+  const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, ms, shape, localInertia);
   const body = new Ammo.btRigidBody(rbInfo);
   physicsWorld.addRigidBody(body);
-  boxMesh.userData.physicsBody = body;
-  rigidBodies.push(boxMesh);
+  mesh.userData.physicsBody = body;
+  rigidBodies.push(mesh);
 }
 
-function createSoftBodyBox() {
-  // Создаем мягкую сетку (например, из частиц)
-  const volume = 2;
-  const segments = 4;
+// Создание мягкого тела (простая сетка)
+function createSoftBodyBox(x, y, z, sx, sy, sz) {
   const softBodyHelpers = new Ammo.btSoftBodyHelpers();
+  const numSegments = 4; // более мелкая сетка — более точная деформация
 
   const vertices = [];
-  for (let i = 0; i <= segments; i++) {
-    for (let j = 0; j <= segments; j++) {
-      for (let k = 0; k <= segments; k++) {
+  for (let i = 0; i <= numSegments; i++) {
+    for (let j = 0; j <= numSegments; j++) {
+      for (let k = 0; k <= numSegments; k++) {
         vertices.push(new Ammo.btVector3(
-          (i / segments - 0.5) * volume,
-          (j / segments) * volume + 5,
-          (k / segments - 0.5) * volume
+          (i / numSegments - 0.5) * sx,
+          (j / numSegments) * sy + y,
+          (k / numSegments - 0.5) * sz
         ));
       }
     }
   }
 
+  // Для простоты создадим мягкое тело из точек без треугольников (можно усложнить)
+  const shapePoints = vertices.flatMap(v => [v.x(), v.y(), v.z()]);
+
   const softBody = softBodyHelpers.CreateFromTriMesh(
     physicsWorld.getWorldInfo(),
-    vertices.reduce((arr, v) => {
-      arr.push(v.x()); arr.push(v.y()); arr.push(v.z());
-      return arr;
-    }, []),
-    [],
+    shapePoints,
+    [], // треугольники — сложнее реализовать, оставляем пустым для примера
     0
   );
+
   softBody.get_m_materials().at(0).set_m_kLST(0.9);
   softBody.setTotalMass(1, false);
-  physicsWorld.addSoftBody(softBody, 1, -1);
+  physicsWorld.addSoftBody(softBody);
   softBodies.push(softBody);
+
+  // Визуализация мягкого тела — очень сложная задача, требует особой логики.
+  // Для примера создадим простую сетку
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(vertices.length * 3);
+  for (let i = 0; i < vertices.length; i++) {
+    positions[3*i] = vertices[i].x();
+    positions[3*i + 1] = vertices[i].y();
+    positions[3*i + 2] = vertices[i].z();
+  }
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.MeshStandardMaterial({ color: 0x00ff00, wireframe: true });
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+  softBodies.forEach(sb => { sb.threeMesh = mesh; }); // связь для обновления
 }
 
 function onWindowResize() {
@@ -150,43 +164,29 @@ function onWindowResize() {
 
 function animate() {
   requestAnimationFrame(animate);
-  if (!Ammo) return; // еще не инициализировано
+  if (typeof Ammo === 'undefined') return;
 
-  // Управление
-  handleControls();
-
-  // Физика
+  // Шаг симуляции
   physicsWorld.stepSimulation(1/60, 10);
 
-  // Обновляем позиции объектов
+  // Обновление жестких тел
   for (let obj of rigidBodies) {
     const objPhys = obj.userData.physicsBody;
     const ms = objPhys.getMotionState();
     if (ms) {
-      ms.getWorldTransform(tempTransform);
-      const p = tempTransform.getOrigin();
-      const q = tempTransform.getRotation();
+      ms.getWorldTransform(tmpTransform);
+      const p = tmpTransform.getOrigin();
+      const q = tmpTransform.getRotation();
       obj.position.set(p.x(), p.y(), p.z());
       obj.quaternion.set(q.x(), q.y(), q.z(), q.w());
     }
   }
 
-  // Обновление мягких тел — сложный процесс, требует отдельной логики
-
-  // Камера
-  const target = scene.children.find(c => c.geometry && c.geometry.type === 'BoxGeometry' && c.material.color.getHex() === 255);
-  // или просто следить за машиной или сценой
+  // Обновление мягких тел — для простоты пропущено, нужно писать отдельно
 
   renderer.render(scene, camera);
 }
-
-function handleControls() {
-  // Тут можно реализовать управление мягкими телами и объектами
-}
-
 </script>
 
-</body>
-</html>
 </body>
 </html>
