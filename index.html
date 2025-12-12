@@ -2,229 +2,231 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Painter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Geometry Dash Maximalism</title>
 <style>
   body {
     margin: 0;
+    background: linear-gradient(135deg, #111, #222);
     font-family: Arial, sans-serif;
+    overflow: hidden;
+  }
+  #header {
     display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-  #toolbar {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    background-color: #fafafa;
-    border-bottom: 1px solid #ccc;
-  }
-  #toolbar > * {
-    margin-right: 10px;
-  }
-  #canvasContainer {
-    flex: 1;
-    position: relative;
-  }
-  #canvas {
+    justify-content: space-between;
+    padding: 10px;
+    background: rgba(0,0,0,0.7);
+    position: fixed;
     width: 100%;
-    height: 100%;
-    display: block;
-    background-color: #fff;
+    z-index: 10;
+  }
+  #skins, #levels {
+    display: flex;
+    gap: 10px;
   }
   button {
-    padding: 5px 10px;
+    background: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: background 0.3s;
   }
+  button:hover {
+    background: #ddd;
+  }
+  #gameContainer {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+  canvas {
+    display: block;
+  }
+  /* Стиль для максимализма */
 </style>
 </head>
 <body>
-
-<div id="toolbar">
-  <button id="undoBtn">Отменить</button>
-  <button id="redoBtn">Повторить</button>
-  <button id="clearBtn">Очистить</button>
-  <button id="saveBtn">Сохранить</button>
-  <button id="loadBtn">Загрузить</button>
-  <label>
-    Цвет линий:
-    <input type="color" id="colorPicker" value="#000000" />
-  </label>
-  <label>
-    Толщина:
-    <input type="range" id="lineWidth" min="1" max="10" value="3" />
-  </label>
-  <label>
-    Инструмент:
-    <select id="toolSelect">
-      <option value="pencil">Карандаш</option>
-      <option value="rectangle">Прямоугольник</option>
-      <option value="circle">Круг</option>
-      <option value="erase">Ластик</option>
-    </select>
-  </label>
+<div id="header">
+  <div id="skins">
+    <button data-skin="red">Красный</button>
+    <button data-skin="blue">Синий</button>
+    <button data-skin="green">Зеленый</button>
+    <button data-skin="gold">Золото</button>
+  </div>
+  <div id="levels">
+    <button data-level="1">Уровень 1</button>
+    <button data-level="2">Уровень 2</button>
+    <button data-level="3">Уровень 3</button>
+    <button data-level="4">Уровень 4</button>
+  </div>
 </div>
-
-<div id="canvasContainer">
-  <canvas id="canvas"></canvas>
+<div id="gameContainer">
+  <canvas id="gameCanvas"></canvas>
 </div>
-
 <script>
-const canvas = document.getElementById('canvas');
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-let drawing = false;
-let currentTool = 'pencil';
-let currentColor = document.getElementById('colorPicker').value;
-let lineWidth = document.getElementById('lineWidth').value;
-let startX = 0;
-let startY = 0;
-let history = [];
-let redoStack = [];
+let width = window.innerWidth;
+let height = window.innerHeight;
+canvas.width = width;
+canvas.height = height;
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - document.getElementById('toolbar').offsetHeight;
-  redraw();
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-document.getElementById('colorPicker').addEventListener('input', (e) => {
-  currentColor = e.target.value;
-});
-document.getElementById('lineWidth').addEventListener('input', (e) => {
-  lineWidth = e.target.value;
-});
-document.getElementById('toolSelect').addEventListener('change', (e) => {
-  currentTool = e.target.value;
+window.addEventListener('resize', () => {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
 });
 
-// История для undo/redo
-function saveState() {
-  history.push(canvas.toDataURL());
-  if (history.length > 50) {
-    history.shift();
-  }
-}
-function restoreState() {
-  if (history.length > 0) {
-    const imgData = history.pop();
-    const img = new Image();
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    };
-    img.src = imgData;
-  }
-}
+// Цветовые схемы для скинов
+const skins = {
+  red: { color: '#FF4136' },
+  blue: { color: '#0074D9' },
+  green: { color: '#2ECC40' },
+  gold: { color: '#FFDC00' }
+};
 
-document.getElementById('undoBtn').addEventListener('click', () => {
-  if (history.length > 0) {
-    redoStack.push(canvas.toDataURL());
-    restoreState();
-  }
-});
-document.getElementById('redoBtn').addEventListener('click', () => {
-  if (redoStack.length > 0) {
-    saveState();
-    const imgData = redoStack.pop();
-    const img = new Image();
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
-    };
-    img.src = imgData;
-  }
-});
+let currentSkin = 'red';
 
-document.getElementById('clearBtn').addEventListener('click', () => {
-  saveState();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
-
-document.getElementById('saveBtn').addEventListener('click', () => {
-  const dataUrl = canvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = 'drawing.png';
-  a.click();
-});
-
-document.getElementById('loadBtn').addEventListener('click', () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const img = new Image();
-      img.onload = () => {
-        saveState();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
+// Обработка выбора скина
+document.querySelectorAll('#skins button').forEach(btn => {
+  btn.onclick = () => {
+    currentSkin = btn.dataset.skin;
   };
-  input.click();
 });
 
-// Основные события рисования
-canvas.addEventListener('mousedown', (e) => {
-  saveState();
-  drawing = true;
-  startX = e.clientX;
-  startY = e.clientY;
-  if (currentTool === 'pencil' || currentTool === 'erase') {
-    ctx.strokeStyle = currentTool === 'erase' ? '#FFFFFF' : currentColor;
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-  }
-});
-canvas.addEventListener('mouseup', (e) => {
-  drawing = false;
-  if (currentTool !== 'pencil' && currentTool !== 'erase') {
-    drawShape(e.clientX, e.clientY);
-  }
-});
-canvas.addEventListener('mousemove', (e) => {
-  if (!drawing) return;
-  if (currentTool === 'pencil' || currentTool === 'erase') {
-    ctx.strokeStyle = currentTool === 'erase' ? '#FFFFFF' : currentColor;
-    ctx.lineWidth = lineWidth;
-    ctx.lineTo(e.clientX, e.clientY);
-    ctx.stroke();
-  } else {
-    // В режиме рисования фигуры, показывать временную фигуру (можно реализовать)
-    // для упрощения - не делаем сейчас
-  }
+// Уровни (можно расширять)
+const levels = {
+  1: { obstacleCount: 5, speed: 6, difficulty: 1 },
+  2: { obstacleCount: 8, speed: 7, difficulty: 2 },
+  3: { obstacleCount: 12, speed: 8, difficulty: 3 },
+  4: { obstacleCount: 15, speed: 9, difficulty: 4 }
+};
+
+let currentLevel = 1;
+
+// Обработка выбора уровня
+document.querySelectorAll('#levels button').forEach(btn => {
+  btn.onclick = () => {
+    currentLevel = parseInt(btn.dataset.level);
+    resetGame();
+  };
 });
 
-// Функция для рисования фигур
-function drawShape(endX, endY) {
-  ctx.strokeStyle = currentColor;
-  ctx.lineWidth = lineWidth;
-  const rectX = Math.min(startX, endX);
-  const rectY = Math.min(startY, endY);
-  const rectW = Math.abs(endX - startX);
-  const rectH = Math.abs(endY - startY);
-  if (currentTool === 'rectangle') {
-    ctx.strokeRect(rectX, rectY, rectW, rectH);
-  } else if (currentTool === 'circle') {
-    ctx.beginPath();
-    const radius = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
-    ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-    ctx.stroke();
-  }
+// Основные параметры
+let player = {
+  x: 50,
+  y: height - 100,
+  size: 40,
+  dy: 0,
+  gravity: 0.8,
+  jumpStrength: -15,
+  onGround: false,
+  color: skins[currentSkin].color
+};
+
+let obstacles = [];
+let obstacleTimer = 0;
+let gameOver = false;
+let score = 0;
+let levelData = levels[currentLevel];
+
+function resetGame() {
+  obstacles = [];
+  obstacleTimer = 0;
+  gameOver = false;
+  score = 0;
+  player.x = 50;
+  player.y = height - 100;
+  player.dy = 0;
+  levelData = levels[currentLevel];
 }
 
-// Для более точного рисования фигур можно добавить предварительный отображение
+// Обработка прыжка
+document.addEventListener('keydown', (e) => {
+  if ((e.code === 'Space' || e.code === 'ArrowUp') && player.onGround && !gameOver) {
+    player.dy = player.jumpStrength;
+    player.onGround = false;
+  }
+});
 
+// Основной цикл
+function gameLoop() {
+  if (gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = 'white';
+    ctx.font = '48px Arial';
+    ctx.fillText('Игра окончена', width / 2 - 150, height / 2);
+    ctx.font = '24px Arial';
+    ctx.fillText(`Очки: ${score}`, width / 2 - 50, height / 2 + 40);
+    ctx.fillText(`Нажмите F5 для перезапуска`, width / 2 - 130, height / 2 + 80);
+    return;
+  }
+
+  ctx.clearRect(0, 0, width, height);
+
+  // Обновление игрока
+  player.dy += levelData.gravity;
+  player.y += player.dy;
+  if (player.y + player.size > height - 20) {
+    player.y = height - 20 - player.size;
+    player.dy = 0;
+    player.onGround = true;
+  }
+
+  // Рисуем игрока
+  ctx.fillStyle = skins[currentSkin].color;
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+
+  // Создание препятствий
+  obstacleTimer++;
+  const obstacleInterval = Math.max(50 - levelData.difficulty * 5, 20);
+  if (obstacleTimer > obstacleInterval) {
+    const obstacleHeight = 20 + Math.random() * 50;
+    obstacles.push({
+      x: width,
+      y: height - 20 - obstacleHeight,
+      width: 20 + Math.random() * 20,
+      height: obstacleHeight
+    });
+    obstacleTimer = 0;
+  }
+
+  // Обновление препятствий
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    obstacles[i].x -= levelData.speed;
+    ctx.fillStyle = '#FF851B'; // оранжевые препятствия
+    ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+    // Столкновение
+    if (
+      player.x < obstacles[i].x + obstacles[i].width &&
+      player.x + player.size > obstacles[i].x &&
+      player.y < obstacles[i].y + obstacles[i].height &&
+      player.y + player.size > obstacles[i].y
+    ) {
+      gameOver = true;
+    }
+    if (obstacles[i].x + obstacles[i].width < 0) {
+      obstacles.splice(i, 1);
+      score++;
+    }
+  }
+
+  // Надписи
+  ctx.fillStyle = 'white';
+  ctx.font = '20px Arial';
+  ctx.fillText(`Очки: ${score}`, 20, 30);
+  ctx.fillText(`Уровень: ${currentLevel}`, 20, 60);
+
+  requestAnimationFrame(gameLoop);
+}
+
+// Запуск
+gameLoop();
 </script>
-
 </body>
 </html>
