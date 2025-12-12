@@ -2,483 +2,164 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>painter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Копия BeamNG Drive - Полная версия</title>
 <style>
   body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f0f0f0;
+    background-color: #111;
+    color: #eee;
+    line-height: 1.6;
   }
   header {
-    background: #0078D7;
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    color: #fff;
+    background-color: #222;
+    padding: 20px;
+    text-align: center;
   }
   header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 3em;
   }
-  #toolbar {
+  nav {
     display: flex;
-    flex-wrap: wrap;
-    background: #e1e1e1;
-    padding: 5px;
+    justify-content: center;
+    background-color: #333;
   }
-  #toolbar button, #toolbar input[type=color], #toolbar input[type=range], #toolbar input[type=file] {
-    margin: 2px;
-    padding: 5px 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
+  nav a {
+    color: #eee;
+    padding: 14px 20px;
+    text-decoration: none;
+    transition: background 0.3s;
   }
-  #toolbar button:hover {
-    background: #d0d0d0;
+  nav a:hover {
+    background-color: #444;
   }
-  #canvas-container {
-    position: relative;
-    height: calc(100vh - 80px);
-    background: #fff;
+  section {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: auto;
   }
-  canvas {
-    display: block;
+  h2 {
+    margin-top: 0;
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+  .overview, .features, .screenshots, .video-section, .download, .about {
+    margin-bottom: 50px;
+  }
+  .screenshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+  }
+  img {
     width: 100%;
-    height: 100%;
+    border-radius: 8px;
   }
-  #layersPanel {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 200px;
-    max-height: 80%;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid #999;
-    padding: 5px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.2);
-    font-size: 13px;
+  iframe {
+    width: 100%;
+    height: 480px;
+    border: none;
+    border-radius: 8px;
   }
-  .layer-item {
+  .buttons {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 4px;
+    gap: 20px;
+    justify-content: center;
+  }
+  .button {
+    background-color: #555;
+    color: #fff;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background 0.3s;
+  }
+  .button:hover {
+    background-color: #666;
+  }
+  footer {
+    background-color: #222;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.9em;
+    color: #888;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>painter</h1>
+  <h1>Максимальная копия BeamNG Drive</h1>
+  <p>Реалистичная физика, открытый мир и бесконечные возможности</p>
 </header>
-<div id="toolbar">
-  <button id="brush" title="Кисть">Кисть</button>
-  <button id="eraser" title="Ластик">Ластик</button>
-  <button id="fill" title="Заливка">Залить</button>
-  <button id="text" title="Текст">Текст</button>
-  <button id="color" title="Цвет">Цвет</button>
-  <input type="color" id="colorPicker" value="#000000"/>
-  <button id="size" title="Размер">Размер</button>
-  <input type="range" min="1" max="50" value="5" id="sizeRange"/>
-  <button id="undo" title="Отмена">Отмена</button>
-  <button id="redo" title="Повтор">Повтор</button>
-  <button id="save" title="Сохранить">Сохранить</button>
-  <button id="load" title="Загрузить">Загрузить</button>
-  <input type="file" id="fileInput" style="display:none"/>
-  <button id="layersBtn" title="Слои">Слои</button>
-  <button id="clear" title="Очистить">Очистить</button>
-</div>
 
-<div id="canvas-container">
-  <canvas id="mainCanvas"></canvas>
-  <div id="layersPanel" style="display:none"></div>
-</div>
+<nav>
+  <a href="#overview">Обзор</a>
+  <a href="#features">Особенности</a>
+  <a href="#screenshots">Скриншоты</a>
+  <a href="#video">Видео</a>
+  <a href="#download">Скачать</a>
+  <a href="#about">О проекте</a>
+</nav>
 
-<script>
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d');
+<section id="overview" class="overview">
+  <h2>Обзор игры</h2>
+  <p>Эта игра — максимально точная копия BeamNG Drive, созданная для любителей реалистичных симуляторов вождения. В игре реализована физика разрушений, открытый мир, множество автомобилей и трасс. Исследуйте виртуальный мир, создавайте свои сценарии и наслаждайтесь уникальным опытом вождения.</p>
+  <p>Игра обладает высокой детализацией и реализмом, что делает ее похожей на оригинал, но с уникальным стилем и дополнениями от разработчика.</p>
+</section>
 
-let layers = [];
-let currentLayer = null;
-let isDrawing = false;
-let currentTool = 'pencil'; // выбранный инструмент
-let currentColor = document.getElementById('colorPicker').value;
-let brushSize = parseInt(document.getElementById('sizeRange').value);
-let startX=0, startY=0;
+<section id="features" class="features">
+  <h2>Особенности</h2>
+  <ul>
+    <li>Реалистичная физика разрушений</li>
+    <li>Большой открытый мир</li>
+    <li>Разнообразие автомобилей и трасс</li>
+    <li>Настраиваемые сценарии и миссии</li>
+    <li>Поддержка модов и дополнений</li>
+    <li>Интуитивный редактор уровней</li>
+    <li>Поддержка VR и мультитач</li>
+    <li>Обновляемая графика и физика</li>
+  </ul>
+</section>
 
-const history = [];
-const redoStack = [];
+<section id="screenshots" class="screenshots">
+  <h2>Скриншоты</h2>
+  <div class="screenshots-grid">
+    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+1" alt="Скриншот игры 1" />
+    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+2" alt="Скриншот игры 2" />
+    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+3" alt="Скриншот игры 3" />
+    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+4" alt="Скриншот игры 4" />
+  </div>
+</section>
 
-// Создать слой
-function createLayer(name='Layer') {
-  const layer = document.createElement('canvas');
-  layer.width = canvas.width;
-  layer.height = canvas.height;
-  layer.style.position='absolute';
-  layer.style.top='0';
-  layer.style.left='0';
-  layer.dataset.name=name;
-  document.getElementById('layersPanel').appendChild(layer);
-  layers.push(layer);
-  currentLayer=layer;
-}
-function initLayers() {
-  layers.forEach(l => l.remove());
-  layers = [];
-  createLayer('Layer 1');
-  updateLayers();
-}
-function updateLayers() {
-  const panel = document.getElementById('layersPanel');
-  panel.innerHTML='';
-  layers.forEach((l,i) => {
-    const div = document.createElement('div');
-    div.className='layer-item';
+<section id="video" class="video-section">
+  <h2>Видео-презентация</h2>
+  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Видео игры" allowfullscreen></iframe>
+</section>
 
-    const checkbox = document.createElement('input');
-    checkbox.type='checkbox';
-    checkbox.checked=true;
-    checkbox.onchange= ()=> {
-      l.style.display=checkbox.checked?'block':'none';
-      draw();
-    };
-    div.appendChild(checkbox);
+<section id="download" class="download">
+  <h2>Скачать игру</h2>
+  <p>Доступна для Windows, Mac и Linux. В ближайшее время будет выпущена версия для VR.</p>
+  <div class="buttons">
+    <a href="#" class="button">Скачать для Windows</a>
+    <a href="#" class="button">Скачать для Mac</a>
+    <a href="#" class="button">Скачать для Linux</a>
+  </div>
+</section>
 
-    const span=document.createElement('span');
-    span.innerText=l.dataset.name;
-    div.appendChild(span);
+<section id="about" class="about">
+  <h2>О проекте</h2>
+  <p>Этот сайт создан для демонстрации максимально точной копии BeamNG Drive. В реальности создание такой игры требует сотен тысяч строк кода и сложных технологий. Здесь представлен только сайт-визитка с информацией и демонстрационными элементами.</p>
+  <p>Все изображения и видео — примерные, для реальной игры потребуется разработка полноценного движка и программирование.</p>
+</section>
 
-    const btn=document.createElement('button');
-    btn.innerText='X';
-    btn.onclick= ()=> {
-      l.remove();
-      layers.splice(i,1);
-      if (currentLayer===l) {
-        currentLayer=layers[layers.length-1] || null;
-      }
-      updateLayers();
-      draw();
-    };
-    div.appendChild(btn);
-    panel.appendChild(div);
-  });
-}
+<footer>
+  &copy; 2024 Максимальная копия BeamNG Drive. Все права защищены.
+</footer>
 
-// Основная функция рисования
-function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  layers.forEach(l => {
-    if (l.style.display!=='none') {
-      ctx.drawImage(l,0,0);
-    }
-  });
-}
-
-// Обновление размеров холста
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - 80;
-  initLayers();
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-function getLayerCtx(layer) {
-  return layer.getContext('2d');
-}
-
-// Создаем новый слой при инициализации
-initLayers();
-
-// Обработчики инструментов
-document.getElementById('pencil').onclick= ()=> { currentTool='pencil'; };
-document.getElementById('brush').onclick= ()=> { currentTool='brush'; };
-document.getElementById('eraser').onclick= ()=> { currentTool='eraser'; };
-document.getElementById('fill').onclick= ()=> { currentTool='fill'; };
-document.getElementById('text').onclick= ()=> { currentTool='text'; };
-
-// Цвет
-document.getElementById('color').onclick= ()=> { document.getElementById('colorPicker').click(); };
-document.getElementById('colorPicker').onchange= ()=> {
-  currentColor = document.getElementById('colorPicker').value;
-};
-
-// Размер
-document.getElementById('size').onclick= ()=> { document.getElementById('sizeRange').click(); };
-document.getElementById('sizeRange').oninput= ()=> {
-  brushSize=parseInt(document.getElementById('sizeRange').value);
-};
-
-// История
-function saveHistory() {
-  draw();
-  history.push(canvas.toDataURL());
-  if (history.length>200) history.shift();
-}
-function undo() {
-  if (history.length===0) return;
-  redoStack.push(canvas.toDataURL());
-  const data=history.pop();
-  const img=new Image();
-  img.onload= ()=> {
-    clearLayer(currentLayer);
-    getLayerCtx(currentLayer).drawImage(img,0,0);
-    draw();
-  };
-  img.src=data;
-}
-function redo() {
-  if (redoStack.length===0) return;
-  history.push(canvas.toDataURL());
-  const data=redoStack.pop();
-  const img=new Image();
-  img.onload= ()=> {
-    clearLayer(currentLayer);
-    getLayerCtx(currentLayer).drawImage(img,0,0);
-    draw();
-  };
-  img.src=data;
-}
-
-// Работа с файлами
-document.getElementById('save').onclick= ()=> {
-  draw();
-  const dataURL=canvas.toDataURL('image/png');
-  const a=document.createElement('a');
-  a.href=dataURL;
-  a.download='painter.png';
-  a.click();
-};
-document.getElementById('load').onclick= ()=> {
-  document.getElementById('fileInput').click();
-};
-document.getElementById('fileInput').onchange= (e)=> {
-  const file=e.target.files[0];
-  const reader=new FileReader();
-  reader.onload= ()=> {
-    const img=new Image();
-    img.onload= ()=> {
-      clearLayer(currentLayer);
-      getLayerCtx(currentLayer).drawImage(img,0,0);
-      draw();
-    };
-    img.src=reader.result;
-  };
-  reader.readAsDataURL(file);
-};
-function clearLayer(layer) {
-  getLayerCtx(layer).clearRect(0,0,layer.width,layer.height);
-}
-
-// Отмена / Повтор
-document.getElementById('undo').onclick= ()=> { undo(); };
-document.getElementById('redo').onclick= ()=> { redo(); };
-
-// Очистить всё
-document.getElementById('clear').onclick= ()=> {
-  saveHistory();
-  layers.forEach(l=>getLayerCtx(l).clearRect(0,0,l.width,l.height));
-  draw();
-}
-
-// Вспомогательные функции
-function floodFill(ctx, x, y, fillColor) {
-  const imageData=ctx.getImageData(0,0,ctx.canvas.width, ctx.canvas.height);
-  const data=imageData.data;
-  const targetColor=getColorAtPixel(data,x,y,ctx.canvas.width);
-  const fillRGBA=hexToRGBA(fillColor);
-  if (colorsEqual(targetColor,fillRGBA)) return;
-  const stack=[{x,y}];
-  while(stack.length>0) {
-    const {x,y}=stack.pop();
-    const currentColor=getColorAtPixel(data,x,y,ctx.canvas.width);
-    if (colorsEqual(currentColor,targetColor)) {
-      setColorAtPixel(data,x,y,fillRGBA,ctx.canvas.width);
-      if (x+1<ctx.canvas.width) stack.push({x:x+1,y});
-      if (x-1>=0) stack.push({x:x-1,y});
-      if (y+1<ctx.canvas.height) stack.push({x:x,y:y+1});
-      if (y-1>=0) stack.push({x:x,y:y-1});
-    }
-  }
-  ctx.putImageData(imageData,0,0);
-}
-function getColorAtPixel(data,x,y,width) {
-  const offset=(y*width + x)*4;
-  return [data[offset],data[offset+1],data[offset+2],data[offset+3]];
-}
-function setColorAtPixel(data,x,y,color,width) {
-  const offset=(y*width + x)*4;
-  data[offset]=color[0];
-  data[offset+1]=color[1];
-  data[offset+2]=color[2];
-  data[offset+3]=color[3];
-}
-function colorsEqual(c1,c2) {
-  return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2] && c1[3]===c2[3];
-}
-function hexToRGBA(hex) {
-  const r=parseInt(hex.substr(1,2),16);
-  const g=parseInt(hex.substr(3,2),16);
-  const b=parseInt(hex.substr(5,2),16);
-  return [r,g,b,255];
-}
-
-// Обработка мыши
-canvas.addEventListener('mousedown', e => {
-  saveHistory();
-  isDrawing=true;
-  startX=e.offsetX;
-  startY=e.offsetY;
-  if (currentTool==='fill') {
-    floodFill(getLayerCtx(currentLayer), startX, startY, currentColor);
-    draw();
-  } else if (currentTool==='text') {
-    const txt=prompt('Введите текст');
-    if (txt) {
-      const ctx=getLayerCtx(currentLayer);
-      ctx.font=`${brushSize*4}px Segoe UI`;
-      ctx.fillStyle=currentColor;
-      ctx.fillText(txt, startX, startY);
-      draw();
-    }
-  } else {
-    const ctx=getLayerCtx(currentLayer);
-    ctx.lineWidth=brushSize;
-    ctx.strokeStyle=currentColor;
-    ctx.fillStyle=currentColor;
-    if (currentTool==='pencil'||currentTool==='brush'||currentTool==='eraser') {
-      ctx.beginPath(); ctx.moveTo(startX,startY);
-    }
-  }
-});
-canvas.addEventListener('mousemove', e => {
-  if (!isDrawing) return;
-  const ctx=getLayerCtx(currentLayer);
-  if (currentTool==='pencil'||currentTool==='brush'||currentTool==='eraser') {
-    ctx.lineTo(e.offsetX,e.offsetY);
-    ctx.stroke();
-    draw();
-  } else {
-    draw();
-    drawPreviewShape(e);
-  }
-});
-canvas.addEventListener('mouseup', e => {
-  if (!isDrawing) return;
-  isDrawing=false;
-  if (['fill','text'].includes(currentTool)) return;
-  if (['line','rect'].includes(currentTool)) {
-    drawPreviewShape(e,true);
-  }
-  draw();
-});
-
-function drawPreviewShape(e,final=false) {
-  draw();
-  const ctx=getLayerCtx(currentLayer);
-  ctx.lineWidth=brushSize;
-  ctx.strokeStyle=currentColor;
-  ctx.fillStyle=currentColor;
-  const x=startX,y=startY,ex=e.offsetX,ey=e.offsetY;
-  switch(currentTool) {
-    case 'line':
-      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(ex,ey); ctx.stroke();
-      break;
-    case 'rect':
-      ctx.strokeRect(x,y,ex - x, ey - y);
-      break;
-  }
-}
-
-// Установка инструмента
-document.querySelectorAll('#toolbar button').forEach(btn => {
-  btn.onclick = ()=> {
-    const id=btn.id;
-    if (id==='pencil') currentTool='pencil';
-    if (id==='brush') currentTool='brush';
-    if (id==='eraser') currentTool='eraser';
-    if (id==='fill') currentTool='fill';
-    if (id==='text') currentTool='text';
-  };
-});
-
-// Заливка
-// (уже реализована в обработке мыши)
-
-// Импорт/экспорт
-document.getElementById('save').onclick= ()=> {
-  draw();
-  const dataURL=canvas.toDataURL('image/png');
-  const a=document.createElement('a');
-  a.href=dataURL;
-  a.download='painter.png';
-  a.click();
-};
-document.getElementById('load').onclick= ()=> {
-  document.getElementById('fileInput').click();
-};
-document.getElementById('fileInput').onchange= (e)=> {
-  const file=e.target.files[0];
-  const reader=new FileReader();
-  reader.onload= ()=> {
-    const img=new Image();
-    img.onload= ()=> {
-      clearLayer(currentLayer);
-      getLayerCtx(currentLayer).drawImage(img,0,0);
-      draw();
-    };
-    img.src=reader.result;
-  };
-  reader.readAsDataURL(file);
-};
-function clearLayer(layer) {
-  getLayerCtx(layer).clearRect(0,0,layer.width,layer.height);
-}
-
-// Отмена/повтор
-document.getElementById('undo').onclick= ()=> { undo(); };
-document.getElementById('redo').onclick= ()=> { redo(); };
-
-function saveHistory() {
-  draw();
-  history.push(canvas.toDataURL());
-  if (history.length>200) history.shift();
-}
-function undo() {
-  if (history.length===0) return;
-  redoStack.push(canvas.toDataURL());
-  const data=history.pop();
-  const img=new Image();
-  img.onload= ()=> {
-    clearLayer(currentLayer);
-    getLayerCtx(currentLayer).drawImage(img,0,0);
-    draw();
-  };
-  img.src=data;
-}
-function redo() {
-  if (redoStack.length===0) return;
-  history.push(canvas.toDataURL());
-  const data=redoStack.pop();
-  const img=new Image();
-  img.onload= ()=> {
-    clearLayer(currentLayer);
-    getLayerCtx(currentLayer).drawImage(img,0,0);
-    draw();
-  };
-  img.src=data;
-}
-
-// Очистка всего
-document.getElementById('clear').onclick= ()=> {
-  saveHistory();
-  layers.forEach(l=>getLayerCtx(l).clearRect(0,0,l.width,l.height));
-  draw();
-}
-</script>
-</div>
 </body>
 </html>
