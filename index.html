@@ -2,193 +2,191 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Мини-версия BeamNG Drive</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Максимально точная копия BeamNG (база)</title>
 <style>
-  body {
-    margin: 0;
-    background: #222;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-  }
-  #gameCanvas {
-    display: block;
-    background: #444;
-  }
-  #info {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    color: #fff;
-    background: rgba(0,0,0,0.5);
-    padding: 8px;
-    border-radius: 8px;
-  }
+  body { margin: 0; overflow: hidden; }
+  canvas { display: block; }
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="1200" height="700"></canvas>
-<div id="info">Управление: стрелки - движение, пробел - тормоз, R - перезапуск</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ammo.js/builds/ammo.wasm.js"></script>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+let scene, camera, renderer;
+let physicsWorld;
+let rigidBodies = [];
+let softBodies = [];
+let tempTransform;
 
-let keys = {};
+init();
+animate();
 
-window.addEventListener('keydown', e => {
-  keys[e.key.toLowerCase()] = true;
-});
-window.addEventListener('keyup', e => {
-  keys[e.key.toLowerCase()] = false;
-});
+function init() {
+  // Инициализация сцены
+  scene = new THREE.Scene();
 
-// Простая физика и объекты
-class Car {
-  constructor() {
-    this.x = 100;
-    this.y = 100;
-    this.width = 60;
-    this.height = 30;
-    this.angle = 0;
-    this.speed = 0;
-    this.maxSpeed = 4;
-    this.acceleration = 0.1;
-    this.friction = 0.98;
-    this.color = 'red';
-    this.health = 100;
-  }
+  // Камера
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.2, 2000);
+  camera.position.set(0, 20, 50);
+  camera.lookAt(0, 0, 0);
 
-  update() {
-    if (keys['arrowup']) {
-      this.speed += this.acceleration;
-    }
-    if (keys['arrowdown']) {
-      this.speed -= this.acceleration;
-    }
-    if (keys['arrowleft']) {
-      this.angle -= 0.03;
-    }
-    if (keys['arrowright']) {
-      this.angle += 0.03;
-    }
-    if (keys[' ']) {
-      this.speed *= 0.95; // тормоз
-    }
+  // Освещение
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(10, 20, 10);
+  scene.add(light);
 
-    // ограничения скорости
-    if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
-    if (this.speed < -this.maxSpeed/2) this.speed = -this.maxSpeed/2;
+  // Рендерер
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-    // физика
-    this.x += Math.cos(this.angle) * this.speed;
-    this.y += Math.sin(this.angle) * this.speed;
-
-    this.speed *= this.friction;
-
-    // границы
-    if (this.x < 0) this.x = 0;
-    if (this.y < 0) this.y = 0;
-    if (this.x > canvas.width) this.x = canvas.width;
-    if (this.y > canvas.height) this.y = canvas.height;
-  }
-
-  draw() {
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle);
-    ctx.fillStyle = this.color;
-    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
-    ctx.restore();
-  }
+  // Инициализация Ammo.js
+  Ammo().then(function(AmmoLib) {
+    Ammo = AmmoLib;
+    setupPhysics();
+    createSceneObjects();
+    window.addEventListener('resize', onWindowResize, false);
+  });
 }
 
-class Obstacle {
-  constructor(x, y, w, h) {
-    this.x = x;
-    this.y = y;
-    this.width = w;
-    this.height = h;
-  }
-
-  draw() {
-    ctx.fillStyle = '#555';
-    ctx.fillRect(this.x, this.y, this.width, this.height);
-  }
+function setupPhysics() {
+  const collisionConfiguration = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
+  const dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+  const broadphase = new Ammo.btDbvtBroadphase();
+  const solver = new Ammo.btSequentialImpulseConstraintSolver();
+  const softBodySolver = new Ammo.btDefaultSoftBodySolver();
+  physicsWorld = new Ammo.btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softBodySolver);
+  physicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
+  physicsWorld.getWorldInfo().set_m_gravity(new Ammo.btVector3(0, -9.82, 0));
+  tempTransform = new Ammo.btTransform();
 }
 
-const playerCar = new Car();
+function createSceneObjects() {
+  // Создаем землю
+  const groundSize = 100;
+  const groundGeo = new THREE.BoxGeometry(groundSize, 1, groundSize);
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
+  const groundMesh = new THREE.Mesh(groundGeo, groundMat);
+  groundMesh.position.y = -0.5;
+  scene.add(groundMesh);
 
-const obstacles = [
-  new Obstacle(300, 200, 200, 50),
-  new Obstacle(700, 500, 150, 150),
-  new Obstacle(500, 300, 50, 200),
-  new Obstacle(1000, 100, 80, 80)
-];
-
-function detectCollision(car, obstacle) {
-  // проверка столкновения по осям
-  const rect1 = {
-    x: car.x - car.width/2,
-    y: car.y - car.height/2,
-    w: car.width,
-    h: car.height
-  };
-  const rect2 = obstacle;
-
-  return (
-    rect1.x < rect2.x + rect2.w &&
-    rect1.x + rect1.w > rect2.x &&
-    rect1.y < rect2.y + rect2.h &&
-    rect1.y + rect1.h > rect2.y
+  // Физика земли
+  const groundShape = new Ammo.btBoxShape(new Ammo.btVector3(groundSize/2, 0.5, groundSize/2));
+  const groundBody = new Ammo.btRigidBody(
+    new Ammo.btRigidBodyConstructionInfo(0, new Ammo.btDefaultMotionState(), groundShape, new Ammo.btVector3(0,0,0))
   );
+  physicsWorld.addRigidBody(groundBody);
+
+  // Создаем мягкий объект (например, сетку из мягких тел)
+  createSoftBodyBox();
+
+  // Создаем твердый блок
+  createRigidBox(0, 2, 0, 2, 2, 2);
 }
 
-function handleCollisions() {
-  for (let obs of obstacles) {
-    if (detectCollision(playerCar, obs)) {
-      // простая реакция — уменьшение здоровья и отскок
-      playerCar.health -= 1;
-      // отскок
-      playerCar.speed = -playerCar.speed * 0.5;
+function createRigidBox(x, y, z, sx, sy, sz) {
+  const boxGeo = new THREE.BoxGeometry(sx, sy, sz);
+  const boxMat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+  const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+  boxMesh.position.set(x, y, z);
+  scene.add(boxMesh);
+
+  const boxShape = new Ammo.btBoxShape(new Ammo.btVector3(sx/2, sy/2, sz/2));
+  const mass = 10;
+  const localInertia = new Ammo.btVector3(0,0,0);
+  boxShape.calculateLocalInertia(mass, localInertia);
+  const motionState = new Ammo.btDefaultMotionState(new Ammo.btTransform(
+    new Ammo.btQuaternion(0,0,0,1), new Ammo.btVector3(x,y,z)
+  ));
+  const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, boxShape, localInertia);
+  const body = new Ammo.btRigidBody(rbInfo);
+  physicsWorld.addRigidBody(body);
+  boxMesh.userData.physicsBody = body;
+  rigidBodies.push(boxMesh);
+}
+
+function createSoftBodyBox() {
+  // Создаем мягкую сетку (например, из частиц)
+  const volume = 2;
+  const segments = 4;
+  const softBodyHelpers = new Ammo.btSoftBodyHelpers();
+
+  const vertices = [];
+  for (let i = 0; i <= segments; i++) {
+    for (let j = 0; j <= segments; j++) {
+      for (let k = 0; k <= segments; k++) {
+        vertices.push(new Ammo.btVector3(
+          (i / segments - 0.5) * volume,
+          (j / segments) * volume + 5,
+          (k / segments - 0.5) * volume
+        ));
+      }
     }
   }
+
+  const softBody = softBodyHelpers.CreateFromTriMesh(
+    physicsWorld.getWorldInfo(),
+    vertices.reduce((arr, v) => {
+      arr.push(v.x()); arr.push(v.y()); arr.push(v.z());
+      return arr;
+    }, []),
+    [],
+    0
+  );
+  softBody.get_m_materials().at(0).set_m_kLST(0.9);
+  softBody.setTotalMass(1, false);
+  physicsWorld.addSoftBody(softBody, 1, -1);
+  softBodies.push(softBody);
 }
 
-function resetGame() {
-  playerCar.x = 100;
-  playerCar.y = 100;
-  playerCar.speed = 0;
-  playerCar.angle = 0;
-  playerCar.health = 100;
+function onWindowResize() {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function animate() {
+  requestAnimationFrame(animate);
+  if (!Ammo) return; // еще не инициализировано
 
-  // управление
-  if (keys['r']) {
-    resetGame();
+  // Управление
+  handleControls();
+
+  // Физика
+  physicsWorld.stepSimulation(1/60, 10);
+
+  // Обновляем позиции объектов
+  for (let obj of rigidBodies) {
+    const objPhys = obj.userData.physicsBody;
+    const ms = objPhys.getMotionState();
+    if (ms) {
+      ms.getWorldTransform(tempTransform);
+      const p = tempTransform.getOrigin();
+      const q = tempTransform.getRotation();
+      obj.position.set(p.x(), p.y(), p.z());
+      obj.quaternion.set(q.x(), q.y(), q.z(), q.w());
+    }
   }
 
-  playerCar.update();
-  handleCollisions();
+  // Обновление мягких тел — сложный процесс, требует отдельной логики
 
-  // рисуем
-  for (let obs of obstacles) {
-    obs.draw();
-  }
-  playerCar.draw();
+  // Камера
+  const target = scene.children.find(c => c.geometry && c.geometry.type === 'BoxGeometry' && c.material.color.getHex() === 255);
+  // или просто следить за машиной или сценой
 
-  // информация
-  ctx.fillStyle = 'white';
-  ctx.font = '20px Arial';
-  ctx.fillText(`Здоровье: ${playerCar.health}`, 20, 30);
-
-  requestAnimationFrame(gameLoop);
+  renderer.render(scene, camera);
 }
 
-gameLoop();
+function handleControls() {
+  // Тут можно реализовать управление мягкими телами и объектами
+}
+
 </script>
+
+</body>
+</html>
 </body>
 </html>
