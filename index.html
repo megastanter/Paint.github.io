@@ -3,163 +3,192 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Копия BeamNG Drive - Полная версия</title>
+<title>Мини-версия BeamNG Drive</title>
 <style>
   body {
     margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #111;
-    color: #eee;
-    line-height: 1.6;
+    background: #222;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
   }
-  header {
-    background-color: #222;
-    padding: 20px;
-    text-align: center;
+  #gameCanvas {
+    display: block;
+    background: #444;
   }
-  header h1 {
-    margin: 0;
-    font-size: 3em;
-  }
-  nav {
-    display: flex;
-    justify-content: center;
-    background-color: #333;
-  }
-  nav a {
-    color: #eee;
-    padding: 14px 20px;
-    text-decoration: none;
-    transition: background 0.3s;
-  }
-  nav a:hover {
-    background-color: #444;
-  }
-  section {
-    padding: 40px 20px;
-    max-width: 1200px;
-    margin: auto;
-  }
-  h2 {
-    margin-top: 0;
-    font-size: 2em;
-    margin-bottom: 20px;
-  }
-  .overview, .features, .screenshots, .video-section, .download, .about {
-    margin-bottom: 50px;
-  }
-  .screenshots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 15px;
-  }
-  img {
-    width: 100%;
-    border-radius: 8px;
-  }
-  iframe {
-    width: 100%;
-    height: 480px;
-    border: none;
-    border-radius: 8px;
-  }
-  .buttons {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-  }
-  .button {
-    background-color: #555;
+  #info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
     color: #fff;
-    padding: 15px 30px;
-    border: none;
+    background: rgba(0,0,0,0.5);
+    padding: 8px;
     border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.2em;
-    transition: background 0.3s;
-  }
-  .button:hover {
-    background-color: #666;
-  }
-  footer {
-    background-color: #222;
-    text-align: center;
-    padding: 20px;
-    font-size: 0.9em;
-    color: #888;
   }
 </style>
 </head>
 <body>
+<canvas id="gameCanvas" width="1200" height="700"></canvas>
+<div id="info">Управление: стрелки - движение, пробел - тормоз, R - перезапуск</div>
 
-<header>
-  <h1>Максимальная копия BeamNG Drive</h1>
-  <p>Реалистичная физика, открытый мир и бесконечные возможности</p>
-</header>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-<nav>
-  <a href="#overview">Обзор</a>
-  <a href="#features">Особенности</a>
-  <a href="#screenshots">Скриншоты</a>
-  <a href="#video">Видео</a>
-  <a href="#download">Скачать</a>
-  <a href="#about">О проекте</a>
-</nav>
+let keys = {};
 
-<section id="overview" class="overview">
-  <h2>Обзор игры</h2>
-  <p>Эта игра — максимально точная копия BeamNG Drive, созданная для любителей реалистичных симуляторов вождения. В игре реализована физика разрушений, открытый мир, множество автомобилей и трасс. Исследуйте виртуальный мир, создавайте свои сценарии и наслаждайтесь уникальным опытом вождения.</p>
-  <p>Игра обладает высокой детализацией и реализмом, что делает ее похожей на оригинал, но с уникальным стилем и дополнениями от разработчика.</p>
-</section>
+window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', e => {
+  keys[e.key.toLowerCase()] = false;
+});
 
-<section id="features" class="features">
-  <h2>Особенности</h2>
-  <ul>
-    <li>Реалистичная физика разрушений</li>
-    <li>Большой открытый мир</li>
-    <li>Разнообразие автомобилей и трасс</li>
-    <li>Настраиваемые сценарии и миссии</li>
-    <li>Поддержка модов и дополнений</li>
-    <li>Интуитивный редактор уровней</li>
-    <li>Поддержка VR и мультитач</li>
-    <li>Обновляемая графика и физика</li>
-  </ul>
-</section>
+// Простая физика и объекты
+class Car {
+  constructor() {
+    this.x = 100;
+    this.y = 100;
+    this.width = 60;
+    this.height = 30;
+    this.angle = 0;
+    this.speed = 0;
+    this.maxSpeed = 4;
+    this.acceleration = 0.1;
+    this.friction = 0.98;
+    this.color = 'red';
+    this.health = 100;
+  }
 
-<section id="screenshots" class="screenshots">
-  <h2>Скриншоты</h2>
-  <div class="screenshots-grid">
-    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+1" alt="Скриншот игры 1" />
-    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+2" alt="Скриншот игры 2" />
-    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+3" alt="Скриншот игры 3" />
-    <img src="https://via.placeholder.com/600x400.png?text=Скриншот+4" alt="Скриншот игры 4" />
-  </div>
-</section>
+  update() {
+    if (keys['arrowup']) {
+      this.speed += this.acceleration;
+    }
+    if (keys['arrowdown']) {
+      this.speed -= this.acceleration;
+    }
+    if (keys['arrowleft']) {
+      this.angle -= 0.03;
+    }
+    if (keys['arrowright']) {
+      this.angle += 0.03;
+    }
+    if (keys[' ']) {
+      this.speed *= 0.95; // тормоз
+    }
 
-<section id="video" class="video-section">
-  <h2>Видео-презентация</h2>
-  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Видео игры" allowfullscreen></iframe>
-</section>
+    // ограничения скорости
+    if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
+    if (this.speed < -this.maxSpeed/2) this.speed = -this.maxSpeed/2;
 
-<section id="download" class="download">
-  <h2>Скачать игру</h2>
-  <p>Доступна для Windows, Mac и Linux. В ближайшее время будет выпущена версия для VR.</p>
-  <div class="buttons">
-    <a href="#" class="button">Скачать для Windows</a>
-    <a href="#" class="button">Скачать для Mac</a>
-    <a href="#" class="button">Скачать для Linux</a>
-  </div>
-</section>
+    // физика
+    this.x += Math.cos(this.angle) * this.speed;
+    this.y += Math.sin(this.angle) * this.speed;
 
-<section id="about" class="about">
-  <h2>О проекте</h2>
-  <p>Этот сайт создан для демонстрации максимально точной копии BeamNG Drive. В реальности создание такой игры требует сотен тысяч строк кода и сложных технологий. Здесь представлен только сайт-визитка с информацией и демонстрационными элементами.</p>
-  <p>Все изображения и видео — примерные, для реальной игры потребуется разработка полноценного движка и программирование.</p>
-</section>
+    this.speed *= this.friction;
 
-<footer>
-  &copy; 2024 Максимальная копия BeamNG Drive. Все права защищены.
-</footer>
+    // границы
+    if (this.x < 0) this.x = 0;
+    if (this.y < 0) this.y = 0;
+    if (this.x > canvas.width) this.x = canvas.width;
+    if (this.y > canvas.height) this.y = canvas.height;
+  }
 
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.fillStyle = this.color;
+    ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+    ctx.restore();
+  }
+}
+
+class Obstacle {
+  constructor(x, y, w, h) {
+    this.x = x;
+    this.y = y;
+    this.width = w;
+    this.height = h;
+  }
+
+  draw() {
+    ctx.fillStyle = '#555';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+}
+
+const playerCar = new Car();
+
+const obstacles = [
+  new Obstacle(300, 200, 200, 50),
+  new Obstacle(700, 500, 150, 150),
+  new Obstacle(500, 300, 50, 200),
+  new Obstacle(1000, 100, 80, 80)
+];
+
+function detectCollision(car, obstacle) {
+  // проверка столкновения по осям
+  const rect1 = {
+    x: car.x - car.width/2,
+    y: car.y - car.height/2,
+    w: car.width,
+    h: car.height
+  };
+  const rect2 = obstacle;
+
+  return (
+    rect1.x < rect2.x + rect2.w &&
+    rect1.x + rect1.w > rect2.x &&
+    rect1.y < rect2.y + rect2.h &&
+    rect1.y + rect1.h > rect2.y
+  );
+}
+
+function handleCollisions() {
+  for (let obs of obstacles) {
+    if (detectCollision(playerCar, obs)) {
+      // простая реакция — уменьшение здоровья и отскок
+      playerCar.health -= 1;
+      // отскок
+      playerCar.speed = -playerCar.speed * 0.5;
+    }
+  }
+}
+
+function resetGame() {
+  playerCar.x = 100;
+  playerCar.y = 100;
+  playerCar.speed = 0;
+  playerCar.angle = 0;
+  playerCar.health = 100;
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // управление
+  if (keys['r']) {
+    resetGame();
+  }
+
+  playerCar.update();
+  handleCollisions();
+
+  // рисуем
+  for (let obs of obstacles) {
+    obs.draw();
+  }
+  playerCar.draw();
+
+  // информация
+  ctx.fillStyle = 'white';
+  ctx.font = '20px Arial';
+  ctx.fillText(`Здоровье: ${playerCar.health}`, 20, 30);
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
 </body>
 </html>
