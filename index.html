@@ -2,12 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Traffic Racer Web</title>
+<title>2D Гонки с Траффиком</title>
 <style>
   body {
     margin: 0;
-    overflow: hidden;
     background: #222;
+    overflow: hidden;
   }
   canvas {
     display: block;
@@ -17,137 +17,139 @@
   #score {
     position: absolute;
     top: 10px;
-    left: 10px;
-    color: #fff;
+    left: 20px;
     font-family: Arial, sans-serif;
     font-size: 24px;
+    color: #fff;
     z-index: 10;
   }
 </style>
 </head>
 <body>
-
 <div id="score">Очки: 0</div>
-<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
 <script>
-const config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    backgroundColor: '#444',
-    physics: {
-        default: 'arcade',
-        arcade: {
-            debug: false,
-        }
-    },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+document.body.appendChild(canvas);
+
+canvas.width = 400;
+canvas.height = 600;
+
+let keys = {};
+let player = {
+  x: 180,
+  y: 500,
+  width: 40,
+  height: 80,
+  speed: 5,
+  color: 'blue'
 };
 
-const game = new Phaser.Game(config);
-
-let player;
-let cars;
-let roadLines;
-let cursors;
+let traffic = [];
+let trafficCount = 0;
 let score = 0;
-let scoreText;
 let gameOver = false;
 
-function preload() {
-    this.load.image('playerCar', 'https://i.imgur.com/7k8rHjV.png'); // Модель авто игрока
-    this.load.image('car', 'https://i.imgur.com/6z7iRzR.png'); // Модель вражеской машины
-    this.load.image('roadLine', 'https://i.imgur.com/0dQ4QXh.png'); // Линии разметки
-}
+window.addEventListener('keydown', e => { keys[e.key] = true; });
+window.addEventListener('keyup', e => { keys[e.key] = false; });
 
-function create() {
-    // Создаем дорожную разметку
-    roadLines = this.physics.add.group();
-    for (let i = 0; i < 10; i++) {
-        let line = roadLines.create(400, i * 60, 'roadLine');
-        line.setOrigin(0.5, 0.5);
-        line.setDisplaySize(10, 50);
-        line.setImmovable(true);
-    }
-
-    // Создаем игрока
-    player = this.physics.add.sprite(400, 500, 'playerCar');
-    player.setCollideWorldBounds(true);
-    player.setDisplaySize(50, 100);
-
-    // Группа вражеских машин
-    cars = this.physics.add.group();
-
-    // Создаем управление
-    cursors = this.input.keyboard.createCursorKeys();
-
-    // Коллизия
-    this.physics.add.overlap(player, cars, hitCar, null, this);
-
-    // Очки
-    score = 0;
-    scoreText = document.getElementById('score');
-
-    // Таймер появления машин
-    this.time.addEvent({
-        delay: 1000,
-        callback: spawnCar,
-        callbackScope: this,
-        loop: true
-    });
+function spawnTraffic() {
+  const lanePositions = [60, 180, 300]; // три полосы
+  const lane = lanePositions[Math.floor(Math.random() * lanePositions.length)];
+  const car = {
+    x: lane,
+    y: -80,
+    width: 40,
+    height: 80,
+    speed: 4 + Math.random() * 2,
+    color: 'red'
+  };
+  traffic.push(car);
 }
 
 function update() {
-    if (gameOver) {
-        return;
+  if (gameOver) return;
+
+  // Управление машиной игрока
+  if (keys['ArrowLeft'] && player.x > 0) {
+    player.x -= player.speed;
+  }
+  if (keys['ArrowRight'] && player.x < canvas.width - player.width) {
+    player.x += player.speed;
+  }
+
+  // Обновляем траффик
+  for (let i = 0; i < traffic.length; i++) {
+    traffic[i].y += traffic[i].speed;
+
+    // Столкновение
+    if (
+      traffic[i].y + traffic[i].height > player.y &&
+      traffic[i].y < player.y + player.height &&
+      traffic[i].x < player.x + player.width &&
+      traffic[i].x + traffic[i].width > player.x
+    ) {
+      alert('Игра окончена! Ваши очки: ' + score);
+      gameOver = true;
     }
 
-    // Движение линии дорожной разметки
-    roadLines.children.iterate(function(line) {
-        line.y += 5;
-        if (line.y > 600) {
-            line.y = -50;
-        }
-    });
-
-    // Управление игроком
-    if (cursors.left.isDown) {
-        player.setVelocityX(-200);
-    } else if (cursors.right.isDown) {
-        player.setVelocityX(200);
-    } else {
-        player.setVelocityX(0);
+    // Удаляем, если проехали
+    if (traffic[i].y > canvas.height) {
+      traffic.splice(i, 1);
+      score++;
+      document.getElementById('score').innerText = 'Очки: ' + score;
+      i--;
     }
+  }
 
-    // Передвижение вражеских машин
-    cars.children.iterate(function(car) {
-        car.y += 5;
-        if (car.y > 600) {
-            car.destroy();
-            score += 10;
-            scoreText.innerText = 'Очки: ' + score;
-        }
-    });
+  // Спавним новых машин через определенное время
+  trafficCount++;
+  if (trafficCount > 50) {
+    spawnTraffic();
+    trafficCount = 0;
+  }
 }
 
-function spawnCar() {
-    const laneXPositions = [200, 400, 600];
-    const x = Phaser.Utils.Array.GetRandom(laneXPositions);
-    const car = cars.create(x, -100, 'car');
-    car.setDisplaySize(50, 100);
-    car.setVelocityY(0);
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Рисуем дорогу
+  ctx.fillStyle = '#555';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Линии разметки
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2;
+  for (let y = 0; y < canvas.height; y += 40) {
+    ctx.setLineDash([10, 10]);
+    ctx.beginPath();
+    ctx.moveTo(canvas.width/2, y);
+    ctx.lineTo(canvas.width/2, y + 20);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Рисуем машину игрока
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+
+  // Рисуем траффик
+  for (let car of traffic) {
+    ctx.fillStyle = car.color;
+    ctx.fillRect(car.x, car.y, car.width, car.height);
+  }
 }
 
-function hitCar(player, car) {
-    this.physics.pause();
-    player.setTint(0xff0000);
-    gameOver = true;
-    alert('Игра окончена! Ваши очки: ' + score);
+function gameLoop() {
+  update();
+  draw();
+  if (!gameOver) {
+    requestAnimationFrame(gameLoop);
+  }
 }
+
+gameLoop();
+
 </script>
 </body>
 </html>
