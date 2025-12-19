@@ -2,266 +2,152 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ШколоЧат</title>
+<title>Traffic Racer Web</title>
 <style>
   body {
     margin: 0;
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #141E30, #243B55);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-
-  header {
-    padding: 20px;
-    background: rgba(0,0,0,0.8);
-    text-align: center;
-    font-size: 2em;
-    font-weight: bold;
-    letter-spacing: 2px;
-    text-shadow: 2px 2px 4px #000;
-  }
-
-  #auth {
-    display: flex;
-    justify-content: center;
-    padding: 10px;
-    gap: 15px;
-  }
-
-  #auth input, #auth select {
-    padding: 10px;
-    font-size: 1em;
-    border: none;
-    border-radius: 8px;
-  }
-
-  #chatContainer {
-    flex: 1;
-    display: flex;
     overflow: hidden;
+    background: #222;
   }
-
-  #userList {
-    width: 280px;
-    background: rgba(0,0,0,0.7);
-    padding: 10px;
-    overflow-y: auto;
-    border-right: 2px solid #fff;
+  canvas {
+    display: block;
+    margin: 0 auto;
+    background: #444;
   }
-
-  #userList h3 {
-    text-align: center;
-    margin-bottom: 10px;
-  }
-
-  .user {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-bottom: 8px;
-    transition: background 0.3s;
-  }
-
-  .user:hover {
-    background: rgba(255,255,255,0.1);
-  }
-
-  .avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 12px;
-    object-fit: cover;
-    border: 2px solid #fff;
-  }
-
-  #messages {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: rgba(0,0,0,0.4);
-    padding: 10px;
-    overflow-y: auto;
-  }
-
-  .message {
-    margin-bottom: 15px;
-    padding: 10px 14px;
-    border-radius: 15px;
-    background: rgba(255,255,255,0.1);
-    max-width: 70%;
-    line-height: 1.4;
-    transition: background 0.3s;
-  }
-
-  .message:hover {
-    background: rgba(255,255,255,0.2);
-  }
-
-  .message.self {
-    background: rgba(255,255,255,0.2);
-    align-self: flex-end;
-  }
-
-  #sendMessage {
-    display: flex;
-    padding: 10px;
-    border-top: 2px solid #fff;
-  }
-
-  #messageInput {
-    flex: 1;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 25px;
-    font-size: 1em;
-    background: #fff;
-    color: #000;
-  }
-
-  #sendBtn {
-    padding: 10px 20px;
-    margin-left: 12px;
-    border: none;
-    border-radius: 25px;
-    background: #FF5722;
+  #score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
     color: #fff;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    z-index: 10;
   }
-
-  #sendBtn:hover {
-    background: #E64A19;
-  }
-
-  /* Максималистский стиль, яркие цвета, тени, градиенты */
 </style>
 </head>
 <body>
 
-<header>ШколоЧат</header>
-
-<!-- Регистрация / авторизация -->
-<div id="auth">
-  <input type="text" id="username" placeholder="Введите имя" />
-  <select id="avatarSelect">
-    <option value="https://i.imgur.com/8Km9tLL.png">🐱 Кот</option>
-    <option value="https://i.imgur.com/2nCt3Sbl.png">🐶 Собака</option>
-    <option value="https://i.imgur.com/3K7K0Ok.png">🦊 Лиса</option>
-    <option value="https://i.imgur.com/7bXk2g6.png">🦁 Лев</option>
-    <option value="https://i.imgur.com/8Km9tLL.png">🐱 Кот</option>
-    <option value="https://i.imgur.com/2nCt3Sbl.png">🐶 Собака</option>
-  </select>
-  <button id="loginBtn">Войти</button>
-</div>
-
-<!-- Основной чат -->
-<div id="chat" style="display:none; flex:1; flex-direction:row; height: calc(100vh - 70px);">
-  <div id="userList">
-    <h3>Пользователи</h3>
-    <!-- сюда добавим список пользователей -->
-  </div>
-  <div style="flex:1; display:flex; flex-direction:column;">
-    <div id="messages"></div>
-    <div id="sendMessage">
-      <input type="text" id="messageInput" placeholder="Введите сообщение..." />
-      <button id="sendBtn">Отправить</button>
-    </div>
-  </div>
-</div>
-
+<div id="score">Очки: 0</div>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
 <script>
-const loginBtn = document.getElementById('loginBtn');
-const usernameInput = document.getElementById('username');
-const avatarSelect = document.getElementById('avatarSelect');
-const authDiv = document.getElementById('auth');
-const chatDiv = document.getElementById('chat');
-
-let currentUser = null;
-let users = [];
-let messages = [];
-
-const userListDiv = document.getElementById('userList');
-const messagesDiv = document.getElementById('messages');
-const messageInput = document.getElementById('messageInput');
-
-function addUser(user) {
-  users.push(user);
-  updateUserList();
-}
-
-function updateUserList() {
-  userListDiv.innerHTML = '<h3>Пользователи</h3>';
-  users.forEach(u => {
-    const userDiv = document.createElement('div');
-    userDiv.className = 'user';
-    userDiv.innerHTML = `<img src="${u.avatar}" class="avatar" /> ${u.name}`;
-    userDiv.onclick = () => {
-      alert('Вы выбрали пользователя: ' + u.name);
-    };
-    userListDiv.appendChild(userDiv);
-  });
-}
-
-function addMessage(msg) {
-  messages.push(msg);
-  renderMessages();
-}
-
-function renderMessages() {
-  messagesDiv.innerHTML = '';
-  messages.forEach(msg => {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'message' + (msg.sender === currentUser.name ? ' self' : '');
-    msgDiv.innerHTML = `<strong>${msg.sender}</strong>: ${msg.text}`;
-    messagesDiv.appendChild(msgDiv);
-  });
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-document.getElementById('loginBtn').onclick = () => {
-  const name = usernameInput.value.trim();
-  if (!name) {
-    alert('Введите имя');
-    return;
-  }
-  const avatar = avatarSelect.value;
-  currentUser = { name, avatar };
-  addUser(currentUser);
-  authDiv.style.display = 'none';
-  document.getElementById('chat').style.display = 'flex';
+const config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    backgroundColor: '#444',
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false,
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
 };
 
-// Отправка сообщений
-document.getElementById('sendBtn').onclick = sendMessage;
-document.getElementById('messageInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') sendMessage();
-});
+const game = new Phaser.Game(config);
 
-function sendMessage() {
-  const text = messageInput.value.trim();
-  if (!text || !currentUser) return;
-  const msg = { sender: currentUser.name, text };
-  addMessage(msg);
-  messageInput.value = '';
+let player;
+let cars;
+let roadLines;
+let cursors;
+let score = 0;
+let scoreText;
+let gameOver = false;
+
+function preload() {
+    this.load.image('playerCar', 'https://i.imgur.com/7k8rHjV.png'); // Модель авто игрока
+    this.load.image('car', 'https://i.imgur.com/6z7iRzR.png'); // Модель вражеской машины
+    this.load.image('roadLine', 'https://i.imgur.com/0dQ4QXh.png'); // Линии разметки
 }
 
-// Имитация входящих сообщений от других пользователей
-setInterval(() => {
-  if (users.length > 1) {
-    const randUser = users[Math.floor(Math.random() * users.length)];
-    if (randUser !== currentUser) {
-      addMessage({ sender: randUser.name, text: 'Привет! Это автоматическое сообщение.' });
+function create() {
+    // Создаем дорожную разметку
+    roadLines = this.physics.add.group();
+    for (let i = 0; i < 10; i++) {
+        let line = roadLines.create(400, i * 60, 'roadLine');
+        line.setOrigin(0.5, 0.5);
+        line.setDisplaySize(10, 50);
+        line.setImmovable(true);
     }
-  }
-}, 20000);
+
+    // Создаем игрока
+    player = this.physics.add.sprite(400, 500, 'playerCar');
+    player.setCollideWorldBounds(true);
+    player.setDisplaySize(50, 100);
+
+    // Группа вражеских машин
+    cars = this.physics.add.group();
+
+    // Создаем управление
+    cursors = this.input.keyboard.createCursorKeys();
+
+    // Коллизия
+    this.physics.add.overlap(player, cars, hitCar, null, this);
+
+    // Очки
+    score = 0;
+    scoreText = document.getElementById('score');
+
+    // Таймер появления машин
+    this.time.addEvent({
+        delay: 1000,
+        callback: spawnCar,
+        callbackScope: this,
+        loop: true
+    });
+}
+
+function update() {
+    if (gameOver) {
+        return;
+    }
+
+    // Движение линии дорожной разметки
+    roadLines.children.iterate(function(line) {
+        line.y += 5;
+        if (line.y > 600) {
+            line.y = -50;
+        }
+    });
+
+    // Управление игроком
+    if (cursors.left.isDown) {
+        player.setVelocityX(-200);
+    } else if (cursors.right.isDown) {
+        player.setVelocityX(200);
+    } else {
+        player.setVelocityX(0);
+    }
+
+    // Передвижение вражеских машин
+    cars.children.iterate(function(car) {
+        car.y += 5;
+        if (car.y > 600) {
+            car.destroy();
+            score += 10;
+            scoreText.innerText = 'Очки: ' + score;
+        }
+    });
+}
+
+function spawnCar() {
+    const laneXPositions = [200, 400, 600];
+    const x = Phaser.Utils.Array.GetRandom(laneXPositions);
+    const car = cars.create(x, -100, 'car');
+    car.setDisplaySize(50, 100);
+    car.setVelocityY(0);
+}
+
+function hitCar(player, car) {
+    this.physics.pause();
+    player.setTint(0xff0000);
+    gameOver = true;
+    alert('Игра окончена! Ваши очки: ' + score);
+}
 </script>
 </body>
 </html>
