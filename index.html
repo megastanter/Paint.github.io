@@ -2,190 +2,174 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Гонка на машинках - Максимальная версия</title>
+<title>Максимальная 2D гонка - стартовая версия</title>
 <style>
-  body {
-    margin: 0;
-    background: #000;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-  }
-  #gameCanvas {
-    display: block;
-    margin: 0 auto;
-    background: linear-gradient(to bottom, #222, #444);
-  }
-  #scoreBoard {
-    position: absolute;
-    top: 10px;
-    left: 20px;
-    color: #fff;
-    font-size: 20px;
-    z-index: 10;
-  }
-  #startBtn {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 20px 40px;
-    font-size: 24px;
-    cursor: pointer;
-    background: #28a745;
-    border: none;
-    border-radius: 10px;
-    color: #fff;
-    z-index: 10;
-  }
+  body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #222; }
+  #canvas { display: block; margin: 0 auto; background: #111; }
+  #ui { position: absolute; top: 10px; left: 20px; color: #fff; z-index: 10; }
+  #shopBtn { position: absolute; top: 10px; right: 20px; padding: 8px 16px; background: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+  #shop { position: absolute; top: 60px; right: 20px; width: 350px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; display: none; }
+  #shop h2 { margin-top: 0; }
+  .car-option { margin: 10px 0; cursor: pointer; display: flex; align-items: center; transition: background 0.3s; padding: 8px; border-radius: 4px; }
+  .car-option:hover { background: #444; }
+  .car-option img { width: 60px; height: 60px; margin-right: 10px; }
 </style>
 </head>
 <body>
+<div id="ui">
+  <div id="score">Очки: 0</div>
+</div>
+<button id="shopBtn">Магазин</button>
+<div id="shop">
+  <h2>Магазин машин</h2>
+  <div class="car-option" data-price="100" data-model="basic" data-color="#3399ff">
+    <img src="https://i.imgur.com/UbkU7bE.png" alt="Basic Car" />
+    <div>Базовая машина — 100 очков</div>
+  </div>
+  <div class="car-option" data-price="300" data-model="sports" data-color="#ff3333">
+    <img src="https://i.imgur.com/4hY0E7n.png" alt="Sports Car" />
+    <div>Спорткар — 300 очков</div>
+  </div>
+  <div class="car-option" data-price="600" data-model="luxury" data-color="#ffd700">
+    <img src="https://i.imgur.com/8IuMDmW.png" alt="Luxury Car" />
+    <div>Люкс-кар — 600 очков</div>
+  </div>
+</div>
 
-<div id="scoreBoard">Очки: 0</div>
-<button id="startBtn">Начать игру</button>
-<canvas id="gameCanvas" width="480" height="700"></canvas>
+<canvas id="canvas" width="480" height="700"></canvas>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const startBtn = document.getElementById('startBtn');
-const scoreBoard = document.getElementById('scoreBoard');
+const c = document.getElementById('canvas');
+const ctx = c.getContext('2d');
 
-let gameInterval;
-let gameRunning = false;
+const scoreDiv = document.getElementById('score');
+const shopBtn = document.getElementById('shopBtn');
+const shop = document.getElementById('shop');
+
 let score = 0;
+let money = 0;
 let level = 1;
-let trafficSpeed = 4;
-let trafficCount = 0;
-let levelThreshold = 20; // очков для повышения уровня
+let gameRunning = false;
 
-// Игрок
 const player = {
-  x: 210,
+  model: 'basic',
+  color: '#3399ff',
+  x: 200,
   y: 600,
   width: 60,
   height: 120,
-  speed: 7,
-  color: '#3399ff',
+  speed: 8,
   draw() {
-    // Можно добавить более детальную прорисовку
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x, this.y, this.width, this.height);
-    // Колеса или детали
+    // Детали
     ctx.fillStyle = '#222';
     ctx.fillRect(this.x + 10, this.y + 10, 15, 15);
     ctx.fillRect(this.x + 35, this.y + 10, 15, 15);
   }
 };
 
-// Траффик машин
-const traffic = [];
+const obstacles = [];
+const lanesX = [130, 210, 290];
 
 let keys = {};
-
-// Обработчики управления
 window.addEventListener('keydown', e => { keys[e.key] = true; });
 window.addEventListener('keyup', e => { keys[e.key] = false; });
 
-// Стартовая кнопка
-startBtn.onclick = () => {
-  startGame();
-};
+document.querySelectorAll('.car-option').forEach(div => {
+  div.onclick = () => {
+    const price = +div.dataset.price;
+    if (money >= price) {
+      money -= price;
+      player.model = div.dataset.model;
+      player.color = div.dataset.color;
+    } else {
+      alert('Недостаточно очков!');
+    }
+  };
+});
+document.getElementById('shopBtn').onclick = () => { shop.style.display = shop.style.display === 'block' ? 'none' : 'block'; };
 
-function startGame() {
-  gameRunning = true;
-  score = 0;
-  level = 1;
-  trafficSpeed = 4;
-  traffic.length = 0;
-  scoreBoard.innerText = 'Очки: 0';
-  startBtn.style.display = 'none';
-  if (gameInterval) clearInterval(gameInterval);
-  gameInterval = setInterval(update, 1000 / 60);
-}
-
-// Создание машин трафика
-function spawnTraffic() {
-  const lanes = [130, 210, 290]; // три полосы
-  const lane = lanes[Math.floor(Math.random() * lanes.length)];
-  const car = {
-    x: lane,
+function spawnObstacle() {
+  const laneX = lanesX[Math.floor(Math.random() * lanesX.length)];
+  obstacles.push({
+    x: laneX,
     y: -150,
     width: 60,
     height: 120,
-    color: Math.random() > 0.5 ? '#e74c3c' : '#f39c12',
-    speed: trafficSpeed,
+    color: '#f00',
+    speed: 4 + level,
     draw() {
       ctx.fillStyle = this.color;
       ctx.fillRect(this.x, this.y, this.width, this.height);
-      // Милицейский дизайн
       ctx.fillStyle = '#222';
-      ctx.fillRect(this.x + 10, this.y + 10, 40, 20);
+      ctx.fillRect(this.x + 10, this.y + 10, 15, 15);
+      ctx.fillRect(this.x + 35, this.y + 10, 15, 15);
     }
-  };
-  traffic.push(car);
+  });
 }
 
-// Обновление игры
-function update() {
-  // Управление
-  if (keys['ArrowLeft'] && player.x > 50) player.x -= player.speed;
+let obstacleTimer = 0;
+
+function gameLoop() {
+  ctx.clearRect(0, 0, 480, 700);
+  drawRoad();
+
+  // управление
+  if (keys['ArrowLeft'] && player.x > 60) player.x -= player.speed;
   if (keys['ArrowRight'] && player.x < 480 - player.width - 20) player.x += player.speed;
 
-  // Задача: движение машин и проверка столкновений
-  for (let i = 0; i < traffic.length; i++) {
-    let car = traffic[i];
-    car.y += car.speed;
-
-    // Столкновение
+  // движение препятствий
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const o = obstacles[i];
+    o.y += o.speed;
     if (
-      car.y + car.height > player.y &&
-      car.y < player.y + player.height &&
-      car.x < player.x + player.width &&
-      car.x + car.width > player.x
+      o.y + o.height > player.y &&
+      o.y < player.y + player.height &&
+      o.x < player.x + player.width &&
+      o.x + o.width > player.x
     ) {
       endGame();
       return;
     }
-
-    // Удаление машин
-    if (car.y > 700) {
-      traffic.splice(i, 1);
+    if (o.y > 700) {
+      obstacles.splice(i, 1);
       score++;
-      scoreBoard.innerText = 'Очки: ' + score;
-      // Повышение уровня
-      if (score % levelThreshold === 0) {
-        level++;
-        trafficSpeed += 1; // ускорение
-      }
+      money++;
+      scoreDiv.innerText = `Очки: ${score} | Монеты: ${money}`;
+      if (score % 20 === 0) level++;
+    } else {
+      o.draw();
     }
   }
 
-  // Спавн новых машин
-  trafficCount++;
-  if (trafficCount > Math.max(20 - level * 2, 10)) { // быстрее с ростом уровня
-    spawnTraffic();
-    trafficCount = 0;
+  // спавн препятствий
+  obstacleTimer++;
+  if (obstacleTimer > Math.max(20 - level, 5)) {
+    spawnObstacle();
+    obstacleTimer = 0;
   }
 
-  // Рисуем дорогу
-  drawRoad();
+  // рисуем игрока
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+  ctx.fillStyle = '#222';
+  ctx.fillRect(player.x + 10, player.y + 10, 15, 15);
+  ctx.fillRect(player.x + 35, player.y + 10, 15, 15);
 
-  // Рисуем игрока
-  player.draw();
+  // интерфейс
+  ctx.fillStyle = '#fff';
+  ctx.font = '20px Arial';
+  ctx.fillText(`Очки: ${score}`, 20, 30);
+  ctx.fillText(`Монеты: ${money}`, 20, 60);
+  ctx.fillText(`Уровень: ${level}`, 20, 90);
 
-  // Рисуем трафик
-  for (let car of traffic) {
-    car.draw();
-  }
+  if (gameRunning) requestAnimationFrame(gameLoop);
 }
 
-// Отрисовка дороги
 function drawRoad() {
   ctx.fillStyle = '#555';
   ctx.fillRect(50, 0, 380, 700);
-
-  // Разметка
   ctx.strokeStyle = 'white';
   ctx.lineWidth = 4;
   ctx.setLineDash([40, 40]);
@@ -196,24 +180,22 @@ function drawRoad() {
   ctx.setLineDash([]);
 }
 
-// Конец игры
 function endGame() {
-  clearInterval(gameInterval);
-  gameRunning = false;
-  alert('Игра окончена! Ваши очки: ' + score);
-  startBtn.style.display = 'block';
+  alert(`Игра окончена! Очки: ${score}`);
+  location.reload();
 }
 
-// Основной цикл
-function gameLoop() {
-  if (gameRunning) {
-    update();
-    requestAnimationFrame(gameLoop);
-  }
+function start() {
+  score = 0;
+  money = 0;
+  level = 1;
+  obstacles.length = 0;
+  gameRunning = true;
+  requestAnimationFrame(gameLoop);
 }
 
-// Запуск
-requestAnimationFrame(gameLoop);
+start();
+
 </script>
 </body>
 </html>
