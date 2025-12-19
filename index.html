@@ -2,154 +2,218 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>2D Гонки с Траффиком</title>
+<title>Гонка на машинках - Максимальная версия</title>
 <style>
   body {
     margin: 0;
-    background: #222;
+    background: #000;
+    font-family: Arial, sans-serif;
     overflow: hidden;
   }
-  canvas {
+  #gameCanvas {
     display: block;
     margin: 0 auto;
-    background: #444;
+    background: linear-gradient(to bottom, #222, #444);
   }
-  #score {
+  #scoreBoard {
     position: absolute;
     top: 10px;
     left: 20px;
-    font-family: Arial, sans-serif;
+    color: #fff;
+    font-size: 20px;
+    z-index: 10;
+  }
+  #startBtn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px 40px;
     font-size: 24px;
+    cursor: pointer;
+    background: #28a745;
+    border: none;
+    border-radius: 10px;
     color: #fff;
     z-index: 10;
   }
 </style>
 </head>
 <body>
-<div id="score">Очки: 0</div>
+
+<div id="scoreBoard">Очки: 0</div>
+<button id="startBtn">Начать игру</button>
+<canvas id="gameCanvas" width="480" height="700"></canvas>
+
 <script>
-const canvas = document.createElement('canvas');
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-document.body.appendChild(canvas);
+const startBtn = document.getElementById('startBtn');
+const scoreBoard = document.getElementById('scoreBoard');
 
-canvas.width = 400;
-canvas.height = 600;
+let gameInterval;
+let gameRunning = false;
+let score = 0;
+let level = 1;
+let trafficSpeed = 4;
+let trafficCount = 0;
+let levelThreshold = 20; // очков для повышения уровня
 
-let keys = {};
-let player = {
-  x: 180,
-  y: 500,
-  width: 40,
-  height: 80,
-  speed: 5,
-  color: 'blue'
+// Игрок
+const player = {
+  x: 210,
+  y: 600,
+  width: 60,
+  height: 120,
+  speed: 7,
+  color: '#3399ff',
+  draw() {
+    // Можно добавить более детальную прорисовку
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    // Колеса или детали
+    ctx.fillStyle = '#222';
+    ctx.fillRect(this.x + 10, this.y + 10, 15, 15);
+    ctx.fillRect(this.x + 35, this.y + 10, 15, 15);
+  }
 };
 
-let traffic = [];
-let trafficCount = 0;
-let score = 0;
-let gameOver = false;
+// Траффик машин
+const traffic = [];
 
+let keys = {};
+
+// Обработчики управления
 window.addEventListener('keydown', e => { keys[e.key] = true; });
 window.addEventListener('keyup', e => { keys[e.key] = false; });
 
+// Стартовая кнопка
+startBtn.onclick = () => {
+  startGame();
+};
+
+function startGame() {
+  gameRunning = true;
+  score = 0;
+  level = 1;
+  trafficSpeed = 4;
+  traffic.length = 0;
+  scoreBoard.innerText = 'Очки: 0';
+  startBtn.style.display = 'none';
+  if (gameInterval) clearInterval(gameInterval);
+  gameInterval = setInterval(update, 1000 / 60);
+}
+
+// Создание машин трафика
 function spawnTraffic() {
-  const lanePositions = [60, 180, 300]; // три полосы
-  const lane = lanePositions[Math.floor(Math.random() * lanePositions.length)];
+  const lanes = [130, 210, 290]; // три полосы
+  const lane = lanes[Math.floor(Math.random() * lanes.length)];
   const car = {
     x: lane,
-    y: -80,
-    width: 40,
-    height: 80,
-    speed: 4 + Math.random() * 2,
-    color: 'red'
+    y: -150,
+    width: 60,
+    height: 120,
+    color: Math.random() > 0.5 ? '#e74c3c' : '#f39c12',
+    speed: trafficSpeed,
+    draw() {
+      ctx.fillStyle = this.color;
+      ctx.fillRect(this.x, this.y, this.width, this.height);
+      // Милицейский дизайн
+      ctx.fillStyle = '#222';
+      ctx.fillRect(this.x + 10, this.y + 10, 40, 20);
+    }
   };
   traffic.push(car);
 }
 
+// Обновление игры
 function update() {
-  if (gameOver) return;
+  // Управление
+  if (keys['ArrowLeft'] && player.x > 50) player.x -= player.speed;
+  if (keys['ArrowRight'] && player.x < 480 - player.width - 20) player.x += player.speed;
 
-  // Управление машиной игрока
-  if (keys['ArrowLeft'] && player.x > 0) {
-    player.x -= player.speed;
-  }
-  if (keys['ArrowRight'] && player.x < canvas.width - player.width) {
-    player.x += player.speed;
-  }
-
-  // Обновляем траффик
+  // Задача: движение машин и проверка столкновений
   for (let i = 0; i < traffic.length; i++) {
-    traffic[i].y += traffic[i].speed;
+    let car = traffic[i];
+    car.y += car.speed;
 
     // Столкновение
     if (
-      traffic[i].y + traffic[i].height > player.y &&
-      traffic[i].y < player.y + player.height &&
-      traffic[i].x < player.x + player.width &&
-      traffic[i].x + traffic[i].width > player.x
+      car.y + car.height > player.y &&
+      car.y < player.y + player.height &&
+      car.x < player.x + player.width &&
+      car.x + car.width > player.x
     ) {
-      alert('Игра окончена! Ваши очки: ' + score);
-      gameOver = true;
+      endGame();
+      return;
     }
 
-    // Удаляем, если проехали
-    if (traffic[i].y > canvas.height) {
+    // Удаление машин
+    if (car.y > 700) {
       traffic.splice(i, 1);
       score++;
-      document.getElementById('score').innerText = 'Очки: ' + score;
-      i--;
+      scoreBoard.innerText = 'Очки: ' + score;
+      // Повышение уровня
+      if (score % levelThreshold === 0) {
+        level++;
+        trafficSpeed += 1; // ускорение
+      }
     }
   }
 
-  // Спавним новых машин через определенное время
+  // Спавн новых машин
   trafficCount++;
-  if (trafficCount > 50) {
+  if (trafficCount > Math.max(20 - level * 2, 10)) { // быстрее с ростом уровня
     spawnTraffic();
     trafficCount = 0;
   }
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Рисуем дорогу
-  ctx.fillStyle = '#555';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawRoad();
 
-  // Линии разметки
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 2;
-  for (let y = 0; y < canvas.height; y += 40) {
-    ctx.setLineDash([10, 10]);
-    ctx.beginPath();
-    ctx.moveTo(canvas.width/2, y);
-    ctx.lineTo(canvas.width/2, y + 20);
-    ctx.stroke();
-  }
-  ctx.setLineDash([]);
+  // Рисуем игрока
+  player.draw();
 
-  // Рисуем машину игрока
-  ctx.fillStyle = player.color;
-  ctx.fillRect(player.x, player.y, player.width, player.height);
-
-  // Рисуем траффик
+  // Рисуем трафик
   for (let car of traffic) {
-    ctx.fillStyle = car.color;
-    ctx.fillRect(car.x, car.y, car.width, car.height);
+    car.draw();
   }
 }
 
+// Отрисовка дороги
+function drawRoad() {
+  ctx.fillStyle = '#555';
+  ctx.fillRect(50, 0, 380, 700);
+
+  // Разметка
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([40, 40]);
+  ctx.beginPath();
+  ctx.moveTo(200, 0);
+  ctx.lineTo(200, 700);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// Конец игры
+function endGame() {
+  clearInterval(gameInterval);
+  gameRunning = false;
+  alert('Игра окончена! Ваши очки: ' + score);
+  startBtn.style.display = 'block';
+}
+
+// Основной цикл
 function gameLoop() {
-  update();
-  draw();
-  if (!gameOver) {
+  if (gameRunning) {
+    update();
     requestAnimationFrame(gameLoop);
   }
 }
 
-gameLoop();
-
+// Запуск
+requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
