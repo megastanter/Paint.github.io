@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Paint web</title>
+<title>Paint Windows Clone</title>
 <style>
   body {
     margin: 0;
@@ -69,18 +69,18 @@
 <body>
 
 <!-- Заголовок -->
-<div id="titleBar">Paint web</div>
+<div id="titleBar">Маляр Windows</div>
 
 <!-- Панель инструментов -->
 <div id="toolbar">
   <!-- Инструменты рисования -->
-  <button id="pencilBtn" title="Карандаш">✏️</button>
-  <button id="brushBtn" title="Кисть">🖌️</button>
-  <button id="lineBtn" title="Линия">📏</button>
-  <button id="rectBtn" title="Прямоугольник">▭</button>
-  <button id="ellipseBtn" title="Эллипс">⬭</button>
-  <button id="fillBtn" title="Заливка">🪣</button>
-  <button id="eraserBtn" title="Ластик">🧽</button>
+  <button id="pencilBtn" data-tool="pencil">Карандаш</button>
+  <button id="brushBtn" data-tool="brush">Кисть</button>
+  <button id="lineBtn" data-tool="line">Линия</button>
+  <button id="rectBtn" data-tool="rect">Прямоугольник</button>
+  <button id="ellipseBtn" data-tool="ellipse">Эллипс</button>
+  <button id="fillBtn" data-tool="fill">Заливка</button>
+  <button id="eraserBtn" data-tool="eraser">Ластик</button>
   <button id="undoBtn" title="Отмена">↺</button>
   <button id="redoBtn" title="Повтор">↻</button>
   <!-- Цвет и размер -->
@@ -112,7 +112,9 @@ let currentColor = document.getElementById('colorPicker').value;
 let brushSize = document.getElementById('sizeRange').value;
 
 let startX = 0, startY = 0;
-let savedImageData = null;
+let tempCanvas = document.createElement('canvas');
+let tempCtx = tempCanvas.getContext('2d');
+
 let undoStack = [];
 let redoStack = [];
 
@@ -132,18 +134,13 @@ document.getElementById('sizeRange').addEventListener('input', () => {
   updateStatus();
 });
 
-// Инструменты
-document.getElementById('pencilBtn').onclick = () => { currentTool='pencil'; updateStatus(); };
-document.getElementById('brushBtn').onclick = () => { currentTool='brush'; updateStatus(); };
-document.getElementById('lineBtn').onclick = () => { currentTool='line'; updateStatus(); };
-document.getElementById('rectBtn').onclick = () => { currentTool='rect'; updateStatus(); };
-document.getElementById('ellipseBtn').onclick = () => { currentTool='ellipse'; updateStatus(); };
-document.getElementById('fillBtn').onclick = () => { currentTool='fill'; updateStatus(); };
-document.getElementById('eraserBtn').onclick = () => { currentTool='eraser'; updateStatus(); };
-document.getElementById('undoBtn').onclick = () => { undo(); };
-document.getElementById('redoBtn').onclick = () => { redo(); };
-document.getElementById('clearBtn').onclick = () => { clearCanvas(); };
-document.getElementById('saveBtn').onclick = () => { saveCanvas(); };
+// Назначение инструментов
+document.querySelectorAll('#toolbar button').forEach(btn => {
+  btn.onclick = () => {
+    currentTool = btn.getAttribute('data-tool');
+    updateStatus();
+  };
+});
 
 // Загрузка файла
 const fileInput = document.getElementById('fileInput');
@@ -159,7 +156,7 @@ fileInput.addEventListener('change', () => {
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        saveState(); // сохранить после загрузки
+        saveState();
       };
       img.src = e.target.result;
     };
@@ -167,7 +164,7 @@ fileInput.addEventListener('change', () => {
   }
 });
 
-// Основные функции
+// Основные функции для undo/redo
 function saveState() {
   if (undoStack.length > 20) undoStack.shift();
   undoStack.push(canvas.toDataURL());
@@ -180,7 +177,7 @@ function undo() {
   img.onload = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
-  }
+  };
   img.src = imgData;
 }
 function redo() {
@@ -191,7 +188,7 @@ function redo() {
   img.onload = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
-  }
+  };
   img.src = imgData;
 }
 function clearCanvas() {
@@ -206,7 +203,7 @@ function saveCanvas() {
   a.click();
 }
 
-// Рисование
+// Обработка мыши для рисования
 canvas.addEventListener('mousedown', (e) => {
   saveState();
   painting = true;
@@ -222,8 +219,7 @@ canvas.addEventListener('mousedown', (e) => {
     ctx.beginPath();
     ctx.moveTo(e.offsetX, e.offsetY);
   } else if (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse') {
-    startX = e.offsetX;
-    startY = e.offsetY;
+    // подготовка для фигур
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
     tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
@@ -295,16 +291,14 @@ function drawEllipse(x1, y1, x2, y2) {
   ctx.stroke();
 }
 
-// Заливка (flood fill)
+// Заливка
 function fillArea(x, y) {
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const pixelStack = [[x, y]];
   const startColor = getPixelColor(imgData, x, y);
   const fillColor = hexToRgb(currentColor);
   if (!startColor) return;
-
   if (colorsMatch(startColor, fillColor)) return;
-
   while (pixelStack.length > 0) {
     const [px, py] = pixelStack.pop();
     const currentColorPixel = getPixelColor(imgData, px, py);
@@ -318,7 +312,6 @@ function fillArea(x, y) {
   }
   ctx.putImageData(imgData, 0, 0);
 }
-
 function getPixelColor(imgData, x, y) {
   const index = (y * imgData.width + x) * 4;
   return [
@@ -328,7 +321,6 @@ function getPixelColor(imgData, x, y) {
     imgData.data[index + 3]
   ];
 }
-
 function setPixelColor(imgData, x, y, rgb) {
   const index = (y * imgData.width + x) * 4;
   imgData.data[index] = rgb[0];
@@ -336,11 +328,9 @@ function setPixelColor(imgData, x, y, rgb) {
   imgData.data[index + 2] = rgb[2];
   imgData.data[index + 3] = 255;
 }
-
 function colorsMatch(c1, c2) {
   return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2];
 }
-
 function hexToRgb(hex) {
   hex = hex.replace('#', '');
   if(hex.length===3) {
@@ -354,9 +344,6 @@ function hexToRgb(hex) {
 }
 
 // Для фигур
-let tempCanvas = document.createElement('canvas');
-let tempCtx = tempCanvas.getContext('2d');
-
 canvas.addEventListener('mousedown', (e) => {
   saveState();
   if (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse') {
