@@ -3,20 +3,106 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Генератор случайных чисел и рулетка</title>
-<link rel="stylesheet" href="styles.css" />
+<title>RelaxPlay - Мини-игры для отдыха</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #fef0e6; /* светлый персиковый */
+    color: #333;
+  }
+  header {
+    background-color: #ffe0b2; /* бежевый оттенок */
+    padding: 20px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+    color: #d2691e; /* тёплый коричневый цвет */
+  }
+  .intro {
+    padding: 20px;
+    text-align: center;
+  }
+  .btn {
+    background-color: #ffb347; /* персиковый */
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: #fff;
+    transition: background 0.3s;
+  }
+  .btn:hover {
+    background-color: #ff8c42;
+  }
+  .games-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+  }
+  .game-card {
+    background-color: #fff3e0; /* очень светлый персиковый */
+    border-radius: 15px;
+    margin: 10px;
+    width: 200px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .game-card img {
+    width: 100%;
+    border-bottom: 1px solid #ffe0b2;
+  }
+  .game-card h3 {
+    margin: 10px 0;
+    font-size: 1.2em;
+  }
+  .footer {
+    background-color: #ffe0b2;
+    padding: 15px;
+    text-align: center;
+  }
+</style>
 </head>
 <body>
-<div class="container">
-  <h1>Добро пожаловать!</h1>
-  <div class="menu">
-    <button id="numberGenBtn" class="menu-btn">Генератор чисел</button>
-    <button id="rouletteBtn" class="menu-btn">Рулетка да/нет</button>
-  </div>
 
-  <div id="content"></div>
+<header>
+  <h1>RelaxPlay</h1>
+</header>
+
+<div class="intro">
+  <h2>Мини-игры для быстрого отдыха</h2>
+  <p>Выбирайте любимые игры и расслабляйтесь!</p>
+  <button class="btn">Играть сейчас</button>
 </div>
 
-<script src="script.js"></script>
+<h2 style="text-align:center;">Популярные игры</h2>
+<div class="games-section">
+  <div class="game-card">
+    <img src="https://via.placeholder.com/200x150.png?text=Игра+1" alt="Игра 1" />
+    <h3>Бегущий кот</h3>
+    <button class="btn">Играть</button>
+  </div>
+  <div class="game-card">
+    <img src="https://via.placeholder.com/200x150.png?text=Игра+2" alt="Игра 2" />
+    <h3>Ловля фруктов</h3>
+    <button class="btn">Играть</button>
+  </div>
+  <div class="game-card">
+    <img src="https://via.placeholder.com/200x150.png?text=Игра+3" alt="Игра 3" />
+    <h3>Пазл-собиралка</h3>
+    <button class="btn">Играть</button>
+  </div>
+</div>
+
+<div class="footer">
+  <p>&copy; 2024 RelaxPlay. Все права защищены.</p>
+</div>
+
 </body>
 </html>
