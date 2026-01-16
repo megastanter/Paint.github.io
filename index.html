@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Paint web</title>
+<title>Paint Windows Clone</title>
 <style>
   body {
     margin: 0;
@@ -81,11 +81,11 @@
   <button id="ellipseBtn" data-tool="ellipse">Эллипс</button>
   <button id="fillBtn" data-tool="fill">Заливка</button>
   <button id="eraserBtn" data-tool="eraser">Ластик</button>
-  <button id="undoBtn"title="Отмена"</button>
-  <!-- Цвет и размер -->
+  <button id="undoBtn" title="Отмена">Отмена</button>
+  <button id="redoBtn" title="Повтор">↻</button>
+  <!-- Другие инструменты -->
   Цвет: <input type="color" id="colorPicker" value="#000000" />
   Размер: <input type="range" id="sizeRange" min="1" max="50" value="5" />
-
   <!-- Загрузка и сохранение -->
   <button id="loadBtn" title="Загрузить изображение">📂 Загрузить</button>
   <input type="file" id="fileInput" style="display:none" accept="image/*" />
@@ -135,10 +135,12 @@ document.getElementById('sizeRange').addEventListener('input', () => {
 
 // Назначение инструментов
 document.querySelectorAll('#toolbar button').forEach(btn => {
-  btn.onclick = () => {
-    currentTool = btn.getAttribute('data-tool');
-    updateStatus();
-  };
+  if (btn.id !== 'undoBtn' && btn.id !== 'redoBtn' && btn.id !== 'loadBtn' && btn.id !== 'saveBtn' && btn.id !== 'clearBtn') {
+    btn.onclick = () => {
+      currentTool = btn.getAttribute('data-tool');
+      updateStatus();
+    };
+  }
 });
 
 // Загрузка файла
@@ -202,7 +204,7 @@ function saveCanvas() {
   a.click();
 }
 
-// Обработка мыши для рисования
+// Обработка мыши
 canvas.addEventListener('mousedown', (e) => {
   saveState();
   painting = true;
@@ -218,7 +220,6 @@ canvas.addEventListener('mousedown', (e) => {
     ctx.beginPath();
     ctx.moveTo(e.offsetX, e.offsetY);
   } else if (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse') {
-    // подготовка для фигур
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
     tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
@@ -264,137 +265,6 @@ canvas.addEventListener('mousemove', (e) => {
   }
 });
 
-// Функции для фигур
-function drawLine(x1, y1, x2, y2) {
-  ctx.strokeStyle = currentColor;
-  ctx.lineWidth = brushSize;
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
-}
-function drawRect(x, y, w, h) {
-  ctx.strokeStyle = currentColor;
-  ctx.lineWidth = brushSize;
-  ctx.strokeRect(x, y, w, h);
-}
-function drawEllipse(x1, y1, x2, y2) {
-  ctx.strokeStyle = currentColor;
-  ctx.lineWidth = brushSize;
-  const rx = Math.abs(x2 - x1)/2;
-  const ry = Math.abs(y2 - y1)/2;
-  const cx = (x1 + x2)/2;
-  const cy = (y1 + y2)/2;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, rx, ry, 0, 0, 2*Math.PI);
-  ctx.stroke();
-}
-
-// Заливка
-function fillArea(x, y) {
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const pixelStack = [[x, y]];
-  const startColor = getPixelColor(imgData, x, y);
-  const fillColor = hexToRgb(currentColor);
-  if (!startColor) return;
-  if (colorsMatch(startColor, fillColor)) return;
-  while (pixelStack.length > 0) {
-    const [px, py] = pixelStack.pop();
-    const currentColorPixel = getPixelColor(imgData, px, py);
-    if (colorsMatch(currentColorPixel, startColor)) {
-      setPixelColor(imgData, px, py, fillColor);
-      if (px > 0) pixelStack.push([px - 1, py]);
-      if (px < canvas.width - 1) pixelStack.push([px + 1, py]);
-      if (py > 0) pixelStack.push([px, py - 1]);
-      if (py < canvas.height - 1) pixelStack.push([px, py + 1]);
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-}
-function getPixelColor(imgData, x, y) {
-  const index = (y * imgData.width + x) * 4;
-  return [
-    imgData.data[index],
-    imgData.data[index + 1],
-    imgData.data[index + 2],
-    imgData.data[index + 3]
-  ];
-}
-function setPixelColor(imgData, x, y, rgb) {
-  const index = (y * imgData.width + x) * 4;
-  imgData.data[index] = rgb[0];
-  imgData.data[index + 1] = rgb[1];
-  imgData.data[index + 2] = rgb[2];
-  imgData.data[index + 3] = 255;
-}
-function colorsMatch(c1, c2) {
-  return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2];
-}
-function hexToRgb(hex) {
-  hex = hex.replace('#', '');
-  if(hex.length===3) {
-    hex = hex.split('').map(c => c+c).join('');
-  }
-  const bigint = parseInt(hex, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  return [r,g,b];
-}
-
-// Для фигур
-canvas.addEventListener('mousedown', (e) => {
-  saveState();
-  if (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse') {
-    startX = e.offsetX;
-    startY = e.offsetY;
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
-    tempCtx.drawImage(canvas, 0, 0);
-  } else if (currentTool==='pencil' || currentTool==='brush' || currentTool==='eraser') {
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = currentTool==='eraser' ? '#fff' : currentColor;
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-  } else if (currentTool==='fill') {
-    fillArea(e.offsetX, e.offsetY);
-  }
-});
-canvas.addEventListener('mouseup', (e) => {
-  if (!painting) return;
-  if (currentTool==='line') {
-    drawLine(startX, startY, e.offsetX, e.offsetY);
-  } else if (currentTool==='rect') {
-    drawRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
-  } else if (currentTool==='ellipse') {
-    drawEllipse(startX, startY, e.offsetX, e.offsetY);
-  }
-  painting=false;
-});
-canvas.addEventListener('mouseout', () => {
-  if (painting && (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse')) {
-    // ничего не делаем
-  }
-  painting=false;
-});
-canvas.addEventListener('mousemove', (e) => {
-  if (!painting) return;
-  if (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse') {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(tempCanvas, 0, 0);
-    if (currentTool==='line') {
-      drawLine(startX, startY, e.offsetX, e.offsetY);
-    } else if (currentTool==='rect') {
-      drawRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
-    } else if (currentTool==='ellipse') {
-      drawEllipse(startX, startY, e.offsetX, e.offsetY);
-    }
-  }
-});
-
 // Функции фигур
 function drawLine(x1, y1, x2, y2) {
   ctx.strokeStyle = currentColor;
@@ -420,6 +290,9 @@ function drawEllipse(x1, y1, x2, y2) {
   ctx.ellipse(cx, cy, rx, ry, 0, 0, 2*Math.PI);
   ctx.stroke();
 }
+
+// Обработка кнопки "Отмена"
+document.getElementById('undoBtn').onclick = () => { undo(); };
 </script>
 </body>
 </html>
