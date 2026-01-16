@@ -3,422 +3,131 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Strike шутер</title>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<title>Paint Web</title>
 <style>
-body {
-  margin: 0;
-  overflow: hidden;
-  font-family: 'Arial', sans-serif;
-  background: #111;
-}
-#ui {
-  position: absolute; top: 20px; left: 20px; z-index: 10;
-  display: flex; flex-direction: column; gap: 10px;
-  background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px;
-}
-#ui button {
-  padding: 12px 20px; font-size: 14px; border: none; border-radius: 8px;
-  background: #4CAF50; color: #fff; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  transition: background 0.2s, transform 0.1s;
-}
-#ui button:hover {
-  background: #45a049;
-  transform: scale(1.05);
-}
-#weaponMenu {
-  margin-top: 10px;
-}
-#weaponMenu button {
-  margin: 2px;
-  padding: 8px 12px;
-  background: #2196F3; color: #fff;
-  border: none; border-radius: 4px; cursor: pointer;
-}
-#weaponMenu button:hover {
-  background: #0b7dda;
-}
-#stats {
-  position: absolute; top: 20px; right: 20px; z-index: 10;
-  color: #fff; font-size: 16px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;
-}
+  body {
+    margin: 0;
+    background: #282c34;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #toolbar {
+    display: flex;
+    background: #444;
+    padding: 10px;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+  }
+  button, input[type=color], input[type=range] {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #666;
+  }
+  #canvasContainer {
+    position: relative;
+    border: 2px solid #555;
+    margin-top: 10px;
+  }
+  #paintCanvas {
+    background: #fff;
+    display: block;
+  }
+  #status {
+    margin: 10px;
+    color: #fff;
+  }
 </style>
 </head>
 <body>
-<div id="ui">
-  <div>
-    Выберите оружие:
-    <div id="weaponMenu">
-      <button data-damage="10">М4 (урон 10)</button>
-      <button data-damage="20">АК-47 (урон 20)</button>
-      <button data-damage="15">Пистолет (урон 15)</button>
-      <button data-damage="25">Дробовик (урон 25)</button>
-      <button data-damage="30">Лазер (урон 30)</button>
-    </div>
-  </div>
-  <button id="shootBtn">🔫 Стрелять</button>
-  <button id="reloadBtn">♻️ Перезарядка</button>
-  <button id="themeBtn">🌙 Тема</button>
+
+<div id="toolbar">
+  <button id="brushBtn">Кисть</button>
+  <button id="eraserBtn">Ластик</button>
+  <button id="clearBtn">Очистить</button>
+  <button id="saveBtn">Сохранить</button>
+  <label>Цвет:
+    <input type="color" id="colorPicker" value="#000000" />
+  </label>
+  <label>Размер:
+    <input type="range" id="sizeRange" min="1" max="50" value="5" />
+  </label>
 </div>
-<div id="stats">
-  HP: <span id="playerHP">100</span> | Очки: <span id="score">0</span> | Патроны: <span id="ammoCount">20</span>
+
+<div id="canvasContainer">
+  <canvas id="paintCanvas" width="1000" height="700"></canvas>
 </div>
+
+<div id="status">Инструмент: Кисть | Цвет: #000000 | Размер: 5</div>
 
 <script>
-let scene, camera, renderer, clock;
-let bullets = [], enemies = [], particles = [], pickups = [];
-let score = 0;
+const canvas = document.getElementById('paintCanvas');
+const ctx = canvas.getContext('2d');
 
-const player = {
-  position: new THREE.Vector3(0, 1.6, 5),
-  speed: 0.2,
-  hp: 100,
-  maxHp: 100,
-  ammo: 20,
-  maxAmmo: 20,
-  reloadTime: 2,
-  isReloading: false,
-  lastShotTime: 0,
-  shotCooldown: 0.3 // секунды
+let drawing = false;
+let currentTool = 'brush'; // 'brush' или 'eraser'
+let currentColor = document.getElementById('colorPicker').value;
+let brushSize = document.getElementById('sizeRange').value;
+
+// Обновление цвета и размера
+document.getElementById('colorPicker').addEventListener('change', () => {
+  currentColor = document.getElementById('colorPicker').value;
+  updateStatus();
+});
+document.getElementById('sizeRange').addEventListener('input', () => {
+  brushSize = document.getElementById('sizeRange').value;
+  updateStatus();
+});
+
+// Инструменты
+document.getElementById('brushBtn').onclick = () => { currentTool='brush'; updateStatus(); };
+document.getElementById('eraserBtn').onclick = () => { currentTool='eraser'; updateStatus(); };
+document.getElementById('clearBtn').onclick = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); };
+document.getElementById('saveBtn').onclick = () => {
+  const dataURL = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = 'my_drawing.png';
+  a.click();
 };
 
-let damagePerShot = 10; // по умолчанию
-let isDarkMode = false;
-const keys = {};
-let moveCameraMode = false;
-
-// Инициализация сцены
-init();
-animate();
-
-function init() {
-  scene = new THREE.Scene();
-
-  // Солнце и Луна
-  const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-  sunLight.position.set(100, 200, 100);
-  scene.add(sunLight);
-  const moonLight = new THREE.PointLight(0x9999ff, 0.3);
-  moonLight.position.set(-100, 150, -100);
-  scene.add(moonLight);
-
-  addMap();
-
-  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-  scene.add(ambient);
-
-  for(let i=0; i<20; i++) spawnEnemy();
-
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 300);
-  camera.position.copy(player.position);
-  camera.lookAt(player.position.x, player.position.y, player.position.z-1);
-
-  const crossGeo = new THREE.RingGeometry(0.02, 0.04, 32);
-  const crossMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide });
-  const cross = new THREE.Mesh(crossGeo, crossMat);
-  cross.position.z = -0.2;
-  camera.add(cross);
-  scene.add(camera);
-
-  renderer = new THREE.WebGLRenderer({ antialias:true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  document.body.appendChild(renderer.domElement);
-
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if(!moveCameraMode) {
-      const deltaX = e.movementX || 0;
-      const deltaY = e.movementY || 0;
-      camera.rotation.y -= deltaX * 0.002;
-      camera.rotation.x -= deltaY * 0.002;
-      camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
-    }
-  });
-
-  document.getElementById('shootBtn').onclick = () => shoot();
-  document.getElementById('reloadBtn').onclick = () => reload();
-  document.getElementById('themeBtn').onclick = () => toggleTheme();
-
-  document.querySelectorAll('#weaponMenu button').forEach(btn => {
-    btn.onclick = () => {
-      damagePerShot = parseInt(btn.dataset.damage);
-      alert('Вы выбрали оружие с уроном ' + damagePerShot);
-    };
-  });
-
-  document.addEventListener('keydown', (e) => {
-    keys[e.key.toLowerCase()] = true;
-    if(e.key==='ArrowUp') keys['arrowup']=true;
-    if(e.key==='ArrowDown') keys['arrowdown']=true;
-    if(e.key==='ArrowLeft') keys['arrowleft']=true;
-    if(e.key==='ArrowRight') keys['arrowright']=true;
-    if(e.key==='Shift') moveCameraMode=true;
-  });
-  document.addEventListener('keyup', (e) => {
-    keys[e.key.toLowerCase()] = false;
-    if(e.key==='ArrowUp') keys['arrowup']=false;
-    if(e.key==='ArrowDown') keys['arrowdown']=false;
-    if(e.key==='ArrowLeft') keys['arrowleft']=false;
-    if(e.key==='ArrowRight') keys['arrowright']=false;
-    if(e.key==='Shift') moveCameraMode=false;
-  });
-
-  // Аптеки (появляются случайно в карте)
-  for(let i=0; i<5; i++) spawnHealthPickup();
-
-  clock = new THREE.Clock();
+function updateStatus() {
+  document.getElementById('status').textContent = 
+    `Инструмент: ${currentTool === 'brush' ? 'Кисть' : 'Ластик'} | Цвет: ${currentColor} | Размер: ${brushSize}`;
 }
 
-// Создаем карту с границами и препятствиями
-function addMap() {
-  const groundGeo = new THREE.PlaneGeometry(200, 200);
-  const groundMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI/2;
-  ground.receiveShadow = true;
-  scene.add(ground);
+// Рисование
+canvas.addEventListener('mousedown', (e) => {
+  drawing = true;
+  ctx.lineWidth = brushSize;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = currentTool === 'eraser' ? '#fff' : currentColor;
+  ctx.beginPath();
+  ctx.moveTo(e.offsetX, e.offsetY);
+});
+canvas.addEventListener('mouseup', () => {
+  drawing = false;
+});
+canvas.addEventListener('mouseout', () => {
+  drawing = false;
+});
+canvas.addEventListener('mousemove', (e) => {
+  if (!drawing) return;
+  ctx.lineTo(e.offsetX, e.offsetY);
+  ctx.stroke();
+});
 
-  const boxGeo = new THREE.BoxGeometry(4, 4, 4);
-  const boxMat = new THREE.MeshStandardMaterial({ color: 0x888888 });
-  const boxes = [
-    new THREE.Mesh(boxGeo, boxMat),
-    new THREE.Mesh(boxGeo, boxMat),
-    new THREE.Mesh(boxGeo, boxMat),
-    new THREE.Mesh(boxGeo, boxMat)
-  ];
-  boxes[0].position.set(20, 2, 20);
-  boxes[1].position.set(-20, 2, -20);
-  boxes[2].position.set(0, 2, -30);
-  boxes[3].position.set(-50, 2, 50);
-  boxes.forEach(b => { b.castShadow=true; scene.add(b); });
-}
-
-// Спавн врагов
-function spawnEnemy() {
-  const size = Math.random() * 0.8 + 0.3;
-  const geo = new THREE.CylinderGeometry(size*0.3, size*0.3, size*1.2, 12);
-  const mat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-  const enemy = new THREE.Mesh(geo, mat);
-  enemy.position.x = (Math.random() - 0.5) * 150;
-  enemy.position.z = (Math.random() - 0.5) * 150;
-  enemy.position.y = size * 0.6;
-  enemy.castShadow = true;
-  enemy.userData = { health: 100, size: size*0.3, attackCooldown: 0, velocity: new THREE.Vector3() };
-  scene.add(enemy);
-  enemies.push(enemy);
-}
-
-// Создаем аптечку
-function spawnHealthPickup() {
-  const geo = new THREE.SphereGeometry(0.5, 8, 8);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-  const pickup = new THREE.Mesh(geo, mat);
-  pickup.position.x = (Math.random() - 0.5) * 180;
-  pickup.position.z = (Math.random() - 0.5) * 180;
-  pickup.position.y = 0.5;
-  pickup.userData = { type:'health', amount:25 };
-  scene.add(pickup);
-  pickups.push(pickup);
-}
-
-// Стрельба
-function shoot() {
-  const now = performance.now() / 1000;
-  if(player.ammo<=0 || player.isReloading || player.hp<=0 || (now - player.lastShotTime)<player.shotCooldown) return;
-  const geo = new THREE.SphereGeometry(0.12, 8, 8);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffff00 });
-  const bullet = new THREE.Mesh(geo, mat);
-  bullet.position.copy(camera.position);
-  const dir = new THREE.Vector3();
-  camera.getWorldDirection(dir);
-  bullet.userData={ velocity: dir.multiplyScalar(2), lifeTime:0, damage:damagePerShot };
-  scene.add(bullet);
-  bullets.push(bullet);
-  player.ammo--;
-  player.lastShotTime = now;
-  document.getElementById('ammoCount').textContent = player.ammo;
-}
-
-// Перезарядка
-function reload() {
-  if(player.isReloading || player.ammo===player.maxAmmo) return;
-  player.isReloading=true;
-  setTimeout(()=> {
-    player.ammo=player.maxAmmo; 
-    player.isReloading=false;
-    document.getElementById('ammoCount').textContent=player.ammo;
-  }, player.reloadTime*1000);
-}
-
-// Тема
-function toggleTheme() {
-  document.body.classList.toggle('dark');
-  scene.background.setHex(document.body.classList.contains('dark') ? 0x111 : 0x202020);
-}
-
-// Обработка движения
-function handlePlayerMovement(delta) {
-  const boundary=98;
-  if(!moveCameraMode && player.hp>0) {
-    if(keys['w']) player.position.z -= player.speed;
-    if(keys['s']) player.position.z += player.speed;
-    if(keys['a']) player.position.x -= player.speed;
-    if(keys['d']) player.position.x += player.speed;
-    player.position.x = Math.max(-boundary, Math.min(boundary, player.position.x));
-    player.position.z = Math.max(-boundary, Math.min(boundary, player.position.z));
-  }
-}
-
-// Обновление камеры
-function updateCamera() {
-  camera.position.x = player.position.x;
-  camera.position.z = player.position.z + 2;
-  camera.position.y = player.position.y + 1;
-  camera.lookAt(player.position.x, player.position.y, player.position.z);
-}
-
-// Основной цикл
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-
-  if(player.hp<=0) {
-    alert("Вы проиграли! Перезагрузите страницу");
-    return;
-  }
-
-  handlePlayerMovement(delta);
-  updateCamera();
-
-  // Обновление врагов
-  enemies.forEach(e => {
-    // Уклонение
-    const toPlayer = new THREE.Vector3().subVectors(player.position, e.position);
-    const avoidDir = new THREE.Vector3().crossVectors(toPlayer, new THREE.Vector3(0,1,0)).normalize();
-    avoidDir.multiplyScalar(0.02);
-    e.userData.velocity.add(avoidDir);
-    e.userData.velocity.clampLength(0, 0.03);
-    e.position.add(e.userData.velocity);
-    e.userData.velocity.multiplyScalar(0.95);
-
-    // Стрельба врагов
-    if(e.userData.attackCooldown <=0 && e.position.distanceTo(player.position)<20) {
-      enemyShoot(e);
-      e.userData.attackCooldown= Math.random()*3+2;
-    } else {
-      e.userData.attackCooldown -= delta;
-    }
-  });
-
-  // Обновление пуль
-  for(let i=bullets.length-1; i>=0; i--) {
-    const b=bullets[i];
-    b.position.add(b.userData.velocity);
-    b.userData.lifeTime+=delta;
-    if(b.position.length()>300 || b.userData.lifeTime>3) {
-      scene.remove(b); bullets.splice(i,1);
-    } else {
-      // Попадание в врагов
-      for(let j=enemies.length-1; j>=0; j--) {
-        const e=enemies[j];
-        if(b.position.distanceTo(e.position)<e.userData.size+0.12) {
-          e.userData.health -= b.userData.damage;
-          scene.remove(b);
-          bullets.splice(i,1);
-          if(e.userData.health<=0) {
-            scene.remove(e);
-            enemies.splice(j,1);
-            createExplosion(e.position);
-            score+=10;
-            spawnEnemy();
-          }
-          break;
-        }
-      }
-    }
-  }
-
-  // Взаимодействие врагов и игрока
-  enemies.forEach(e => {
-    if(e.position.distanceTo(player.position)<e.userData.size+0.3) {
-      player.hp -= 0.2;
-      document.getElementById('playerHP').textContent = Math.max(0, Math.round(player.hp));
-    }
-  });
-
-  // Враги стреляют по игроку
-  enemies.forEach(e => {
-    if(e.userData.attackCooldown<=0 && e.position.distanceTo(player.position)<20) {
-      enemyShoot(e);
-      e.userData.attackCooldown=Math.random()*3+2;
-    } else {
-      e.userData.attackCooldown -= delta;
-    }
-  });
-
-  // Обновление частиц
-  for(let i=particles.length-1; i>=0; i--) {
-    const p=particles[i];
-    p.position.add(p.userData.velocity);
-    p.userData.life+=delta;
-    if(p.userData.life>1) {
-      scene.remove(p);
-      particles.splice(i,1);
-    }
-  }
-
-  // Обработка подбора аптечек
-  for(let i=pickups.length-1; i>=0; i--) {
-    const p=pickups[i];
-    if(player.position.distanceTo(p.position)<1.5) {
-      if(p.userData.type==='health') {
-        player.hp = Math.min(player.maxHp, player.hp + p.userData.amount);
-        document.getElementById('playerHP').textContent=player.hp;
-      }
-      scene.remove(p);
-      pickups.splice(i,1);
-    }
-  }
-
-  // Обновление UI
-  document.getElementById('playerHP').textContent = Math.max(0, Math.round(player.hp));
-  document.getElementById('score').textContent = score;
-  document.getElementById('ammoCount').textContent=player.ammo;
-
-  renderer.render(scene, camera);
-}
-
-// Враг стреляет
-function enemyShoot(enemy) {
-  const geo = new THREE.SphereGeometry(0.1,8,8);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-  const bullet = new THREE.Mesh(geo, mat);
-  bullet.position.copy(enemy.position);
-  const dir = new THREE.Vector3().subVectors(player.position, enemy.position).normalize();
-  bullet.userData={ velocity: dir.multiplyScalar(2), lifeTime:0, damage:20 };
-  scene.add(bullet);
-  bullets.push(bullet);
-}
-
-// Взрыв
-function createExplosion(pos) {
-  const count=20;
-  for(let i=0;i<count;i++) {
-    const geo=new THREE.SphereGeometry(0.05,6,6);
-    const mat=new THREE.MeshStandardMaterial({ color:0xffaa00 });
-    const p=new THREE.Mesh(geo,mat);
-    p.position.copy(pos);
-    p.userData={ velocity: new THREE.Vector3((Math.random()-0.5)*2, Math.random()*2, (Math.random()-0.5)*2), life:0 };
-    scene.add(p);
-    particles.push(p);
-  }
-}
 </script>
+
 </body>
 </html>
