@@ -2,196 +2,189 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Песочница — Продвинутая версия</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>3D стрелялка с ИИ</title>
 <style>
-  body {
-    margin: 0;
-    background: #222;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-  }
+  body { margin: 0; overflow: hidden; }
+  canvas { display: block; }
   #ui {
-    position: absolute;
-    top: 10px; left: 10px; right: 10px;
-    display: flex;
-    gap: 10px;
-    z-index: 10;
+    position: absolute; top: 10px; left: 10px; z-index: 10;
+    color: #fff; font-family: Arial, sans-serif;
   }
   button {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 4px;
-    background: #ffb347;
-    cursor: pointer;
+    padding: 8px 12px; margin-right: 10px; border: none; border-radius: 4px; background: #4CAF50; cursor: pointer;
   }
   button:hover {
-    background: #ff8c42;
-  }
-  #fpsCounter {
-    color: #fff;
-    font-size: 14px;
-    margin-left: 20px;
-  }
-  #gameCanvas {
-    display: block;
+    background: #45a049;
   }
 </style>
 </head>
 <body>
 
 <div id="ui">
-  <button id="addBox">Добавить блок</button>
-  <button id="toggleGravity">Гравитация: Вкл/Выкл</button>
-  <button id="pauseBtn">Пауза</button>
-  <button id="clearBtn">Очистить</button>
-  <div id="fpsCounter"></div>
+  <button id="shootBtn">Стрелять</button>
 </div>
-<canvas id="gameCanvas"></canvas>
 
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+let scene, camera, renderer;
+let clock = new THREE.Clock();
 
-let width = window.innerWidth;
-let height = window.innerHeight;
-canvas.width = width;
-canvas.height = height;
+const bullets = [];
+const enemies = [];
 
-window.onresize = () => {
-  width = window.innerWidth;
-  height = window.innerHeight;
-  canvas.width = width;
-  canvas.height = height;
+const player = {
+  position: new THREE.Vector3(0, 1.6, 5),
+  speed: 0.2,
+  canShoot: true
 };
 
-// Настройки
-let objects = [];
-let gravityEnabled = true;
-let paused = false;
+init();
+animate();
 
-// Объявление классов объектов
-class GameObject {
-  constructor(x, y, w, h, color) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.color = color;
-    this.vx = 0;
-    this.vy = 0;
-    this.isStatic = false; // статичный объект (например, платформа)
-    this.id = Math.random().toString(36).substr(2, 9);
+function init() {
+  // Создаем сцену
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x202020);
+
+  // Камера
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    200
+  );
+  camera.position.copy(player.position);
+  camera.lookAt(0, 1.6, 0);
+
+  // Освещение
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(10, 20, 10);
+  scene.add(dirLight);
+
+  // Пол (земля)
+  const groundGeo = new THREE.PlaneGeometry(100, 100);
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x555555 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI/2;
+  scene.add(ground);
+
+  // Враги
+  for (let i=0; i<10; i++) {
+    spawnEnemy();
   }
-  update() {
-    if (!this.isStatic && !paused) {
-      if (gravityEnabled) this.vy += 0.5; // гравитация
-      this.x += this.vx;
-      this.y += this.vy;
 
-      // Столкновения с полом
-      if (this.y + this.h > height) {
-        this.y = height - this.h;
-        this.vy = 0;
-      }
+  // Рендерер
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
 
-      // Столкновения с боками
-      if (this.x < 0) {
-        this.x = 0;
-        this.vx *= -0.5;
-      }
-      if (this.x + this.w > width) {
-        this.x = width - this.w;
-        this.vx *= -0.5;
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Стрельба
+  document.getElementById('shootBtn').onclick = () => {
+    shoot();
+  };
+
+  // Управление камерой (WASD)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'w') {
+      camera.position.z -= player.speed;
+    } else if (e.key === 's') {
+      camera.position.z += player.speed;
+    } else if (e.key === 'a') {
+      camera.position.x -= player.speed;
+    } else if (e.key === 'd') {
+      camera.position.x += player.speed;
+    }
+  });
+
+  // Мышь для прицеливания
+  document.addEventListener('mousemove', (e) => {
+    // Поворот камеры
+    const deltaX = e.movementX || 0;
+    const deltaY = e.movementY || 0;
+    camera.rotation.y -= deltaX * 0.002;
+    camera.rotation.x -= deltaY * 0.002;
+    camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+  });
+}
+
+function spawnEnemy() {
+  const size = Math.random() * 1 + 0.5;
+  const geo = new THREE.SphereGeometry(size, 16, 16);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+  const enemy = new THREE.Mesh(geo, mat);
+  enemy.position.x = (Math.random() - 0.5) * 50;
+  enemy.position.z = (Math.random() - 0.5) * 50;
+  enemy.userData = {
+    health: 50,
+    state: 'idle',
+    targetPosition: new THREE.Vector3()
+  };
+  enemies.push(enemy);
+  scene.add(enemy);
+}
+
+// Стрельба
+function shoot() {
+  const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+  const material = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+  const bullet = new THREE.Mesh(geometry, material);
+  bullet.position.copy(camera.position);
+
+  // Направление камеры
+  const direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+  bullet.userData = { velocity: direction.multiplyScalar(1.5) };
+  bullets.push(bullet);
+  scene.add(bullet);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+
+  // Обновление пуль
+  for (let i=bullets.length-1; i>=0; i--) {
+    const b = bullets[i];
+    b.position.add(b.userData.velocity);
+    // Удаление за границами
+    if (b.position.length() > 200) {
+      scene.remove(bullets.splice(i, 1)[0]);
+    }
+    // Столкновения с врагами
+    for (let j=enemies.length-1; j>=0; j--) {
+      const e = enemies[j];
+      if (b.position.distanceTo(e.position) < e.geometry.parameters.radius + 0.1) {
+        e.userData.health -= 25;
+        scene.remove(bullets.splice(i, 1)[0]);
+        if (e.userData.health <= 0) {
+          scene.remove(e);
+          enemies.splice(j, 1);
+        }
+        break;
       }
     }
   }
-  draw() {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.w, this.h);
+
+  // Обновление врагов — ИИ (движение к игроку, уклонение)
+  for (let e of enemies) {
+    // Простая логика ИИ: враг бежит к камере
+    const dir = new THREE.Vector3().subVectors(camera.position, e.position).normalize();
+    // Немного добавим случайности
+    e.position.add(dir.multiplyScalar(0.01));
+    // Можно добавить уклонение, обход препятствий и стрельбу
   }
+
+  renderer.render(scene, camera);
 }
-
-// Создание базовых объектов
-function createBox(x, y, w=50, h=50, color='#ffa07a') {
-  const obj = new GameObject(x, y, w, h, color);
-  objects.push(obj);
-}
-
-// Обработка интерфейса
-document.getElementById('addBox').onclick = () => {
-  createBox(Math.random() * (width - 50), 50);
-};
-
-let gravityToggle = true;
-document.getElementById('toggleGravity').onclick = () => {
-  gravityEnabled = !gravityEnabled;
-};
-
-document.getElementById('pauseBtn').onclick = () => {
-  paused = !paused;
-};
-
-document.getElementById('clearBtn').onclick = () => {
-  objects = [];
-};
-
-// Взаимодействие с мышью
-let selectedObject = null;
-let offsetX = 0;
-let offsetY = 0;
-
-canvas.onmousedown = (e) => {
-  for (let obj of objects) {
-    if (
-      e.offsetX >= obj.x && e.offsetX <= obj.x + obj.w &&
-      e.offsetY >= obj.y && e.offsetY <= obj.y + obj.h
-    ) {
-      selectedObject = obj;
-      offsetX = e.offsetX - obj.x;
-      offsetY = e.offsetY - obj.y;
-      break;
-    }
-  }
-};
-
-canvas.onmousemove = (e) => {
-  if (selectedObject) {
-    selectedObject.x = e.offsetX - offsetX;
-    selectedObject.y = e.offsetY - offsetY;
-    selectedObject.vx = 0;
-    selectedObject.vy = 0;
-  }
-};
-
-canvas.onmouseup = () => {
-  selectedObject = null;
-};
-
-// Основной цикл
-let fpsCounter = document.getElementById('fpsCounter');
-let lastTime = performance.now();
-let fps = 0;
-
-function gameLoop() {
-  if (!paused) {
-    ctx.clearRect(0, 0, width, height);
-    for (let obj of objects) {
-      obj.update();
-      obj.draw();
-    }
-  }
-  // FPS расчет
-  const now = performance.now();
-  fps = Math.round(1000 / (now - lastTime));
-  lastTime = now;
-  fpsCounter.innerText = `FPS: ${fps}`;
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-
 </script>
-
 </body>
 </html>
