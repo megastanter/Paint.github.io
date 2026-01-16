@@ -3,106 +3,195 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RelaxPlay - Мини-игры для отдыха</title>
+<title>Песочница — Продвинутая версия</title>
 <style>
   body {
     margin: 0;
-    font-family: 'Arial', sans-serif;
-    background-color: #fef0e6; /* светлый персиковый */
-    color: #333;
-  }
-  header {
-    background-color: #ffe0b2; /* бежевый оттенок */
-    padding: 20px;
-    text-align: center;
-  }
-  header h1 {
-    margin: 0;
-    color: #d2691e; /* тёплый коричневый цвет */
-  }
-  .intro {
-    padding: 20px;
-    text-align: center;
-  }
-  .btn {
-    background-color: #ffb347; /* персиковый */
-    padding: 15px 30px;
-    border: none;
-    border-radius: 25px;
-    font-size: 1.2em;
-    cursor: pointer;
-    color: #fff;
-    transition: background 0.3s;
-  }
-  .btn:hover {
-    background-color: #ff8c42;
-  }
-  .games-section {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 20px;
-  }
-  .game-card {
-    background-color: #fff3e0; /* очень светлый персиковый */
-    border-radius: 15px;
-    margin: 10px;
-    width: 200px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background: #222;
+    font-family: Arial, sans-serif;
     overflow: hidden;
+  }
+  #ui {
+    position: absolute;
+    top: 10px; left: 10px; right: 10px;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    gap: 10px;
+    z-index: 10;
   }
-  .game-card img {
-    width: 100%;
-    border-bottom: 1px solid #ffe0b2;
+  button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #ffb347;
+    cursor: pointer;
   }
-  .game-card h3 {
-    margin: 10px 0;
-    font-size: 1.2em;
+  button:hover {
+    background: #ff8c42;
   }
-  .footer {
-    background-color: #ffe0b2;
-    padding: 15px;
-    text-align: center;
+  #fpsCounter {
+    color: #fff;
+    font-size: 14px;
+    margin-left: 20px;
+  }
+  #gameCanvas {
+    display: block;
   }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>RelaxPlay</h1>
-</header>
-
-<div class="intro">
-  <h2>Мини-игры для быстрого отдыха</h2>
-  <p>Выбирайте любимые игры и расслабляйтесь!</p>
-  <button class="btn">Играть сейчас</button>
+<div id="ui">
+  <button id="addBox">Добавить блок</button>
+  <button id="toggleGravity">Гравитация: Вкл/Выкл</button>
+  <button id="pauseBtn">Пауза</button>
+  <button id="clearBtn">Очистить</button>
+  <div id="fpsCounter"></div>
 </div>
+<canvas id="gameCanvas"></canvas>
 
-<h2 style="text-align:center;">Популярные игры</h2>
-<div class="games-section">
-  <div class="game-card">
-    <img src="https://via.placeholder.com/200x150.png?text=Игра+1" alt="Игра 1" />
-    <h3>Бегущий кот</h3>
-    <button class="btn">Играть</button>
-  </div>
-  <div class="game-card">
-    <img src="https://via.placeholder.com/200x150.png?text=Игра+2" alt="Игра 2" />
-    <h3>Ловля фруктов</h3>
-    <button class="btn">Играть</button>
-  </div>
-  <div class="game-card">
-    <img src="https://via.placeholder.com/200x150.png?text=Игра+3" alt="Игра 3" />
-    <h3>Пазл-собиралка</h3>
-    <button class="btn">Играть</button>
-  </div>
-</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-<div class="footer">
-  <p>&copy; 2024 RelaxPlay. Все права защищены.</p>
-</div>
+let width = window.innerWidth;
+let height = window.innerHeight;
+canvas.width = width;
+canvas.height = height;
+
+window.onresize = () => {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+};
+
+// Настройки
+let objects = [];
+let gravityEnabled = true;
+let paused = false;
+
+// Объявление классов объектов
+class GameObject {
+  constructor(x, y, w, h, color) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.color = color;
+    this.vx = 0;
+    this.vy = 0;
+    this.isStatic = false; // статичный объект (например, платформа)
+    this.id = Math.random().toString(36).substr(2, 9);
+  }
+  update() {
+    if (!this.isStatic && !paused) {
+      if (gravityEnabled) this.vy += 0.5; // гравитация
+      this.x += this.vx;
+      this.y += this.vy;
+
+      // Столкновения с полом
+      if (this.y + this.h > height) {
+        this.y = height - this.h;
+        this.vy = 0;
+      }
+
+      // Столкновения с боками
+      if (this.x < 0) {
+        this.x = 0;
+        this.vx *= -0.5;
+      }
+      if (this.x + this.w > width) {
+        this.x = width - this.w;
+        this.vx *= -0.5;
+      }
+    }
+  }
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.w, this.h);
+  }
+}
+
+// Создание базовых объектов
+function createBox(x, y, w=50, h=50, color='#ffa07a') {
+  const obj = new GameObject(x, y, w, h, color);
+  objects.push(obj);
+}
+
+// Обработка интерфейса
+document.getElementById('addBox').onclick = () => {
+  createBox(Math.random() * (width - 50), 50);
+};
+
+let gravityToggle = true;
+document.getElementById('toggleGravity').onclick = () => {
+  gravityEnabled = !gravityEnabled;
+};
+
+document.getElementById('pauseBtn').onclick = () => {
+  paused = !paused;
+};
+
+document.getElementById('clearBtn').onclick = () => {
+  objects = [];
+};
+
+// Взаимодействие с мышью
+let selectedObject = null;
+let offsetX = 0;
+let offsetY = 0;
+
+canvas.onmousedown = (e) => {
+  for (let obj of objects) {
+    if (
+      e.offsetX >= obj.x && e.offsetX <= obj.x + obj.w &&
+      e.offsetY >= obj.y && e.offsetY <= obj.y + obj.h
+    ) {
+      selectedObject = obj;
+      offsetX = e.offsetX - obj.x;
+      offsetY = e.offsetY - obj.y;
+      break;
+    }
+  }
+};
+
+canvas.onmousemove = (e) => {
+  if (selectedObject) {
+    selectedObject.x = e.offsetX - offsetX;
+    selectedObject.y = e.offsetY - offsetY;
+    selectedObject.vx = 0;
+    selectedObject.vy = 0;
+  }
+};
+
+canvas.onmouseup = () => {
+  selectedObject = null;
+};
+
+// Основной цикл
+let fpsCounter = document.getElementById('fpsCounter');
+let lastTime = performance.now();
+let fps = 0;
+
+function gameLoop() {
+  if (!paused) {
+    ctx.clearRect(0, 0, width, height);
+    for (let obj of objects) {
+      obj.update();
+      obj.draw();
+    }
+  }
+  // FPS расчет
+  const now = performance.now();
+  fps = Math.round(1000 / (now - lastTime));
+  lastTime = now;
+  fpsCounter.innerText = `FPS: ${fps}`;
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+</script>
 
 </body>
 </html>
