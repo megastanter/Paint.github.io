@@ -2,134 +2,84 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>2D Майнкрафт</title>
+<title>Эмулятор iPhone</title>
 <style>
   body {
     margin: 0;
-    overflow: hidden;
+    background: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
   }
-  #gameCanvas {
-    border: 1px solid #000;
-    display: block;
-    background-color: #87CEEB; /* небо */
+
+  .iphone {
+    position: relative;
+    width: 300px;
+    height: 600px;
+    border: 20px solid #222;
+    border-radius: 40px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    background-color: #000;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Верхняя полоса - динамик */
+  .notch {
+    height: 40px;
+    background: #222;
+    border-radius: 0 0 10px 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  /* Экран */
+  .screen {
+    flex: 1;
+    background-color: #fff;
+    margin: 10px;
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    color: #333;
+  }
+
+  /* Кнопка дома */
+  .home-button {
+    width: 60px;
+    height: 60px;
+    background: #222;
+    border-radius: 50%;
+    margin: 20px auto;
+    cursor: pointer;
+    box-shadow: inset 0 0 8px rgba(255,255,255,0.3);
+    transition: background 0.3s;
+  }
+  .home-button:hover {
+    background: #555;
   }
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div class="iphone">
+  <div class="notch"></div>
+  <div class="screen" id="screen">Главный экран</div>
+  <div class="home-button" id="homeBtn" title="Домой"></div>
+</div>
+
 <script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const screen = document.getElementById('screen');
+const homeBtn = document.getElementById('homeBtn');
 
-const tileSize = 40;
-const worldWidth = 50;
-const worldHeight = 20;
-
-// Создаем мир - массив блоков
-let world = [];
-for (let y=0; y<worldHeight; y++) {
-    world[y] = [];
-    for (let x=0; x<worldWidth; x++) {
-        if (y > 14) {
-            world[y][x] = 'grass'; // земля
-        } else {
-            world[y][x] = null; // пусто
-        }
-    }
-}
-
-// Персонаж
-let player = {
-    x: 5,
-    y: 14,
-    width: tileSize,
-    height: tileSize,
-    color: 'red',
-    vx: 0,
-    vy: 0,
-    onGround: false
-};
-
-const keys = {};
-
-// Обработка клавиш
-window.addEventListener('keydown', (e) => {
-    keys[e.key] = true;
+homeBtn.addEventListener('click', () => {
+  // Меняем содержимое экрана при нажатии
+  screen.innerHTML = 'Домашний экран';
 });
-window.addEventListener('keyup', (e) => {
-    keys[e.key] = false;
-});
-
-// Основной цикл
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-function update() {
-    // управление
-    if (keys['ArrowLeft']) {
-        player.x -= 2;
-    }
-    if (keys['ArrowRight']) {
-        player.x += 2;
-    }
-    if (keys['ArrowUp'] && player.onGround) {
-        player.vy = -10; // прыжок
-        player.onGround = false;
-    }
-
-    // гравитация
-    player.vy += 0.5;
-    player.y += player.vy;
-
-    // коллизия с землей
-    if (player.y + player.height > worldHeight * tileSize) {
-        player.y = worldHeight * tileSize - player.height;
-        player.vy = 0;
-        player.onGround = true;
-    } else {
-        // проверка блоков под персонажем
-        const tileX = Math.floor((player.x + player.width/2) / tileSize);
-        const tileY = Math.floor((player.y + player.height) / tileSize);
-        if (world[tileY] && world[tileY][tileX]) {
-            player.y = tileY * tileSize - player.height;
-            player.vy = 0;
-            player.onGround = true;
-        } else {
-            player.onGround = false;
-        }
-    }
-
-    // ограничение по границам
-    if (player.x < 0) player.x = 0;
-    if (player.x + player.width > worldWidth * tileSize) {
-        player.x = worldWidth * tileSize - player.width;
-    }
-}
-
-// рисуем
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // рисуем блоки
-    for (let y=0; y<worldHeight; y++) {
-        for (let x=0; x<worldWidth; x++) {
-            if (world[y][x]) {
-                ctx.fillStyle = 'green';
-                ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
-            }
-        }
-    }
-
-    // рисуем персонажа
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, player.width, player.height);
-}
-
-// запуск
-gameLoop();
 </script>
 </body>
 </html>
