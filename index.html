@@ -2,303 +2,309 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Paint - Аналог Windows</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Paint Modern - Windows 11 Style</title>
+<!-- Подключение шрифтов и стилей для Windows 11 -->
+<link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
 <style>
+  /* Общий стиль страницы */
   body {
     margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f0f0;
     display: flex;
     flex-direction: column;
-    font-family: Arial, sans-serif;
   }
+
+  /* Заголовок */
+  header {
+    background: linear-gradient(90deg, #ffffff, #e5e5e5);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+  }
+
+  /* Панель инструментов */
   #toolbar {
     display: flex;
+    background: #ffffff;
     padding: 10px;
-    background: #eee;
-    flex-wrap: wrap;
-    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #ccc;
   }
-  button, input[type=color], select {
-    margin-right: 10px;
-    margin-bottom: 5px;
+
+  /* Кнопки инструментов */
+  .tool-btn {
+    background: #f3f3f3;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
   }
-  #canvasContainer {
+
+  .tool-btn:hover {
+    background: #e0e0e0;
+  }
+
+  /* Активная кнопка */
+  .tool-btn.active {
+    background: #0078D4;
+    color: white;
+    border-color: #005a9e;
+  }
+
+  /* Основной холст */
+  #canvas-container {
     flex: 1;
-    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #eaeaea;
   }
+
   canvas {
-    border: 1px solid #000;
-    display: block;
-    width: 100%;
-    height: calc(100vh - 80px);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+  }
+
+  /* Подвал или дополнительные настройки */
+  #settings {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 20px;
+    background: #ffffff;
+    border-top: 1px solid #ccc;
+  }
+
+  /* В стиле Windows 11: слайдер для толщины линий */
+  input[type=range] {
+    width: 150px;
+  }
+
+  /* Цвета */
+  .color-picker {
+    display: flex;
+    gap: 6px;
+  }
+
+  .color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
+
+  /* Меню выбора цвета */
+  .color-swatch.selected {
+    border: 2px solid #0078D4;
   }
 </style>
 </head>
 <body>
 
+<header>
+  <h1>Paint Modern</h1>
+</header>
+
+<!-- Панель инструментов -->
 <div id="toolbar">
-  <!-- Инструменты -->
-  <button id="pencilBtn">Карандаш</button>
-  <button id="brushBtn">Кисть</button>
-  <button id="eraserBtn">Ластик</button>
-  <button id="lineBtn">Линия</button>
-  <button id="rectBtn">Прямоугольник</button>
-  <button id="ellipseBtn">Эллипс</button>
-  <button id="textBtn">Текст</button>
-  <button id="fillBtn">Заливка</button>
-  <button id="selectBtn">Выделение</button>
-  <button id="clearBtn">Очистить</button>
-  <button id="undoBtn">Отмена</button>
-  <button id="redoBtn">Повтор</button>
-  <button id="saveBtn">Сохранить</button>
-  <input type="file" id="loadFile" accept="image/*" />
-  <button id="loadBtn">Загрузить</button>
-  
-  <!-- Настройки -->
-  <label>Цвет:
-    <input type="color" id="colorPicker" value="#000000" />
-  </label>
-  <label>Толщина:
-    <select id="lineWidth">
-      <option value="1">1px</option>
-      <option value="3" selected>3px</option>
-      <option value="5">5px</option>
-      <option value="10">10px</option>
-    </select>
-  </label>
+  <button class="tool-btn" id="brush" title="Кисть (B)">🖌️</button>
+  <button class="tool-btn" id="eraser" title="Ластик (E)">🧴</button>
+  <button class="tool-btn" id="line" title="Линия (L)">📏</button>
+  <button class="tool-btn" id="rectangle" title="Прямоугольник (R)">▭</button>
+  <button class="tool-btn" id="circle" title="Круг (C)">⚪️</button>
+  <button class="tool-btn" id="fill" title="Заливка (F)">🪣</button>
+  <button class="tool-btn" id="colorPickerBtn" title="Цвет">🎨</button>
+  <button class="tool-btn" id="undo" title="Отмена">↺</button>
+  <button class="tool-btn" id="redo" title="Повтор">↻</button>
+  <button class="tool-btn" id="clear" title="Очистить">🗑️</button>
 </div>
 
-<div id="canvasContainer">
-  <canvas id="paintCanvas"></canvas>
+<!-- Панель выбора цвета -->
+<div id="settings">
+  <div class="color-picker" id="colorPicker">
+    <div class="color-swatch" style="background-color: black;" data-color="#000000"></div>
+    <div class="color-swatch" style="background-color: red;" data-color="#FF0000"></div>
+    <div class="color-swatch" style="background-color: green;" data-color="#00FF00"></div>
+    <div class="color-swatch" style="background-color: blue;" data-color="#0000FF"></div>
+    <div class="color-swatch" style="background-color: yellow;" data-color="#FFFF00"></div>
+    <div class="color-swatch" style="background-color: purple;" data-color="#800080"></div>
+  </div>
+  <label for="lineWidth">Толщина линии:</label>
+  <input type="range" id="lineWidth" min="1" max="50" value="3" />
+</div>
+
+<!-- Контейнер холста -->
+<div id="canvas-container">
+  <canvas id="paintCanvas" width="800" height="600"></canvas>
 </div>
 
 <script>
-const canvas = document.getElementById('paintCanvas');
-const ctx = canvas.getContext('2d');
+  // Получение элементов
+  const canvas = document.getElementById('paintCanvas');
+  const ctx = canvas.getContext('2d');
 
-let currentTool = 'pencil'; // инструмент
-let drawing = false;
-let startX = 0;
-let startY = 0;
-let savedImage = null;
-let currentColor = document.getElementById('colorPicker').value;
-let lineWidth = parseInt(document.getElementById('lineWidth').value);
-let undoStack = [];
-let redoStack = [];
-let fillColor = currentColor;
-let selection = null; // для выделения
-let selectionCanvas = null; // для сохранения выделенной области
+  const buttons = document.querySelectorAll('.tool-btn');
+  const colorSwatches = document.querySelectorAll('.color-swatch');
+  const lineWidthRange = document.getElementById('lineWidth');
 
-// Настройки
-document.getElementById('colorPicker').addEventListener('change', (e) => {
-  currentColor = e.target.value;
-});
-document.getElementById('lineWidth').addEventListener('change', (e) => {
-  lineWidth = parseInt(e.target.value);
-});
+  let currentTool = 'pencil';
+  let drawing = false;
+  let startX = 0;
+  let startY = 0;
+  let currentColor = '#000000';
+  let lineWidth = 3;
 
-// Размер холста под окно
-function resizeCanvas() {
-  const container = document.getElementById('canvasContainer');
-  canvas.width = container.clientWidth;
-  canvas.height = container.clientHeight;
-  redraw();
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+  // История для undo/redo
+  const history = [];
+  let historyStep = -1;
 
-// Функция для сохранения состояния (отмена/повтор)
-function saveState() {
-  undoStack.push(canvas.toDataURL());
-  if (undoStack.length > 50) undoStack.shift();
-  redoStack = [];
-}
-
-// Восстановление по истории
-function restoreState(stack, otherStack) {
-  if (stack.length === 0) return;
-  const dataURL = stack.pop();
-  const img = new Image();
-  img.onload = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0);
-  }
-  img.src = dataURL;
-  otherStack.push(dataURL);
-}
-
-// Инструменты
-document.getElementById('pencilBtn').onclick = () => { currentTool='pencil'; };
-document.getElementById('brushBtn').onclick = () => { currentTool='brush'; };
-document.getElementById('eraserBtn').onclick = () => { currentTool='eraser'; };
-document.getElementById('lineBtn').onclick = () => { currentTool='line'; };
-document.getElementById('rectBtn').onclick = () => { currentTool='rect'; };
-document.getElementById('ellipseBtn').onclick = () => { currentTool='ellipse'; };
-document.getElementById('textBtn').onclick = () => { currentTool='text'; };
-document.getElementById('fillBtn').onclick = () => { currentTool='fill'; };
-document.getElementById('selectBtn').onclick = () => { currentTool='select'; };
-
-// Очистка
-document.getElementById('clearBtn').onclick = () => {
-  saveState();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-// Undo / Redo
-document.getElementById('undoBtn').onclick = () => { restoreState(undoStack, redoStack); };
-document.getElementById('redoBtn').onclick = () => {
-  if (redoStack.length > 0) {
-    const dataURL = redoStack.pop();
-    const img = new Image();
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+  function saveState() {
+    if (historyStep < history.length - 1) {
+      history.splice(historyStep + 1);
     }
-    img.src = dataURL;
+    history.push(canvas.toDataURL());
+    historyStep++;
   }
-}
 
-// Сохранение
-document.getElementById('saveBtn').onclick = () => {
-  const dataURL = canvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = dataURL;
-  a.download = 'paint.png';
-  a.click();
-}
-
-// Загрузка изображения
-document.getElementById('loadBtn').onclick = () => {
-  document.getElementById('loadFile').click();
-};
-document.getElementById('loadFile').onchange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(ev) {
+  function undo() {
+    if (historyStep > 0) {
+      historyStep--;
+      const imgData = history[historyStep];
       const img = new Image();
       img.onload = () => {
-        saveState();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = imgData;
+    }
+  }
+
+  function redo() {
+    if (historyStep < history.length - 1) {
+      historyStep++;
+      const imgData = history[historyStep];
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      };
+      img.src = imgData;
+    }
+  }
+
+  // Обработка выбора инструментов
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const id = btn.id;
+      if (id === 'pencil') currentTool = 'pencil';
+      else if (id === 'brush') currentTool = 'brush';
+      else if (id === 'eraser') currentTool = 'eraser';
+      else if (id === 'line') currentTool = 'line';
+      else if (id === 'rectangle') currentTool = 'rectangle';
+      else if (id === 'circle') currentTool = 'circle';
+      else if (id === 'fill') currentTool = 'fill';
+      else if (id === 'undo') undo();
+      else if (id === 'redo') redo();
+      else if (id === 'clear') {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        saveState();
       }
-      img.src = ev.target.result;
-    }
-    reader.readAsDataURL(file);
-  }
-};
+    });
+  });
 
-// Основные обработчики
-canvas.addEventListener('mousedown', (e) => {
-  savingForShape = true;
-  startX = e.offsetX;
-  startY = e.offsetY;
-  if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser') {
+  // Обработка выбора цвета
+  colorSwatches.forEach(swatch => {
+    swatch.addEventListener('click', () => {
+      currentColor = swatch.dataset.color;
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      swatch.classList.add('selected');
+    });
+  });
+
+  // Обработка изменения толщины линии
+  lineWidthRange.addEventListener('change', () => {
+    lineWidth = parseInt(lineWidthRange.value);
+  });
+
+  // Обработка инструментов рисования
+  canvas.addEventListener('mousedown', (e) => {
     drawing = true;
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-  } else if (currentTool === 'fill') {
-    // Простая заливка
+    startX = e.offsetX;
+    startY = e.offsetY;
     saveState();
-    ctx.fillStyle = currentColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  } else if (currentTool === 'text') {
-    const text = prompt('Введите текст');
-    if (text) {
-      saveState();
+
+    if (currentTool === 'fill') {
+      // заливка
       ctx.fillStyle = currentColor;
-      ctx.font = lineWidth * 4 + 'px Arial';
-      ctx.fillText(text, startX, startY);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (currentTool === 'pencil' || currentTool === 'brush') {
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    } else if (currentTool === 'eraser') {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = lineWidth * 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
     }
-  } else if (currentTool === 'select') {
-    // Выделение (простой прямоугольник)
-    selection = {x1: startX, y1: startY, x2: startX, y2: startY};
-  }
-});
+  });
 
-canvas.addEventListener('mousemove', (e) => {
-  if (drawing && (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser')) {
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.strokeStyle = currentTool==='eraser'?'white':currentColor;
-    ctx.lineWidth = currentTool==='brush'?lineWidth*2:lineWidth;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-  } else if (savingForShape && (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse')) {
-    // Для примера, не рисуем тут, рисуем только по отпусканию
-  } else if (currentTool==='select' && selection) {
-    selection.x2 = e.offsetX;
-    selection.y2 = e.offsetY;
-    redraw();
-  }
-});
+  canvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return;
+    if (currentTool === 'pencil' || currentTool === 'brush' || currentTool === 'eraser') {
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+    }
+  });
 
-let savingForShape = false;
-
-canvas.addEventListener('mouseup', (e) => {
-  if (drawing && (currentTool==='pencil' || currentTool==='brush' || currentTool==='eraser')) {
+  canvas.addEventListener('mouseup', (e) => {
+    if (!drawing) return;
     drawing = false;
-    saveState();
-  } else if (savingForShape && (currentTool==='line' || currentTool==='rect' || currentTool==='ellipse')) {
-    saveState();
-    ctx.strokeStyle = currentColor;
-    ctx.lineWidth = lineWidth;
-    ctx.beginPath();
-    if (currentTool==='line') {
+    if (currentTool === 'line') {
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
       ctx.moveTo(startX, startY);
       ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
-    } else if (currentTool==='rect') {
-      ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
-    } else if (currentTool==='ellipse') {
-      // Окружность или эллипс
-      let centerX = (startX + e.offsetX)/2;
-      let centerY = (startY + e.offsetY)/2;
-      let radiusX = Math.abs(e.offsetX - startX)/2;
-      let radiusY = Math.abs(e.offsetY - startY)/2;
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.scale(1, radiusY/radiusX);
+    } else if (currentTool === 'rectangle') {
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = lineWidth;
+      ctx.strokeRect(
+        Math.min(startX, e.offsetX),
+        Math.min(startY, e.offsetY),
+        Math.abs(e.offsetX - startX),
+        Math.abs(e.offsetY - startY)
+      );
+    } else if (currentTool === 'circle') {
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = lineWidth;
+      const radius = Math.hypot(e.offsetX - startX, e.offsetY - startY);
       ctx.beginPath();
-      ctx.arc(0, 0, radiusX, 0, Math.PI * 2);
-      ctx.restore();
+      ctx.arc(startX, startY, radius, 0, Math.PI * 2);
       ctx.stroke();
     }
-    savingForShape = false;
-  } else if (currentTool==='select' && selection) {
-    // Создаем выделение
-    const x = Math.min(selection.x1, selection.x2);
-    const y = Math.min(selection.y1, selection.y2);
-    const w = Math.abs(selection.x2 - selection.x1);
-    const h = Math.abs(selection.y2 - selection.y1);
-    // Создаем временный холст для выделенной области
-    selectionCanvas = document.createElement('canvas');
-    selectionCanvas.width = w;
-    selectionCanvas.height = h;
-    const sctx = selectionCanvas.getContext('2d');
-    sctx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-    // Очищаем выбранную область на основном холсте
-    ctx.clearRect(x, y, w, h);
-    selection = null;
-    redraw();
-  }
-});
+  });
 
-// Двойной клик для вставки выделения
-canvas.addEventListener('dblclick', () => {
-  if (selectionCanvas) {
-    saveState();
-    ctx.drawImage(selectionCanvas, selection.x1, selection.y1);
-    selectionCanvas = null;
-  }
-});
-
-// Функция перерисовки (например, для рамки выделения)
-function redraw() {
-  // Для простоты не рисуем рамки выделения
-}
-
-// Инициализация
-saveState();
 </script>
-
 </body>
 </html>
