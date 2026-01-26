@@ -2,307 +2,243 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<title>Paint Windows 10 - расширенная версия</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Installer — Скачать бесплатно</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
+<!-- Font Awesome для иконок -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
   body {
     margin: 0;
-    background: #ececec;
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', sans-serif;
+    background: #e0f7fa; /* светло-голубой фон */
+    color: #222;
   }
 
-  #toolbar {
+  header {
+    background-color: #039be5; /* насыщенный сине-голубой */
+    padding: 40px 20px;
+    text-align: center;
+    color: #fff;
+    font-size: 3em;
+    font-weight: 700;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  header h1 {
+    margin: 0;
+  }
+
+  nav {
+    display: flex;
+    justify-content: center;
+    background-color: #0288d1; /* чуть темнее */
+    padding: 12px 20px;
+    flex-wrap: wrap;
+  }
+
+  nav a {
+    color: #fff;
+    text-decoration: none;
+    margin: 8px 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    font-size: 1em;
+  }
+
+  nav a i {
+    margin-right: 8px;
+    font-size: 1.2em;
+  }
+
+  .content {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .section {
+    margin-bottom: 60px;
+  }
+
+  .section h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #039be5;
+    border-bottom: 2px solid #039be5;
+    padding-bottom: 8px;
+  }
+
+  .games {
     display: flex;
     flex-wrap: wrap;
-    padding: 10px;
-    background: #f1f1f1;
-    border-bottom: 1px solid #ccc;
-    align-items: center;
+    gap: 20px;
   }
 
-  /* Инструменты */
-  .tool-btn {
-    margin: 0 5px;
-    padding: 8px 12px;
-    cursor: pointer;
-    border: 1px solid #ccc;
+  .game {
     background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: calc(25% - 20px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    transition: transform 0.2s;
+  }
+
+  .game:hover {
+    transform: translateY(-4px);
+  }
+
+  /* Логотипы приложений */
+  .app-logo {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 12px;
+  }
+
+  .game h3 {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    text-align: center;
+    color: #0277bd;
+  }
+
+  .download-btn {
+    display: inline-block;
+    margin-top: auto;
+    padding: 10px 20px;
+    background-color: #039be5; /* сине-голубой */
+    color: #fff;
     border-radius: 4px;
-  }
-  .tool-btn.active {
-    background: #d0e0f0;
-  }
-
-  /* Цвета */
-  #colorPalette {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: 10px;
-  }
-  .color-swatch {
-    width: 24px;
-    height: 24px;
-    margin: 2px;
-    cursor: pointer;
-    border: 1px solid #000;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s;
   }
 
-  /* Размер кисти */
-  #brushSizeContainer {
-    display: flex;
-    align-items: center;
-    margin-left: 10px;
-  }
-  #brushSize {
-    margin-left: 5px;
+  .download-btn:hover {
+    background-color: #0288d1;
   }
 
-  /* Основной контейнер для холста */
-  #canvasContainer {
-    position: relative;
-    margin: auto;
-    margin-top: 10px;
-    border: 1px solid #ccc;
-    background: #fff;
-    width: 1000px;
-    height: 700px;
+  @media(max-width: 1024px) {
+    .game {
+      width: calc(33.333% - 20px);
+    }
   }
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
+
+  @media(max-width: 768px) {
+    .game {
+      width: calc(50% - 20px);
+    }
+  }
+
+  @media(max-width: 480px) {
+    .game {
+      width: 100%;
+    }
+  }
+
+  footer {
+    background-color: #039be5;
+    padding: 20px;
+    color: #fff;
+    text-align: center;
+  }
+
+  /* Общие стили для ссылок в футере */
+  footer a {
+    color: #fff;
+    text-decoration: underline;
   }
 </style>
 </head>
 <body>
 
-<!-- Панель инструментов -->
-<div id="toolbar">
-  <button class="tool-btn" id="pencilBtn">Карандаш</button>
-  <button class="tool-btn" id="brushBtn">Кисть</button>
-  <button class="tool-btn" id="eraserBtn">Ластик</button>
-  <button class="tool-btn" id="lineBtn">Линия</button>
-  <button class="tool-btn" id="rectBtn">Прямоугольник</button>
-  <button class="tool-btn" id="circleBtn">Круг</button>
-  <button class="tool-btn" id="fillBtn">Заливка</button>
-  <button class="tool-btn" id="undoBtn">Отменить</button>
-  <button class="tool-btn" id="redoBtn">Повторить</button>
-  <button class="tool-btn" id="clearBtn">Очистить</button>
-  <button class="tool-btn" id="saveBtn">Сохранить</button>
+<header>
+  <h1>Installer</h1>
+</header>
 
-  <!-- Цветовая палитра -->
-  <div id="colorPalette">
-    <div class="color-swatch" style="background-color:#000000;" data-color="#000000"></div>
-    <div class="color-swatch" style="background-color:#FFFFFF;" data-color="#FFFFFF"></div>
-    <div class="color-swatch" style="background-color:#FF0000;" data-color="#FF0000"></div>
-    <div class="color-swatch" style="background-color:#00FF00;" data-color="#00FF00"></div>
-    <div class="color-swatch" style="background-color:#0000FF;" data-color="#0000FF"></div>
-    <div class="color-swatch" style="background-color:#FFFF00;" data-color="#FFFF00"></div>
-    <div class="color-swatch" style="background-color:#FF00FF;" data-color="#FF00FF"></div>
-    <div class="color-swatch" style="background-color:#00FFFF;" data-color="#00FFFF"></div>
-    <!-- Добавьте больше цветов по необходимости -->
-  </div>
+<nav>
+  <a href="#games">
+    <i class="fas fa-gamepad"></i> Игры
+  </a>
+  <a href="#apps">
+    <i class="fas fa-mobile-alt"></i> Мобильные приложения
+  </a>
+  <a href="#download">
+    <i class="fas fa-download"></i> Скачать
+  </a>
+</nav>
 
-  <!-- Размер кисти -->
-  <div id="brushSizeContainer">
-    <label for="brushSize">Толщина:</label>
-    <input type="range" id="brushSize" min="1" max="50" value="5" />
-  </div>
+<div class="content">
+
+  <section class="section" id="games">
+    <h2>Популярные игры</h2>
+    <div class="games">
+      <div class="game">
+        <img src="https://via.placeholder.com/80?text=Game+1" alt="Game 1"/>
+        <h3>Game 1</h3>
+        <a href="#" class="download-btn">Скачать</a>
+      </div>
+      <div class="game">
+        <img src="https://via.placeholder.com/80?text=Game+2" alt="Game 2"/>
+        <h3>Game 2</h3>
+        <a href="#" class="download-btn">Скачать</a>
+      </div>
+      <div class="game">
+        <img src="https://via.placeholder.com/80?text=Game+3" alt="Game 3"/>
+        <h3>Game 3</h3>
+        <a href="#" class="download-btn">Скачать</a>
+      </div>
+      <div class="game">
+        <img src="https://via.placeholder.com/80?text=Game+4" alt="Game 4"/>
+        <h3>Game 4</h3>
+        <a href="#" class="download-btn">Скачать</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="apps">
+    <h2>Мобильные приложения</h2>
+    <div class="games">
+      <!-- Android -->
+      <div class="game">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Android_robot.png" alt="Android" class="app-logo"/>
+        <h3>Android</h3>
+        <a href="#" class="download-btn">Скачать</a>
+      </div>
+      <!-- iOS -->
+      <div class="game">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/0d/IOS_logo.png" alt="iOS" class="app-logo"/>
+        <h3>iOS</h3>
+        <a href="#" class="download-btn">Скачать</a>
+      </div>
+      <!-- ПК -->
+      <div class="game">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Windows_logo_-_2012.svg" alt="ПК" class="app-logo"/>
+        <h3>ПК</h3>
+        <a href="#" class="download-btn">Скачать</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="download">
+    <h2>Скачать все приложения</h2>
+    <p>Вы можете скачать все необходимые приложения и игры прямо с этого сайта. Просто выберите нужную платформу и нажмите "Скачать".</p>
+    <a href="#" class="download-btn" style="background-color:#0288d1;">Скачать все</a>
+  </section>
+
 </div>
 
-<!-- Холст -->
-<div id="canvasContainer">
-  <canvas id="paintCanvas" width="1000" height="700"></canvas>
-</div>
-
-<script>
-const canvas = document.getElementById('paintCanvas');
-const ctx = canvas.getContext('2d');
-
-let drawing = false;
-let currentColor = '#000000';
-let brushSize = document.getElementById('brushSize').value;
-
-let currentTool = 'pencil'; // pencil, brush, eraser, line, rect, circle, fill
-let startX = 0;
-let startY = 0;
-let savedImageData = null;
-
-const tools = {
-  pencil: document.getElementById('pencilBtn'),
-  brush: document.getElementById('brushBtn'),
-  eraser: document.getElementById('eraserBtn'),
-  line: document.getElementById('lineBtn'),
-  rect: document.getElementById('rectBtn'),
-  circle: document.getElementById('circleBtn'),
-  fill: document.getElementById('fillBtn'),
-  undo: document.getElementById('undoBtn'),
-  redo: document.getElementById('redoBtn'),
-  clear: document.getElementById('clearBtn'),
-  save: document.getElementById('saveBtn')
-};
-
-let undoStack = [];
-let redoStack = [];
-
-// Выбор инструмента
-Object.keys(tools).forEach(key => {
-  if (tools[key]) {
-    tools[key].addEventListener('click', () => {
-      setActiveTool(key);
-    });
-  }
-});
-
-function setActiveTool(tool) {
-  currentTool = tool;
-  // Обновляем визуально активные кнопки
-  Object.keys(tools).forEach(k => {
-    if (tools[k]) {
-      tools[k].classList.remove('active');
-    }
-  });
-  if (tools[tool]) {
-    tools[tool].classList.add('active');
-  }
-}
-
-// Выбор цвета
-document.querySelectorAll('.color-swatch').forEach(swatch => {
-  swatch.addEventListener('click', () => {
-    currentColor = swatch.getAttribute('data-color');
-  });
-});
-
-// Обработка изменения размера кисти
-document.getElementById('brushSize').addEventListener('input', () => {
-  brushSize = document.getElementById('brushSize').value;
-});
-
-// Сохраняем состояние для undo
-function saveState() {
-  undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-  if (undoStack.length > 20) undoStack.shift(); // лимит на стек
-}
-
-// Отменить
-document.getElementById('undoBtn').addEventListener('click', () => {
-  if (undoStack.length > 0) {
-    redoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-    const imageData = undoStack.pop();
-    ctx.putImageData(imageData, 0, 0);
-  }
-});
-
-// Повторить
-document.getElementById('redoBtn').addEventListener('click', () => {
-  if (redoStack.length > 0) {
-    undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-    const imageData = redoStack.pop();
-    ctx.putImageData(imageData, 0, 0);
-  }
-});
-
-// Очистить
-document.getElementById('clearBtn').addEventListener('click', () => {
-  saveState();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
-
-// Сохранить изображение
-document.getElementById('saveBtn').addEventListener('click', () => {
-  const dataURL = canvas.toDataURL('image/png');
-  const link = document.createElement('a');
-  link.href = dataURL;
-  link.download = 'paint.png';
-  link.click();
-});
-
-// Основные события рисования
-canvas.addEventListener('mousedown', (e) => {
-  saveState();
-  drawing = true;
-  startX = e.offsetX;
-  startY = e.offsetY;
-  if (currentTool === 'fill') {
-    fillCanvas(currentColor);
-  } else if (currentTool === 'pencil' || currentTool === 'brush') {
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = currentColor;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-  } else if (currentTool === 'eraser') {
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-  }
-});
-
-canvas.addEventListener('mouseup', (e) => {
-  if (!drawing) return;
-  drawing = false;
-
-  if (currentTool === 'line') {
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = currentColor;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-  } else if (currentTool === 'rect') {
-    ctx.lineWidth = brushSize;
-    ctx.strokeStyle = currentColor;
-    ctx.strokeRect(
-      Math.min(startX, e.offsetX),
-      Math.min(startY, e.offsetY),
-      Math.abs(e.offsetX - startX),
-      Math.abs(e.offsetY - startY)
-    );
-  } else if (currentTool === 'circle') {
-    ctx.lineWidth = brushSize;
-    ctx.strokeStyle = currentColor;
-    const radius = Math.hypot(e.offsetX - startX, e.offsetY - startY);
-    ctx.beginPath();
-    ctx.arc(startX, startY, radius, 0, Math.PI * 2);
-    ctx.stroke();
-  } else {
-    ctx.closePath();
-  }
-});
-
-canvas.addEventListener('mousemove', (e) => {
-  if (!drawing) return;
-
-  if (currentTool === 'pencil' || currentTool === 'brush') {
-    ctx.lineWidth = brushSize;
-    ctx.strokeStyle = currentColor;
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-  } else if (currentTool === 'eraser') {
-    ctx.lineWidth = brushSize;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineTo(e.offsetX, e.offsetY);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
-  } else if (currentTool === 'line' || currentTool === 'rect' || currentTool === 'circle') {
-    // Для фигур — рисуем временно на новом холсте
-    // Можно реализовать с помощью сохранения исходного состояния
-  }
-});
-
-// Реализация заливки (функция)
-function fillCanvas(color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-</script>
+<footer>
+  &copy; 2024 Installer. Все права защищены. <br/>
+  <a href="#">Обратная связь</a>
+</footer>
 
 </body>
 </html>
