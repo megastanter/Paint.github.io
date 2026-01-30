@@ -3,242 +3,299 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Installer</title>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
-<!-- Font Awesome для иконок -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<title>Классические Игры в Современном Стиле</title>
+<!-- Подключение шрифтов -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
 <style>
   body {
     margin: 0;
-    font-family: 'Roboto', sans-serif;
-    background: #e0f7fa; /* светло-голубой фон */
-    color: #222;
+    font-family: 'Montserrat', sans-serif;
+    background-color: #121212;
+    color: #fff;
   }
 
   header {
-    background-color: #039be5; /* насыщенный сине-голубой */
-    padding: 40px 20px;
+    background: linear-gradient(90deg, #1e3c72, #2a5298);
+    padding: 30px 20px;
     text-align: center;
-    color: #fff;
-    font-size: 3em;
-    font-weight: 700;
-    letter-spacing: 2px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
 
   header h1 {
     margin: 0;
+    font-size: 2.8em;
+    letter-spacing: 2px;
   }
 
-  nav {
-    display: flex;
-    justify-content: center;
-    background-color: #0288d1; /* чуть темнее */
-    padding: 12px 20px;
-    flex-wrap: wrap;
-  }
-
-  nav a {
-    color: #fff;
-    text-decoration: none;
-    margin: 8px 16px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    font-size: 1em;
-  }
-
-  nav a i {
-    margin-right: 8px;
+  .intro {
+    max-width: 900px;
+    margin: 20px auto;
+    text-align: center;
     font-size: 1.2em;
-  }
-
-  .content {
-    max-width: 1200px;
-    margin: 40px auto;
     padding: 0 20px;
   }
 
-  .section {
-    margin-bottom: 60px;
-  }
-
-  .section h2 {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #039be5;
-    border-bottom: 2px solid #039be5;
-    padding-bottom: 8px;
-  }
-
-  .games {
-    display: flex;
-    flex-wrap: wrap;
+  /* Сетка игр */
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
+    padding: 20px;
   }
 
-  .game {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    width: calc(25% - 20px);
+  /* Карточка игры */
+  .game-card {
+    background-color: #222;
+    border-radius: 15px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 16px;
-    transition: transform 0.2s;
+    transition: transform 0.3s, box-shadow 0.3s;
   }
 
-  .game:hover {
-    transform: translateY(-4px);
+  .game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
   }
 
-  /* Логотипы приложений */
-  .app-logo {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    margin-bottom: 12px;
+  .game-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
   }
 
-  .game h3 {
-    font-size: 1.1em;
-    margin-bottom: 8px;
-    text-align: center;
-    color: #0277bd;
+  .game-content {
+    padding: 15px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
-  .download-btn {
-    display: inline-block;
-    margin-top: auto;
-    padding: 10px 20px;
-    background-color: #039be5; /* сине-голубой */
+  .game-title {
+    font-size: 1.4em;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+
+  .game-description {
+    font-size: 0.95em;
+    margin-bottom: 15px;
+    color: #ccc;
+  }
+
+  .play-btn {
+    background-color: #1e90ff;
     color: #fff;
-    border-radius: 4px;
-    text-decoration: none;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
     font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s;
+    text-decoration: none;
+  }
+
+  .play-btn:hover {
+    background-color: #0066cc;
+  }
+
+  /* Встроенная игра */
+  #game-container {
+    display: none;
+    padding: 20px;
+  }
+
+  #game-title {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 15px;
+  }
+
+  #iframe-game {
+    width: 100%;
+    height: 700px;
+    border: none;
+    border-radius: 10px;
+  }
+
+  #back-btn {
+    display: block;
+    margin: 20px auto 0 auto;
+    padding: 12px 25px;
+    background-color: #ff4d4d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1em;
     transition: background-color 0.2s;
   }
 
-  .download-btn:hover {
-    background-color: #0288d1;
+  #back-btn:hover {
+    background-color: #cc3a3a;
   }
 
-  @media(max-width: 1024px) {
-    .game {
-      width: calc(33.333% - 20px);
+  /* Адаптация */
+  @media(max-width: 768px){
+    header h1 {
+      font-size: 2em;
     }
-  }
-
-  @media(max-width: 768px) {
-    .game {
-      width: calc(50% - 20px);
+    #game-title {
+      font-size: 1.5em;
     }
-  }
-
-  @media(max-width: 480px) {
-    .game {
-      width: 100%;
-    }
-  }
-
-  footer {
-    background-color: #039be5;
-    padding: 20px;
-    color: #fff;
-    text-align: center;
-  }
-
-  /* Общие стили для ссылок в футере */
-  footer a {
-    color: #fff;
-    text-decoration: underline;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Installer</h1>
+  <h1>Классические Игры в Современном Стиле</h1>
 </header>
 
-<nav>
-  <a href="#games">
-    <i class="fas fa-gamepad"></i> Игры
-  </a>
-  <a href="#apps">
-    <i class="fas fa-mobile-alt"></i> Мобильные приложения
-  </a>
-  <a href="#download">
-    <i class="fas fa-download"></i> Скачать
-  </a>
-</nav>
-
-<div class="content">
-
-  <section class="section" id="games">
-    <h2>Популярные игры</h2>
-    <div class="games">
-      <div class="game">
-        <img src="https://via.placeholder.com/80?text=Game+1" alt="Game 1"/>
-        <h3>Game 1</h3>
-        <a href="#" class="download-btn">Скачать</a>
-      </div>
-      <div class="game">
-        <img src="https://via.placeholder.com/80?text=Game+2" alt="Game 2"/>
-        <h3>Game 2</h3>
-        <a href="#" class="download-btn">Скачать</a>
-      </div>
-      <div class="game">
-        <img src="https://via.placeholder.com/80?text=Game+3" alt="Game 3"/>
-        <h3>Game 3</h3>
-        <a href="#" class="download-btn">Скачать</a>
-      </div>
-      <div class="game">
-        <img src="https://via.placeholder.com/80?text=Game+4" alt="Game 4"/>
-        <h3>Game 4</h3>
-        <a href="#" class="download-btn">Скачать</a>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="apps">
-    <h2>Мобильные приложения</h2>
-    <div class="games">
-      <!-- Android -->
-      <div class="game">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Android_robot.png" alt="Android" class="app-logo"/>
-        <h3>Android</h3>
-        <a href="#" class="download-btn">Скачать</a>
-      </div>
-      <!-- iOS -->
-      <div class="game">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/0/0d/IOS_logo.png" alt="iOS" class="app-logo"/>
-        <h3>iOS</h3>
-        <a href="#" class="download-btn">Скачать</a>
-      </div>
-      <!-- ПК -->
-      <div class="game">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Windows_logo_-_2012.svg" alt="ПК" class="app-logo"/>
-        <h3>ПК</h3>
-        <a href="#" class="download-btn">Скачать</a>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="download">
-    <h2>Скачать все приложения</h2>
-    <p>Вы можете скачать все необходимые приложения и игры прямо с этого сайта. Просто выберите нужную платформу и нажмите "Скачать".</p>
-    <a href="#" class="download-btn" style="background-color:#0288d1;">Скачать все</a>
-  </section>
-
+<div class="intro">
+  Добро пожаловать! Здесь вы можете играть в самые популярные старинные игры, такие как Тетрис, Змейка, Волк ловит яйца, Космический шутер, Пинг-понг и многие другие — прямо в вашем браузере.
 </div>
 
-<footer>
-  &copy; 2024 Installer. Все права защищены. <br/>
-  <a href="#">Обратная связь</a>
-</footer>
+<section class="games-grid" id="games-grid">
+  <!-- Игра карточки будут добавляться через JavaScript -->
+</section>
+
+<!-- Контейнер для встроенной игры -->
+<div id="game-container">
+  <button id="back-btn">Назад к играм</button>
+  <div id="game-title"></div>
+  <iframe id="iframe-game" src="" allowfullscreen></iframe>
+</div>
+
+<script>
+  // Массив игр с данными
+  const games = [
+    {
+      id: 'tetris',
+      title: 'Тетрис',
+      description: 'Классическая головоломка, в которой нужно укладывать падающие фигуры, чтобы заполнять линии.',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://tetris.com/'
+    },
+    {
+      id: 'snake',
+      title: 'Змейка',
+      description: 'Управляйте змейкой, чтобы есть яблоки и расти, избегая стен и собственного хвоста.',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://snakegame.io/'
+    },
+    {
+      id: 'doodle',
+      title: 'Дудл Джамп',
+      description: 'Прыгайте по платформам, собирайте монеты и избегайте препятствий.',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://www.crazygames.com/game/doodle-jump'
+    },
+    {
+      id: 'wolf',
+      title: 'Волк ловит яйца',
+      description: 'Управляйте волком, чтобы ловить падающие яйца, избегая пропуска и ошибок.',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://www.crazygames.com/game/wolf-animator'
+    },
+    {
+      id: 'space',
+      title: 'Космический шутер',
+      description: 'Управляйте космическим кораблем, стреляйте по врагам и избегайте астероидов.',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://spaceinvaders.online/'
+    },
+    {
+      id: 'pingpong',
+      title: 'Пинг-понг',
+      description: 'Классическая настольная игра, управляемая ракетками. Победите соперника!',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://papergame.io/ping-pong'
+    },
+    {
+      id: 'pacman',
+      title: 'Пакман',
+      description: 'Классический лабиринт, где нужно есть точки и избегать привидений.',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://www.freepacman.org/'
+    },
+    {
+      id: 'arkanoid',
+      title: 'Арканоид',
+      description: 'Разбейте все кирпичи, управляя платформой и мячом.',
+      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://www.crazygames.com/game/arkanoid'
+    }
+  ];
+
+  const gridContainer = document.getElementById('games-grid');
+
+  // Генерация карточек игр
+  games.forEach(game => {
+    const card = document.createElement('div');
+    card.className = 'game-card';
+
+    card.innerHTML = `
+      <img src="${game.image}" alt="${game.title}" class="game-image"/>
+      <div class="game-content">
+        <div class="game-title">${game.title}</div>
+        <div class="game-description">${game.description}</div>
+        <button class="play-btn" data-id="${game.id}">Играть</button>
+      </div>
+    `;
+    gridContainer.appendChild(card);
+  });
+
+  // Обработчик кнопок "Играть"
+  document.querySelectorAll('.play-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const gameId = btn.dataset.id;
+      const game = games.find(g => g.id === gameId);
+      if (game) {
+        document.querySelector('.games-grid').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+
+        // Задаем iframe источник в зависимости от игры
+        switch (gameId) {
+          case 'tetris':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+          case 'snake':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+          case 'doodle':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+          case 'wolf':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+          case 'space':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+          case 'pingpong':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+          case 'pacman':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+          case 'arkanoid':
+            document.getElementById('iframe-game').src = game.link;
+            break;
+        }
+        document.getElementById('game-title').textContent = game.title;
+      }
+    });
+  });
+
+  // Обработчик кнопки "Назад"
+  document.getElementById('back-btn').addEventListener('click', () => {
+    document.getElementById('iframe-game').src = '';
+    document.getElementById('game-container').style.display = 'none';
+    document.querySelector('.games-grid').style.display = 'grid';
+  });
+</script>
 
 </body>
 </html>
