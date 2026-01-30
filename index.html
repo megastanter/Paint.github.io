@@ -3,160 +3,120 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Классические Игры в Современном Стиле</title>
+<title>Многофункциональный калькулятор</title>
 <!-- Подключение шрифтов -->
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
 <style>
   body {
     margin: 0;
     font-family: 'Montserrat', sans-serif;
-    background-color: #121212;
-    color: #fff;
+    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    color: #222;
   }
 
   header {
-    background: linear-gradient(90deg, #1e3c72, #2a5298);
-    padding: 30px 20px;
+    background-color: rgba(0,0,0,0.2);
+    padding: 20px;
     text-align: center;
+    backdrop-filter: blur(10px);
   }
 
   header h1 {
     margin: 0;
-    font-size: 2.8em;
-    letter-spacing: 2px;
-  }
-
-  .intro {
-    max-width: 900px;
-    margin: 20px auto;
-    text-align: center;
-    font-size: 1.2em;
-    padding: 0 20px;
-  }
-
-  /* Сетка игр */
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    padding: 20px;
-  }
-
-  /* Карточка игры */
-  .game-card {
-    background-color: #222;
-    border-radius: 15px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.3s, box-shadow 0.3s;
-  }
-
-  .game-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  }
-
-  .game-image {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-  }
-
-  .game-content {
-    padding: 15px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .game-title {
-    font-size: 1.4em;
-    margin-bottom: 10px;
-    font-weight: 700;
-  }
-
-  .game-description {
-    font-size: 0.95em;
-    margin-bottom: 10px;
-    color: #ccc;
-  }
-
-  .score-container {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9em;
-    margin-bottom: 10px;
-  }
-
-  .score {
-    background-color: #333;
-    padding: 4px 8px;
-    border-radius: 6px;
-  }
-
-  .play-btn {
-    background-color: #1e90ff;
+    font-size: 2.5em;
     color: #fff;
+  }
+
+  /* Навигация вкладок */
+  .tabs {
+    display: flex;
+    overflow-x: auto;
+    background-color: rgba(255,255,255,0.2);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px;
+    cursor: pointer;
+    text-align: center;
+    font-weight: 600;
+    color: #fff;
+    transition: background 0.3s;
+    white-space: nowrap;
+  }
+
+  .tab:hover {
+    background-color: rgba(255,255,255,0.3);
+  }
+
+  .tab.active {
+    background-color: rgba(255,255,255,0.5);
+    color: #000;
+  }
+
+  /* Контейнер для содержимого */
+  .content {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* Общие стили для блоков */
+  .section {
+    display: none;
+    background-color: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+
+  .section.active {
+    display: block;
+  }
+
+  /* Ввод и кнопки */
+  .calc-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .calc-group input, select {
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1em;
+  }
+
+  .result {
+    margin-top: 20px;
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #222;
+    text-align: center;
+  }
+
+  /* Кнопка */
+  .calc-btn {
     padding: 12px;
     border: none;
     border-radius: 8px;
-    font-weight: 600;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 1.2em;
     cursor: pointer;
-    text-align: center;
-    transition: background-color 0.2s;
-    text-decoration: none;
+    transition: background 0.3s;
   }
 
-  .play-btn:hover {
-    background-color: #0066cc;
-  }
-
-  /* Встроенная игра */
-  #game-container {
-    display: none;
-    padding: 20px;
-  }
-
-  #game-title {
-    text-align: center;
-    font-size: 2em;
-    margin-bottom: 15px;
-  }
-
-  #iframe-game {
-    width: 100%;
-    height: 700px;
-    border: none;
-    border-radius: 10px;
-  }
-
-  #back-btn {
-    display: block;
-    margin: 20px auto 0 auto;
-    padding: 12px 25px;
-    background-color: #ff4d4d;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s;
-  }
-
-  #back-btn:hover {
-    background-color: #cc3a3a;
+  .calc-btn:hover {
+    background-color: #45a049;
   }
 
   /* Адаптация */
-  @media(max-width: 768px){
-    header h1 {
-      font-size: 2em;
-    }
-    #game-title {
-      font-size: 1.5em;
+  @media(max-width: 600px){
+    .calc-group {
+      flex-direction: column;
     }
   }
 </style>
@@ -164,176 +124,538 @@
 <body>
 
 <header>
-  <h1>Классические Игры в Современном Стиле</h1>
+  <h1>Многофункциональный калькулятор</h1>
 </header>
 
-<div class="intro">
-  Добро пожаловать! Здесь вы можете играть в самые популярные старинные игры, такие как Тетрис, Змейка, Волк ловит яйца, Космический шутер, Пинг-понг, Пакман, Арканоид и Hextris — прямо в вашем браузере. Также отслеживайте свои результаты!
+<div class="tabs" id="tabs">
+  <div class="tab active" data-section="converter">Конвертер</div>
+  <div class="tab" data-section="bmi">ИМТ</div>
+  <div class="tab" data-section="system">Система счислений</div>
 </div>
 
-<section class="games-grid" id="games-grid">
-  <!-- Карточки создастся через JS -->
-</section>
+<div class="content">
+  <!-- Конвертер -->
+  <div class="section active" id="converter">
+    <h2>Конвертер величин</h2>
+    <div class="tabs" id="subtabs-converter">
+      <div class="tab active" data-sub="currency">Валюта</div>
+      <div class="tab" data-sub="length">Длина</div>
+      <div class="tab" data-sub="mass">Масса</div>
+      <div class="tab" data-sub="area">Площадь</div>
+      <div class="tab" data-sub="time">Время</div>
+      <div class="tab" data-sub="volume">Объем</div>
+      <div class="tab" data-sub="speed">Скорость</div>
+      <div class="tab" data-sub="temp">Температура</div>
+      <div class="tab" data-sub="discount">Скидки</div>
+      <div class="tab" data-sub="data">Данные</div>
+    </div>
+    <div id="converter-content" style="margin-top:20px;">
+      <!-- Здесь динамически появятся формы для каждого типа -->
+    </div>
+  </div>
 
-<!-- Контейнер для встроенной игры -->
-<div id="game-container">
-  <button id="back-btn">Назад к играм</button>
-  <div id="game-title"></div>
-  <iframe id="iframe-game" src="" allowfullscreen></iframe>
+  <!-- ИМТ -->
+  <div class="section" id="bmi">
+    <h2>Расчет ИМТ</h2>
+    <div class="calc-group">
+      <label>Вес (кг):</label>
+      <input type="number" id="bmi-weight" placeholder="Введите вес в кг" />
+      <label>Рост (см):</label>
+      <input type="number" id="bmi-height" placeholder="Введите рост в см" />
+      <button class="calc-btn" onclick="calculateBMI()">Рассчитать ИМТ</button>
+    </div>
+    <div class="result" id="bmi-result"></div>
+  </div>
+
+  <!-- Система счислений -->
+  <div class="section" id="system">
+    <h2>Система счислений</h2>
+    <div class="calc-group">
+      <label>Десятичное число:</label>
+      <input type="number" id="sys-dec" placeholder="Введите число" />
+      <button class="calc-btn" onclick="convertSystem()">Конвертировать</button>
+    </div>
+    <div id="system-result" style="margin-top:15px; font-size:1.2em;"></div>
+  </div>
 </div>
 
 <script>
-  const games = [
-    {
-      id: 'tetris',
-      title: 'Тетрис',
-      description: 'Классическая головоломка, в которой нужно укладывать падающие фигуры, чтобы заполнять линии.',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://tetris.com/'
-    },
-    {
-      id: 'snake',
-      title: 'Змейка',
-      description: 'Управляйте змейкой, чтобы есть яблоки и расти, избегая стен и собственного хвоста.',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://snakegame.io/'
-    },
-    {
-      id: 'doodle',
-      title: 'Дудл Джамп',
-      description: 'Прыгайте по платформам, собирайте монеты и избегайте препятствий.',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://www.crazygames.com/game/doodle-jump'
-    },
-    {
-      id: 'wolf',
-      title: 'Волк ловит яйца',
-      description: 'Управляйте волком, чтобы ловить падающие яйца, избегая пропуска и ошибок.',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://www.crazygames.com/game/wolf-animator'
-    },
-    {
-      id: 'space',
-      title: 'Космический шутер',
-      description: 'Управляйте космическим кораблем, стреляйте по врагам и избегайте астероидов.',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://spaceinvaders.online/'
-    },
-    {
-      id: 'pingpong',
-      title: 'Пинг-понг',
-      description: 'Классическая настольная игра, управляемая ракетками. Победите соперника!',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://papergame.io/ping-pong'
-    },
-    {
-      id: 'pacman',
-      title: 'Пакман',
-      description: 'Классический лабиринт, где нужно есть точки и избегать привидений.',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://www.freepacman.org/'
-    },
-    {
-      id: 'arkanoid',
-      title: 'Арканоид',
-      description: 'Разбейте все кирпичи, управляя платформой и мячом.',
-      image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://www.crazygames.com/game/arkanoid'
-    },
-    {
-      id: 'hexttris',
-      title: 'Hextris',
-      description: 'Современная вариация тетриса с шестигранными фигурами и уникальной механикой.',
-      image: 'https://images.unsplash.com/photo-1615983299042-5c5e0e2b2f6d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      link: 'https://hexttris.com/'
-    }
-  ];
-
-  const gridContainer = document.getElementById('games-grid');
-
-  // Создаем карточки
-  games.forEach(game => {
-    const card = document.createElement('div');
-    card.className = 'game-card';
-
-    // Получение баллов из localStorage или установка по умолчанию
-    const currentScore = localStorage.getItem(`score_${game.id}`) || 0;
-    const maxScore = localStorage.getItem(`max_score_${game.id}`) || 0;
-
-    card.innerHTML = `
-      <img src="${game.image}" alt="${game.title}" class="game-image"/>
-      <div class="game-content">
-        <div class="game-title">${game.title}</div>
-        <div class="game-description">${game.description}</div>
-        <div class="score-container">
-          <div>Очки: <span class="score" id="current-score-${game.id}">${currentScore}</span></div>
-          <div>Лучший: <span class="score" id="max-score-${game.id}">${maxScore}</span></div>
-        </div>
-        <button class="play-btn" data-id="${game.id}">Играть</button>
-      </div>
-    `;
-    gridContainer.appendChild(card);
-  });
-
-  // Обработка кнопок "Играть"
-  document.querySelectorAll('.play-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const gameId = btn.dataset.id;
-      const game = games.find(g => g.id === gameId);
-      if (game) {
-        document.querySelector('.games-grid').style.display = 'none';
-        document.getElementById('game-container').style.display = 'block';
-
-        // Установка заголовка
-        document.getElementById('game-title').textContent = game.title;
-
-        // В зависимости от игры, загружаем или показываем
-        document.getElementById('iframe-game').src = game.link;
-
-        // Сбросить или оставить текущий результат
-        // В этом примере предполагается, что игры не возвращают результат напрямую.
-        // Реальные игровые платформы должны иметь API или способ передачи результата.
-      }
+  // Переключение вкладок
+  document.querySelectorAll('.tabs').forEach(tabContainer => {
+    tabContainer.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const sectionId = tab.dataset.section || tab.dataset.sub;
+        // Переключение секций
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+        // Если это конвертер, обновим форму
+        if(sectionId==='converter') initConverter();
+      });
     });
   });
 
-  // Обработка кнопки "Назад"
-  document.getElementById('back-btn').addEventListener('click', () => {
-    document.getElementById('iframe-game').src = '';
-    document.getElementById('game-container').style.display = 'none';
-    document.querySelector('.games-grid').style.display = 'grid';
-  });
+  // Изначально инициализация конвертера
+  initConverter();
 
-  // Функция для обновления результатов
-  function updateScore(gameId, score) {
-    // Получаем текущий и лучший результат
-    let currentScore = parseInt(localStorage.getItem(`score_${gameId}`)) || 0;
-    let maxScore = parseInt(localStorage.getItem(`max_score_${gameId}`)) || 0;
+  // Массив валют (для примера, реальные курсы требуют API)
+  const currencies = {
+    'USD': 1,
+    'EUR': 0.85,
+    'RUB': 75,
+    'UAH': 27
+  };
 
-    // Обновляем текущий результат
-    if(score > currentScore){
-      localStorage.setItem(`score_${gameId}`, score);
-      document.getElementById(`current-score-${gameId}`).textContent = score;
+  // Инициализация формы конвертера
+  function initConverter() {
+    const contentDiv = document.getElementById('converter-content');
+    const activeSub = document.querySelector('#subtabs-converter .tab.active').dataset.sub;
+    let html = '';
+
+    switch(activeSub){
+      case 'currency':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="curr-from">
+              ${Object.keys(currencies).map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+            <label>В:</label>
+            <select id="curr-to">
+              ${Object.keys(currencies).map(c => `<option value="${c}">${c}</option>`).join('')}
+            </select>
+            <label>Сумма:</label>
+            <input type="number" id="curr-amount" placeholder="Введите сумму" />
+            <button class="calc-btn" onclick="convertCurrency()">Конвертировать</button>
+          </div>
+          <div class="result" id="conv-result"></div>
+        `;
+        break;
+      case 'length':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="len-from">
+              <option value="m">Метр</option>
+              <option value="km">Километр</option>
+              <option value="ft">Фут</option>
+              <option value="mi">Миля</option>
+            </select>
+            <label>В:</label>
+            <select id="len-to">
+              ${['m','km','ft','mi'].map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+            <label>Длина:</label>
+            <input type="number" id="len-value" placeholder="Введите значение" />
+            <button class="calc-btn" onclick="convertLength()">Конвертировать</button>
+          </div>
+          <div class="result" id="len-result"></div>
+        `;
+        break;
+      case 'mass':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="mass-from">
+              <option value="kg">Килограмм</option>
+              <option value="g">Грамм</option>
+              <option value="lb">Фунт</option>
+              <option value="oz">Унция</option>
+            </select>
+            <label>В:</label>
+            <select id="mass-to">
+              ${['kg','g','lb','oz'].map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+            <label>Масса:</label>
+            <input type="number" id="mass-value" placeholder="Введите значение" />
+            <button class="calc-btn" onclick="convertMass()">Конвертировать</button>
+          </div>
+          <div class="result" id="mass-result"></div>
+        `;
+        break;
+      case 'area':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="area-from">
+              <option value="m2">м²</option>
+              <option value="km2">км²</option>
+              <option value="ft2">фут²</option>
+              <option value="ac">акр</option>
+            </select>
+            <label>В:</label>
+            <select id="area-to">
+              ${['m2','km2','ft2','ac'].map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+            <label>Площадь:</label>
+            <input type="number" id="area-value" placeholder="Введите значение" />
+            <button class="calc-btn" onclick="convertArea()">Конвертировать</button>
+          </div>
+          <div class="result" id="area-result"></div>
+        `;
+        break;
+      case 'time':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="time-from">
+              <option value="sec">сек</option>
+              <option value="min">мин</option>
+              <option value="hour">ч</option>
+              <option value="day">день</option>
+            </select>
+            <label>В:</label>
+            <select id="time-to">
+              ${['sec','min','hour','day'].map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+            <label>Время:</label>
+            <input type="number" id="time-value" placeholder="Введите значение" />
+            <button class="calc-btn" onclick="convertTime()">Конвертировать</button>
+          </div>
+          <div class="result" id="time-result"></div>
+        `;
+        break;
+      case 'volume':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="volume-from">
+              <option value="l">Литр</option>
+              <option value="ml">Миллилитр</option>
+              <option value="m3">м³</option>
+              <option value="ft3">фут³</option>
+            </select>
+            <label>В:</label>
+            <select id="volume-to">
+              ${['l','ml','m3','ft3'].map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+            <label>Объем:</label>
+            <input type="number" id="volume-value" placeholder="Введите значение" />
+            <button class="calc-btn" onclick="convertVolume()">Конвертировать</button>
+          </div>
+          <div class="result" id="volume-result"></div>
+        `;
+        break;
+      case 'speed':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="speed-from">
+              <option value="m/s">м/с</option>
+              <option value="km/h">км/ч</option>
+              <option value="mph">миль/ч</option>
+            </select>
+            <label>В:</label>
+            <select id="speed-to">
+              ${['m/s','km/h','mph'].map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+            <label>Скорость:</label>
+            <input type="number" id="speed-value" placeholder="Введите значение" />
+            <button class="calc-btn" onclick="convertSpeed()">Конвертировать</button>
+          </div>
+          <div class="result" id="speed-result"></div>
+        `;
+        break;
+      case 'temp':
+        html = `
+          <div class="calc-group">
+            <label>Из:</label>
+            <select id="temp-from">
+              <option value="C">°C</option>
+              <option value="F">°F</option>
+              <option value="K">К</option>
+            </select>
+            <label>В:</label>
+            <select id="temp-to">
+              ${['C','F','K'].map(v => `<option value="${v}">${v}</option>`).join('')}
+            </select>
+            <label>Температура:</label>
+            <input type="number" id="temp-value" placeholder="Введите значение" />
+            <button class="calc-btn" onclick="convertTemp()">Конвертировать</button>
+          </div>
+          <div class="result" id="temp-result"></div>
+        `;
+        break;
+      case 'discount':
+        html = `
+          <div class="calc-group">
+            <label>Цена без скидки:</label>
+            <input type="number" id="discount-price" placeholder="Введите цену" />
+            <label>Процент скидки:</label>
+            <input type="number" id="discount-percent" placeholder="Процент" />
+            <button class="calc-btn" onclick="calculateDiscount()">Рассчитать</button>
+          </div>
+          <div class="result" id="discount-result"></div>
+        `;
+        break;
+      case 'data':
+        html = `
+          <div class="calc-group">
+            <label>Объем данных (бит):</label>
+            <input type="number" id="data-value" placeholder="Введите количество" />
+            <button class="calc-btn" onclick="convertData()">Конвертировать</button>
+          </div>
+          <div class="result" id="data-result"></div>
+        `;
+        break;
     }
-
-    // Обновляем максимум, если нужно
-    if(score > maxScore){
-      localStorage.setItem(`max_score_${gameId}`, score);
-      document.getElementById(`max-score-${gameId}`).textContent = score;
-    }
+    contentDiv.innerHTML = html;
   }
 
-  // Для симуляции получения очков (например, через сообщение из iframe)
-  // В реальности нужно настроить взаимодействие с игрой через postMessage или API
-  window.addEventListener('message', (event) => {
-    // Проверка домена и получение данных
-    // В этом примере предполагается, что игры могут отправлять сообщение вида:
-    // { gameId: 'tetris', score: 123 }
-    if(event.data && event.data.gameId && event.data.score !== undefined){
-      updateScore(event.data.gameId, event.data.score);
-    }
+  // Обработка вкладок под конвертер
+  document.querySelectorAll('#subtabs-converter .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#subtabs-converter .tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      initConverter();
+    });
   });
-</script>
 
+  // Конвертация валют
+  function convertCurrency() {
+    const from = document.getElementById('curr-from').value;
+    const to = document.getElementById('curr-to').value;
+    const amount = parseFloat(document.getElementById('curr-amount').value);
+    if(isNaN(amount)){
+      alert('Введите сумму');
+      return;
+    }
+    const rateFrom = currencies[from];
+    const rateTo = currencies[to];
+    const result = (amount / rateFrom) * rateTo;
+    document.getElementById('conv-result').textContent = `${amount} ${from} = ${result.toFixed(2)} ${to}`;
+  }
+
+  // Конвертация длины
+  function convertLength() {
+    const from = document.getElementById('len-from').value;
+    const to = document.getElementById('len-to').value;
+    const value = parseFloat(document.getElementById('len-value').value);
+    if(isNaN(value)){
+      alert('Введите значение');
+      return;
+    }
+    // Коэффициенты к метру
+    const toMeter = {
+      'm': 1,
+      'km': 1000,
+      'ft': 0.3048,
+      'mi': 1609.34
+    };
+    const inMeters = value * toMeter[from];
+    const result = inMeters / toMeter[to];
+    document.getElementById('len-result').textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;
+  }
+
+  // Конвертация массы
+  function convertMass() {
+    const from = document.getElementById('mass-from').value;
+    const to = document.getElementById('mass-to').value;
+    const value = parseFloat(document.getElementById('mass-value').value);
+    if(isNaN(value)){
+      alert('Введите значение');
+      return;
+    }
+    const toKg = {
+      'kg': 1,
+      'g': 0.001,
+      'lb': 0.453592,
+      'oz': 0.0283495
+    };
+    const inKg = value * toKg[from];
+    const result = inKg / toKg[to];
+    document.getElementById('mass-result').textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;
+  }
+
+  // Конвертация площади
+  function convertArea() {
+    const from = document.getElementById('area-from').value;
+    const to = document.getElementById('area-to').value;
+    const value = parseFloat(document.getElementById('area-value').value);
+    if(isNaN(value)){
+      alert('Введите значение');
+      return;
+    }
+    const toM2 = {
+      'm2': 1,
+      'km2': 1e6,
+      'ft2': 0.092903,
+      'ac': 4046.86
+    };
+    const inM2 = value * toM2[from];
+    const result = inM2 / toM2[to];
+    document.getElementById('area-result').textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;
+  }
+
+  // Конвертация времени
+  function convertTime() {
+    const from = document.getElementById('time-from').value;
+    const to = document.getElementById('time-to').value;
+    const value = parseFloat(document.getElementById('time-value').value);
+    if(isNaN(value)){
+      alert('Введите значение');
+      return;
+    }
+    const toSec = {
+      'sec': 1,
+      'min': 60,
+      'hour': 3600,
+      'day': 86400
+    };
+    const inSec = value * toSec[from];
+    const result = inSec / toSec[to];
+    document.getElementById('time-result').textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;
+  }
+
+  // Конвертация объема
+  function convertVolume() {
+    const from = document.getElementById('volume-from').value;
+    const to = document.getElementById('volume-to').value;
+    const value = parseFloat(document.getElementById('volume-value').value);
+    if(isNaN(value)){
+      alert('Введите значение');
+      return;
+    }
+    const toL = {
+      'l': 1,
+      'ml': 0.001,
+      'm3': 1000,
+      'ft3': 28.3168
+    };
+    const inL = value * toL[from];
+    const result = inL / toL[to];
+    document.getElementById('volume-result').textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;
+  }
+
+  // Конвертация скорости
+  function convertSpeed() {
+    const from = document.getElementById('speed-from').value;
+    const to = document.getElementById('speed-to').value;
+    const value = parseFloat(document.getElementById('speed-value').value);
+    if(isNaN(value)){
+      alert('Введите значение');
+      return;
+    }
+    const toMS = {
+      'm/s': 1,
+      'km/h': 0.277778,
+      'mph': 0.44704
+    };
+    const inMS = value * toMS[from];
+    const result = inMS / toMS[to];
+    document.getElementById('speed-result').textContent = `${value} ${from} = ${result.toFixed(4)} ${to}`;
+  }
+
+  // Конвертация температуры
+  function convertTemp() {
+    const from = document.getElementById('temp-from').value;
+    const to = document.getElementById('temp-to').value;
+    const value = parseFloat(document.getElementById('temp-value').value);
+    if(isNaN(value)){
+      alert('Введите значение');
+      return;
+    }
+    let celsius;
+    if(from==='C') celsius = value;
+    else if(from==='F') celsius = (value - 32) * 5/9;
+    else if(from==='K') celsius = value - 273.15;
+
+    let result;
+    if(to==='C') result = celsius;
+    else if(to==='F') result = celsius * 9/5 + 32;
+    else if(to==='K') result = celsius + 273.15;
+
+    document.getElementById('temp-result').textContent = `${value}°${from} = ${result.toFixed(2)}°${to}`;
+  }
+
+  // Расчет скидки
+  function calculateDiscount() {
+    const price = parseFloat(document.getElementById('discount-price').value);
+    const percent = parseFloat(document.getElementById('discount-percent').value);
+    if(isNaN(price) || isNaN(percent)){
+      alert('Введите значения');
+      return;
+    }
+    const discountAmount = price * (percent / 100);
+    const finalPrice = price - discountAmount;
+    document.getElementById('discount-result').textContent = `Цена со скидкой: ${finalPrice.toFixed(2)}`;
+  }
+
+  // Конвертация данных
+  function convertData() {
+    const bits = parseFloat(document.getElementById('data-value').value);
+    if(isNaN(bits)){
+      alert('Введите значение');
+      return;
+    }
+    const units = [
+      {name:'бит', value:1},
+      {name:'Кбит', value:1024},
+      {name:'Мбит', value:1048576},
+      {name:'Гбит', value:1073741824}
+    ];
+    let resultText = '';
+    units.forEach(u => {
+      const val = bits / u.value;
+      resultText += `${bits} бит = ${val.toFixed(4)} ${u.name}\n`;
+    });
+    alert(resultText);
+  }
+
+  // Расчет ИМТ
+  function calculateBMI() {
+    const weight = parseFloat(document.getElementById('bmi-weight').value);
+    const heightCm = parseFloat(document.getElementById('bmi-height').value);
+    if(isNaN(weight) || isNaN(heightCm)){
+      alert('Введите данные');
+      return;
+    }
+    const heightM = heightCm / 100;
+    const bmi = weight / (heightM * heightM);
+    document.getElementById('bmi-result').textContent = `Ваш ИМТ: ${bmi.toFixed(2)}`;
+  }
+
+  // Конвертация системы счислений
+  function convertSystem() {
+    const decNumber = parseInt(document.getElementById('sys-dec').value);
+    if(isNaN(decNumber)){
+      alert('Введите число');
+      return;
+    }
+    const bin = decNumber.toString(2);
+    const oct = decNumber.toString(8);
+    const hex = decNumber.toString(16).toUpperCase();
+    document.getElementById('system-result').innerHTML = `
+      Двоичная: ${bin} <br/>
+      Восьмеричная: ${oct} <br/>
+      Шестнадцатеричная: ${hex}
+    `;
+  }
+
+  // Варианты для данных
+  function convertData() {
+    const bits = parseFloat(document.getElementById('data-value').value);
+    if(isNaN(bits)){
+      alert('Введите значение');
+      return;
+    }
+    const units = [
+      {name:'бит', value:1},
+      {name:'Кбит', value:1024},
+      {name:'Мбит', value:1048576},
+      {name:'Гбит', value:1073741824}
+    ];
+    let resultText = '';
+    units.forEach(u => {
+      const val = bits / u.value;
+      resultText += `${bits} бит = ${val.toFixed(4)} ${u.name}\n`;
+    });
+    alert(resultText);
+  }
+
+  // Встроенные функции для других конвертеров используют аналогичные подходы...
+
+</script>
 </body>
 </html>
