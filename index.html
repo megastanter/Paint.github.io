@@ -79,8 +79,21 @@
 
   .game-description {
     font-size: 0.95em;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     color: #ccc;
+  }
+
+  .score-container {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+  }
+
+  .score {
+    background-color: #333;
+    padding: 4px 8px;
+    border-radius: 6px;
   }
 
   .play-btn {
@@ -155,11 +168,11 @@
 </header>
 
 <div class="intro">
-  Добро пожаловать! Здесь вы можете играть в самые популярные старинные игры, такие как Тетрис, Змейка, Волк ловит яйца, Космический шутер, Пинг-понг и многие другие — прямо в вашем браузере.
+  Добро пожаловать! Здесь вы можете играть в самые популярные старинные игры, такие как Тетрис, Змейка, Волк ловит яйца, Космический шутер, Пинг-понг, Пакман, Арканоид и Hextris — прямо в вашем браузере. Также отслеживайте свои результаты!
 </div>
 
 <section class="games-grid" id="games-grid">
-  <!-- Игра карточки будут добавляться через JavaScript -->
+  <!-- Карточки создастся через JS -->
 </section>
 
 <!-- Контейнер для встроенной игры -->
@@ -170,7 +183,6 @@
 </div>
 
 <script>
-  // Массив игр с данными
   const games = [
     {
       id: 'tetris',
@@ -227,28 +239,43 @@
       description: 'Разбейте все кирпичи, управляя платформой и мячом.',
       image: 'https://images.unsplash.com/photo-1623439277793-0f0f8f8f8f8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
       link: 'https://www.crazygames.com/game/arkanoid'
+    },
+    {
+      id: 'hexttris',
+      title: 'Hextris',
+      description: 'Современная вариация тетриса с шестигранными фигурами и уникальной механикой.',
+      image: 'https://images.unsplash.com/photo-1615983299042-5c5e0e2b2f6d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      link: 'https://hexttris.com/'
     }
   ];
 
   const gridContainer = document.getElementById('games-grid');
 
-  // Генерация карточек игр
+  // Создаем карточки
   games.forEach(game => {
     const card = document.createElement('div');
     card.className = 'game-card';
+
+    // Получение баллов из localStorage или установка по умолчанию
+    const currentScore = localStorage.getItem(`score_${game.id}`) || 0;
+    const maxScore = localStorage.getItem(`max_score_${game.id}`) || 0;
 
     card.innerHTML = `
       <img src="${game.image}" alt="${game.title}" class="game-image"/>
       <div class="game-content">
         <div class="game-title">${game.title}</div>
         <div class="game-description">${game.description}</div>
+        <div class="score-container">
+          <div>Очки: <span class="score" id="current-score-${game.id}">${currentScore}</span></div>
+          <div>Лучший: <span class="score" id="max-score-${game.id}">${maxScore}</span></div>
+        </div>
         <button class="play-btn" data-id="${game.id}">Играть</button>
       </div>
     `;
     gridContainer.appendChild(card);
   });
 
-  // Обработчик кнопок "Играть"
+  // Обработка кнопок "Играть"
   document.querySelectorAll('.play-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const gameId = btn.dataset.id;
@@ -257,43 +284,54 @@
         document.querySelector('.games-grid').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
 
-        // Задаем iframe источник в зависимости от игры
-        switch (gameId) {
-          case 'tetris':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-          case 'snake':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-          case 'doodle':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-          case 'wolf':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-          case 'space':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-          case 'pingpong':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-          case 'pacman':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-          case 'arkanoid':
-            document.getElementById('iframe-game').src = game.link;
-            break;
-        }
+        // Установка заголовка
         document.getElementById('game-title').textContent = game.title;
+
+        // В зависимости от игры, загружаем или показываем
+        document.getElementById('iframe-game').src = game.link;
+
+        // Сбросить или оставить текущий результат
+        // В этом примере предполагается, что игры не возвращают результат напрямую.
+        // Реальные игровые платформы должны иметь API или способ передачи результата.
       }
     });
   });
 
-  // Обработчик кнопки "Назад"
+  // Обработка кнопки "Назад"
   document.getElementById('back-btn').addEventListener('click', () => {
     document.getElementById('iframe-game').src = '';
     document.getElementById('game-container').style.display = 'none';
     document.querySelector('.games-grid').style.display = 'grid';
+  });
+
+  // Функция для обновления результатов
+  function updateScore(gameId, score) {
+    // Получаем текущий и лучший результат
+    let currentScore = parseInt(localStorage.getItem(`score_${gameId}`)) || 0;
+    let maxScore = parseInt(localStorage.getItem(`max_score_${gameId}`)) || 0;
+
+    // Обновляем текущий результат
+    if(score > currentScore){
+      localStorage.setItem(`score_${gameId}`, score);
+      document.getElementById(`current-score-${gameId}`).textContent = score;
+    }
+
+    // Обновляем максимум, если нужно
+    if(score > maxScore){
+      localStorage.setItem(`max_score_${gameId}`, score);
+      document.getElementById(`max-score-${gameId}`).textContent = score;
+    }
+  }
+
+  // Для симуляции получения очков (например, через сообщение из iframe)
+  // В реальности нужно настроить взаимодействие с игрой через postMessage или API
+  window.addEventListener('message', (event) => {
+    // Проверка домена и получение данных
+    // В этом примере предполагается, что игры могут отправлять сообщение вида:
+    // { gameId: 'tetris', score: 123 }
+    if(event.data && event.data.gameId && event.data.score !== undefined){
+      updateScore(event.data.gameId, event.data.score);
+    }
   });
 </script>
 
