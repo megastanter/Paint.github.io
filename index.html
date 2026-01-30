@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Создай свою рулетку</title>
+</title>рулетка</title>
 <style>
   body {
     margin: 0;
@@ -76,26 +76,53 @@
   #list button {
     background-color: #f44336;
   }
-  #spinBtn {
-    margin-top: 30px;
-    padding: 15px 30px;
-    font-size: 1.5em;
-    border-radius: 10px;
-    border: none;
-    background-color: #2196F3;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  #spinBtn:hover {
-    background-color: #0b7dda;
-  }
-  #result {
-    margin-top: 30px;
-    font-size: 2em;
-    font-weight: bold;
-    color: #fff;
-  }
+  /* Круглая рулетка */
+#wheelContainer {
+  margin-top: 30px;
+  width: 400px;
+  height: 400px;
+  position: relative;
+  cursor:pointer;
+}
+#wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 10px solid #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+}
+#pointer {
+  position: absolute;
+  top: -20px;
+  left: calc(50% - 10px);
+  width: 0; 
+  height: 0; 
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 20px solid #fff;
+  z-index: 10;
+}
+#spinBtn {
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 1.5em;
+  border-radius: 10px;
+  border: none;
+  background-color: #2196F3;
+  color: #fff;
+  cursor:pointer;
+  transition: background 0.3s;
+}
+#spinBtn:hover {
+  background-color: #0b7dda;
+}
+#result {
+  margin-top: 30px;
+  font-size: 2em;
+  font-weight: bold;
+  color: #fff;
+}
 </style>
 </head>
 <body>
@@ -115,12 +142,25 @@
   <ul id="optionsList"></ul>
 </div>
 
-<button id="spinBtn" onclick="spin()">Крутить рулетку</button>
+<!-- Колесо фортуны -->
+<div id="wheelContainer">
+  <div id="pointer"></div>
+  <canvas id="wheel" width="400" height="400"></canvas>
+</div>
 
+<button id="spinBtn" onclick="spin()">Крутить колесо</button>
 <div id="result"></div>
 
 <script>
   const options = [];
+
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const wheelContainer = document.getElementById('wheelContainer');
+
+  let currentRotation = 0; // угол текущего вращения
+  let isSpinning = false;
+  let selectedOption = '';
 
   function addOption() {
     const input = document.getElementById('optionInput');
@@ -129,6 +169,7 @@
       options.push(value);
       updateList();
       input.value='';
+      drawWheel();
     } else {
       alert('Введите уникальный вариант');
     }
@@ -146,6 +187,7 @@
       li.appendChild(delBtn);
       ul.appendChild(li);
     });
+    drawWheel();
   }
 
   function removeOption(index) {
@@ -157,18 +199,84 @@
     options.length=0;
     updateList();
     document.getElementById('result').textContent='';
+    drawWheel();
   }
+
+  function drawWheel() {
+    const optionsCount = options.length;
+    ctx.clearRect(0, 0, 400, 400);
+    if(optionsCount===0) return;
+
+    const arcSize = Math.PI*2 / optionsCount;
+    ctx.save();
+    ctx.translate(200,200);
+    ctx.rotate(currentRotation * Math.PI/180);
+    ctx.translate(-200,-200);
+
+    for(let i=0; i<optionsCount; i++) {
+      ctx.beginPath();
+      ctx.moveTo(200,200);
+      ctx.arc(200,200,180,i*arcSize,(i+1)*arcSize);
+      ctx.closePath();
+      ctx.fillStyle = `hsl(${i*360/optionsCount}, 70%, 50%)`;
+      ctx.fill();
+
+      // Добавление текста
+      ctx.save();
+      ctx.translate(200,200);
+      ctx.rotate(i*arcSize + arcSize/2);
+      ctx.textAlign='right';
+      ctx.fillStyle='#fff';
+      ctx.font='14px Montserrat';
+      ctx.fillText(options[i], 170, 5);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  document.getElementById('wheelContainer').addEventListener('click', () => {
+    if(!isSpinning && options.length>0){
+      spin();
+    }
+  });
 
   function spin() {
-    if(options.length===0){
-      alert('Добавьте варианты перед кручением!');
-      return;
-    }
-    const randIndex = Math.floor(Math.random()*options.length);
-    const selected = options[randIndex];
-    document.getElementById('result').textContent= `🎉 Выпало: ${selected} 🎉`;
-  }
-</script>
+    if(options.length===0 || isSpinning) return;
+    isSpinning = true;
+    document.getElementById('result').textContent='';
 
+    // случайный угол для остановки
+    const randIndex = Math.floor(Math.random() * options.length);
+    selectedOption = options[randIndex];
+
+    const arcSize = 360 / options.length;
+    const stopAngle = 360 * 4 + (360 - randIndex * arcSize - arcSize/2); // 4 полных оборота + целевой сектор
+
+    const duration = 4000; // длительность вращения
+    const start = performance.now();
+
+    function animate(currentTime) {
+      const elapsed = currentTime - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // easing
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      currentRotation = easeProgress * stopAngle;
+      drawWheel();
+      if(progress <1){
+        requestAnimationFrame(animate);
+      } else {
+        currentRotation = stopAngle % 360;
+        isSpinning = false;
+        document.getElementById('result').textContent='🎉 Выпало: ' + selectedOption + ' 🎉';
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  // Изначально рисуем колесо
+  drawWheel();
+
+</script>
 </body>
 </html>
