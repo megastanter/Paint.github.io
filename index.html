@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Игра Hextris</title>
-<!-- Шрифты -->
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
+<title>Создай свою рулетку</title>
 <style>
   body {
     margin: 0;
@@ -14,215 +12,163 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 20px;
+    min-height: 100vh;
     color: #222;
   }
-  header {
-    padding: 20px;
-    text-align: center;
-    background: rgba(0,0,0,0.2);
-    width: 100%;
-  }
-  header h1 {
-    margin: 0;
-    font-size: 2.5em;
+  h1 {
+    margin-bottom: 20px;
     color: #fff;
   }
-  /* Контейнер игры */
-  #gameContainer {
-    margin-top: 30px;
+  #inputs {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 600px;
   }
-  /* Игра Hextris */
-  canvas {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  #inputs input {
+    flex: 1;
+    padding: 10px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: none;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
   }
-  /* Очки */
-  #score {
-    font-size: 1.5em;
-    margin-top: 15px;
-    color: #fff;
+  #buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
-  /* Кнопка перезапуска */
-  #restartBtn {
-    margin-top: 20px;
-    padding: 12px 30px;
-    font-size: 1.2em;
-    background-color: #4CAF50;
+  button {
+    padding: 12px 20px;
+    font-size: 1em;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    color: #fff;
     transition: background 0.3s;
+    background-color: #4CAF50;
+    color: #fff;
   }
-  #restartBtn:hover {
+  button:hover {
     background-color: #45a049;
   }
-  /* Адаптивность */
-  @media(max-width: 600px){
-    #gameContainer {
-      width: 90%;
-    }
+  #list {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 600px;
+  }
+  #list ul {
+    list-style: none;
+    padding: 0;
+  }
+  #list li {
+    background: rgba(255,255,255,0.2);
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #list button {
+    background-color: #f44336;
+  }
+  #spinBtn {
+    margin-top: 30px;
+    padding: 15px 30px;
+    font-size: 1.5em;
+    border-radius: 10px;
+    border: none;
+    background-color: #2196F3;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  #spinBtn:hover {
+    background-color: #0b7dda;
+  }
+  #result {
+    margin-top: 30px;
+    font-size: 2em;
+    font-weight: bold;
+    color: #fff;
   }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Игра Hextris</h1>
-</header>
+<h1>Создай свою рулетку</h1>
 
-<div id="gameContainer">
-  <canvas id="hextris" width="400" height="600"></canvas>
-  <div id="score">Очки: 0</div>
-  <button id="restartBtn">Начать заново</button>
+<div id="inputs">
+  <input type="text" id="optionInput" placeholder="Добавить вариант" />
+</div>
+<div id="buttons">
+  <button onclick="addOption()">Добавить</button>
+  <button onclick="clearOptions()">Очистить список</button>
 </div>
 
+<div id="list">
+  <h2 style="color:#fff;">Ваши варианты:</h2>
+  <ul id="optionsList"></ul>
+</div>
+
+<button id="spinBtn" onclick="spin()">Крутить рулетку</button>
+
+<div id="result"></div>
+
 <script>
-  const canvas = document.getElementById('hextris');
-  const ctx = canvas.getContext('2d');
-  const scoreDiv = document.getElementById('score');
-  const restartBtn = document.getElementById('restartBtn');
+  const options = [];
 
-  let gameInterval;
-  let animationFrameId;
-  let score = 0;
-  let gameOver = false;
-
-  // Настройки игры
-  const hexagonSize = 30;
-  const centerX = canvas.width / 2;
-  const centerY = 150;
-
-  // Массив сегментов
-  let segments = [];
-
-  // Цвета сегментов
-  const colors = ['#FF6F61', '#6B5B95', '#88B04B', '#F7CAC9', '#92A8D1', '#955251', '#B565A7'];
-
-  // Игровая логика
-  function initGame() {
-    segments = [];
-    score = 0;
-    gameOver = false;
-    document.getElementById('score').textContent = 'Очки: 0';
-
-    // Создаем начальные сегменты
-    for (let i=0; i<6; i++) {
-      segments.push({angle: i * 60, color: colors[i % colors.length], width: 20});
-    }
-    if(gameInterval) clearInterval(gameInterval);
-    if(animationFrameId) cancelAnimationFrame(animationFrameId);
-    gameInterval = setInterval(addSegment, 2000);
-    gameLoop();
-  }
-
-  // Добавление новых сегментов
-  function addSegment() {
-    const lastSegment = segments[segments.length - 1];
-    const newAngle = lastSegment ? lastSegment.angle + 60 : 0;
-    segments.push({angle: newAngle, color: colors[Math.floor(Math.random() * colors.length)], width: 20});
-    // Удаляем старые сегменты
-    if (segments.length > 12) segments.shift();
-  }
-
-  // Обработка управления
-  document.addEventListener('keydown', (e) => {
-    if (gameOver) return;
-    if(e.key === 'ArrowLeft') {
-      rotateHexagon(-60);
-    } else if(e.key === 'ArrowRight') {
-      rotateHexagon(60);
-    }
-  });
-
-  restartBtn.addEventListener('click', initGame);
-
-  // Вращение шестиугольника
-  let currentRotation = 0;
-  function rotateHexagon(angle) {
-    currentRotation += angle;
-  }
-
-  // Основной цикл игры
-  function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawHexagon();
-    drawSegments();
-    checkCollision();
-    if (!gameOver) {
-      animationFrameId = requestAnimationFrame(gameLoop);
+  function addOption() {
+    const input = document.getElementById('optionInput');
+    const value = input.value.trim();
+    if(value && !options.includes(value)){
+      options.push(value);
+      updateList();
+      input.value='';
     } else {
-      alert('Игра окончена! Ваши очки: ' + score);
+      alert('Введите уникальный вариант');
     }
   }
 
-  // Рисуем центральный шестиугольник
-  function drawHexagon() {
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate(currentRotation * Math.PI / 180);
-    ctx.beginPath();
-    for (let i=0; i<6; i++) {
-      const angle = Math.PI / 3 * i;
-      const x = Math.cos(angle) * hexagonSize;
-      const y = Math.sin(angle) * hexagonSize;
-      if(i===0) ctx.moveTo(x,y);
-      else ctx.lineTo(x,y);
-    }
-    ctx.closePath();
-    ctx.fillStyle = '#444';
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // Рисуем сегменты
-  function drawSegments() {
-    segments.forEach(seg => {
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate((seg.angle + currentRotation) * Math.PI / 180);
-      ctx.beginPath();
-      ctx.moveTo(0,0);
-      ctx.arc(0, 0, hexagonSize + 20, 0, Math.PI/3);
-      ctx.lineTo(0,0);
-      ctx.fillStyle = seg.color;
-      ctx.fill();
-      ctx.restore();
+  function updateList() {
+    const ul = document.getElementById('optionsList');
+    ul.innerHTML='';
+    options.forEach((opt, index) => {
+      const li = document.createElement('li');
+      li.textContent = opt;
+      const delBtn = document.createElement('button');
+      delBtn.textContent='Удалить';
+      delBtn.onclick=()=>{ removeOption(index); };
+      li.appendChild(delBtn);
+      ul.appendChild(li);
     });
   }
 
-  // Проверка столкновений
-  function checkCollision() {
-    // Проверяем сегменты, которые пришли к центру
-    for(let i=0; i<segments.length; i++) {
-      const seg = segments[i];
-      const segEndAngle = (seg.angle + 60) % 360;
-      const relativeRotation = (currentRotation % 360 + 360) % 360; // положительный угол
-      // Проверяем, если сегмент повернулся к центру
-      if (Math.abs(((seg.angle + 30) + currentRotation) % 360 - 0) < 15) {
-        // Если сегмент дошел до центра
-        gameOver = true;
-        cancelAnimationFrame(animationFrameId);
-        clearInterval(gameInterval);
-        alert('Игра окончена! Ваши очки: ' + score);
-        break;
-      }
+  function removeOption(index) {
+    options.splice(index,1);
+    updateList();
+  }
+
+  function clearOptions() {
+    options.length=0;
+    updateList();
+    document.getElementById('result').textContent='';
+  }
+
+  function spin() {
+    if(options.length===0){
+      alert('Добавьте варианты перед кручением!');
+      return;
     }
+    const randIndex = Math.floor(Math.random()*options.length);
+    const selected = options[randIndex];
+    document.getElementById('result').textContent= `🎉 Выпало: ${selected} 🎉`;
   }
-
-  // Обновление очков
-  function increaseScore() {
-    score++;
-    document.getElementById('score').textContent = 'Очки: ' + score;
-  }
-
-  // Запуск игры
-  initGame();
-
 </script>
+
 </body>
 </html>
