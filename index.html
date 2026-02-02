@@ -3,219 +3,146 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Генератор и поиск изображений</title>
+<title>генератор изображений</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #ff4e50, #f9d423);
-    margin: 0;
-    padding: 0;
-    color: #fff;
+    background: linear-gradient(135deg, #ff4e50, #ff6f61);
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 40px 20px;
+    margin: 0;
+    min-height: 100vh;
+    color: #fff;
   }
 
   h1 {
-    margin: 20px 0;
-    font-size: 2.8em;
+    font-size: 3em;
+    margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-  }
-
-  /* Меню выбора режима */
-  #modeSelector {
-    display: flex;
-    margin: 20px 0;
-    gap: 20px;
-  }
-
-  .mode-btn {
-    padding: 12px 24px;
-    font-size: 1.2em;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #ff6f61;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  .mode-btn:hover, .mode-btn.active {
-    background: #ff3b2e;
-    transform: translateY(-2px);
-  }
-
-  /* Общий контейнер для форм */
-  #contentContainer {
-    width: 90%;
-    max-width: 700px;
-    background: rgba(255,255,255,0.2);
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    margin-bottom: 30px;
-  }
-
-  /* Заголовки */
-  h2 {
     text-align: center;
-    margin-bottom: 15px;
-    font-size: 2em;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
   }
 
-  /* Ввод и кнопки */
-  input[type="text"] {
+  #form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     width: 100%;
-    padding: 12px;
-    font-size: 1.2em;
-    border-radius: 8px;
+    max-width: 700px;
+    background: rgba(255,255,255,0.1);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+
+  input[type="text"] {
+    padding: 15px;
+    font-size: 1.3em;
+    border-radius: 12px;
     border: 2px solid #fff;
     outline: none;
-    margin-bottom: 15px;
-    transition: border-color 0.3s;
+    margin-bottom: 20px;
+    transition: border-color 0.3s, box-shadow 0.3s;
   }
 
   input[type="text"]:focus {
-    border-color: #fff;
+    border-color: #ffd700;
+    box-shadow: 0 0 10px #ffd700;
   }
 
   button {
-    width: 100%;
-    padding: 12px;
-    font-size: 1.2em;
+    padding: 15px;
+    font-size: 1.4em;
     border: none;
-    border-radius: 10px;
-    background: #ff6f61;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ff7e5f, #feb47b);
     color: #fff;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
     transition: background 0.3s, transform 0.2s;
   }
 
   button:hover {
-    background: #ff3b2e;
+    background: linear-gradient(135deg, #feb47b, #ff7e5f);
     transform: translateY(-2px);
   }
 
-  /* Статус и изображение */
   #status {
-    margin-top: 15px;
-    font-size: 1.2em;
+    margin-top: 20px;
+    font-size: 1.3em;
     min-height: 1.5em;
+    text-align: center;
   }
 
   #imageContainer {
-    margin-top: 20px;
+    margin-top: 30px;
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   #generatedImage {
     max-width: 100%;
-    border-radius: 10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
     display: none;
+    transition: transform 0.3s;
   }
 
-  /* Мелкие стили для адаптивности */
+  #generatedImage:hover {
+    transform: scale(1.02);
+  }
+
+  /* Адаптивность */
   @media(max-width: 600px){
     h1 {
       font-size: 2em;
     }
-    .mode-btn {
+    input[type="text"] {
       font-size: 1em;
-      padding: 10px 20px;
+    }
+    button {
+      font-size: 1em;
     }
   }
 </style>
 </head>
 <body>
 
-<h1>Генератор и поиск изображений</h1>
+<h1>Крутой Генератор Изображений</h1>
 
-<!-- Меню выбора режима -->
-<div id="modeSelector">
-  <button class="mode-btn active" data-mode="generate">Генерация картинки</button>
-  <button class="mode-btn" data-mode="search">Поиск из интернета</button>
+<div id="form">
+  <input type="text" id="promptInput" placeholder="Введите описание картинки..." />
+  <button id="generateBtn">Генерировать</button>
 </div>
 
-<!-- Контейнер с формами -->
-<div id="contentContainer">
-  <!-- Генерация картинки -->
-  <div id="generateSection">
-    <h2>Описание изображения</h2>
-    <input type="text" id="promptInput" placeholder="Введите описание изображения..." />
-    <button id="generateBtn">Генерировать изображение</button>
-  </div>
-
-  <!-- Поиск из интернета -->
-  <div id="searchSection" style="display:none;">
-    <h2>Поиск изображения</h2>
-    <input type="text" id="searchInput" placeholder="Введите запрос для поиска..." />
-    <button id="searchBtn">Искать изображение</button>
-  </div>
-</div>
-
-<!-- Результат -->
 <div id="status"></div>
 <div id="imageContainer">
-  <img id="generatedImage" src="" alt="Результат" />
+  <img id="generatedImage" src="" alt="Сгенерированное изображение" />
 </div>
 
 <script>
-  // API ключи (замените на свои)
-  const deepAI_API_KEY = 'YOUR_DEEPAI_API_KEY'; // для генерации
-  const bingApiKey = 'YOUR_BING_API_KEY'; // для поиска
+  const apiKey = 'YOUR_DEEPAI_API_KEY'; // вставьте свой API ключ сюда
 
-  let currentMode = 'generate';
-
-  const modeButtons = document.querySelectorAll('.mode-btn');
-  const generateSection = document.getElementById('generateSection');
-  const searchSection = document.getElementById('searchSection');
-
-  const promptInput = document.getElementById('promptInput');
   const generateBtn = document.getElementById('generateBtn');
-
-  const searchInput = document.getElementById('searchInput');
-  const searchBtn = document.getElementById('searchBtn');
-
+  const promptInput = document.getElementById('promptInput');
   const statusDiv = document.getElementById('status');
-  const imgElem = document.getElementById('generatedImage');
+  const imageElem = document.getElementById('generatedImage');
 
-  // Переключение режимов
-  modeButtons.forEach(btn => {
-    btn.onclick = () => {
-      modeButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentMode = btn.dataset.mode;
-      if (currentMode === 'generate') {
-        generateSection.style.display = 'block';
-        searchSection.style.display = 'none';
-      } else {
-        generateSection.style.display = 'none';
-        searchSection.style.display = 'block';
-      }
-      // Очистка результатов
-      statusDiv.innerText = '';
-      imgElem.style.display = 'none';
-    };
-  });
-
-  // Генерация изображения
-  document.getElementById('generateBtn').onclick = () => {
+  generateBtn.onclick = () => {
     const prompt = promptInput.value.trim();
     if (!prompt) {
-      alert('Введите описание!');
+      alert('Пожалуйста, введите описание!');
       return;
     }
     statusDiv.innerText = 'Генерация изображения...';
-    imgElem.style.display = 'none';
+    imageElem.style.display = 'none';
 
     fetch('https://api.deepai.org/api/text2img', {
       method: 'POST',
       headers: {
-        'Api-Key': deepAI_API_KEY,
+        'Api-Key': apiKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ text: prompt })
@@ -223,8 +150,8 @@
     .then(res => res.json())
     .then(data => {
       if (data.output_url) {
-        imgElem.src = data.output_url;
-        imgElem.style.display = 'block';
+        imageElem.src = data.output_url;
+        imageElem.style.display = 'block';
         statusDiv.innerText = 'Генерация завершена!';
       } else {
         statusDiv.innerText = 'Ошибка при генерации изображения.';
@@ -232,37 +159,6 @@
     })
     .catch(() => {
       statusDiv.innerText = 'Ошибка сети или API.';
-    });
-  };
-
-  // Поиск изображения через Bing Image Search API
-  document.getElementById('searchBtn').onclick = () => {
-    const query = searchInput.value.trim();
-    if (!query) {
-      alert('Введите запрос для поиска!');
-      return;
-    }
-    statusDiv.innerText = 'Поиск изображений...';
-    imgElem.style.display = 'none';
-
-    fetch(`https://api.bing.microsoft.com/v7. SEARCH/images?q=${encodeURIComponent(query)}&count=1`, {
-      headers: {
-        'Ocp-Apim-Subscription-Key': bingApiKey
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.value && data.value.length > 0) {
-        const imgUrl = data.value[0].contentUrl;
-        imgElem.src = imgUrl;
-        imgElem.style.display = 'block';
-        statusDiv.innerText = 'Результат получен!';
-      } else {
-        statusDiv.innerText = 'Изображения не найдены.';
-      }
-    })
-    .catch(() => {
-      statusDiv.innerText = 'Ошибка сети или API Bing.';
     });
   };
 </script>
