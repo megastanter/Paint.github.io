@@ -3,393 +3,268 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Рулетка</title>
+<title>Генератор и поиск изображений</title>
 <style>
-  * {
-    box-sizing: border-box;
-  }
-
   body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #ff4e50, #f9d423);
     margin: 0;
     padding: 0;
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #89f7fe, #66a6ff);
+    color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    min-height: 100vh;
-    color: #fff;
   }
 
   h1 {
     margin: 20px 0;
-    font-size: 2.5em;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
-    text-align: center;
-    color: #fff;
+    font-size: 2.8em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
   }
 
-  #menu {
-    width: 90%;
-    max-width: 800px;
+  /* Меню выбора режима */
+  #modeSelector {
+    display: flex;
     margin: 20px 0;
+    gap: 20px;
+  }
+
+  .mode-btn {
+    padding: 12px 24px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #ff6f61;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  .mode-btn:hover, .mode-btn.active {
+    background: #ff3b2e;
+    transform: translateY(-2px);
+  }
+
+  /* Общий контейнер для форм */
+  #contentContainer {
+    width: 90%;
+    max-width: 700px;
     background: rgba(255,255,255,0.2);
     padding: 20px;
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    margin-bottom: 30px;
   }
 
-  #menu h2 {
-    margin-top: 0;
+  /* Заголовки */
+  h2 {
     text-align: center;
     margin-bottom: 15px;
     font-size: 2em;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
   }
 
-  .preset-btn {
-    display: inline-block;
-    margin: 8px;
-    padding: 10px 20px;
-    font-size: 1em;
-    border: none;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #89f7fe, #66a6ff);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  .preset-btn:hover {
-    background: linear-gradient(135deg, #66a6ff, #89f7fe);
-    transform: translateY(-2px);
-  }
-
-  #createSection {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  #createSection input {
-    padding: 10px;
-    font-size: 1em;
-    border-radius: 6px;
-    border: 2px solid #fff;
-    outline: none;
-    transition: border-color 0.3s;
-    width: 250px;
-    margin-bottom: 10px;
-  }
-
-  #createSection button {
-    padding: 10px 20px;
-    font-size: 1em;
-    border: none;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #89f7fe, #66a6ff);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  #createSection button:hover {
-    background: linear-gradient(135deg, #66a6ff, #89f7fe);
-    transform: translateY(-2px);
-  }
-
-  #startBtn {
-    margin-top: 15px;
-    padding: 10px 30px;
-    font-size: 1.2em;
-    border: none;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #89f7fe, #66a6ff);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  #startBtn:hover {
-    background: linear-gradient(135deg, #66a6ff, #89f7fe);
-    transform: translateY(-2px);
-  }
-
-  #gameArea {
-    display: none;
-    width: 90%;
-    max-width: 700px;
-    margin: 20px 0;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  #roulette-wrapper {
-    position: relative;
-    width: 400px;
-    height: 400px;
-    margin: 20px 0;
-  }
-
-  #roulette {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 10px solid #fff;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
-    cursor: pointer;
-    position: relative;
-    background: linear-gradient(135deg, #6dd5ed, #2193b0);
-    overflow: hidden;
-  }
-
-  #pointer {
-    position: absolute;
-    top: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0; 
-    height: 0; 
-    border-left: 25px solid transparent;
-    border-right: 25px solid transparent;
-    border-bottom: 50px solid #fff;
-    z-index: 10;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-  }
-
-  #result {
-    font-size: 1.8em;
-    margin-top: 20px;
-    min-height: 2em;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
-    text-align: center;
-    padding: 10px 15px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-    backdrop-filter: blur(5px);
-  }
-
-  #controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 20px;
-    justify-content: center;
-    width: 100%;
-  }
-
-  button {
-    padding: 12px 24px;
-    font-size: 1.1em;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background: linear-gradient(135deg, #89f7fe, #66a6ff);
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
-  }
-
-  button:hover {
-    background: linear-gradient(135deg, #66a6ff, #89f7fe);
-    transform: translateY(-2px);
-  }
-
+  /* Ввод и кнопки */
   input[type="text"] {
-    padding: 10px;
-    font-size: 1em;
-    border-radius: 6px;
+    width: 100%;
+    padding: 12px;
+    font-size: 1.2em;
+    border-radius: 8px;
     border: 2px solid #fff;
     outline: none;
+    margin-bottom: 15px;
     transition: border-color 0.3s;
-    width: 250px;
   }
 
   input[type="text"]:focus {
     border-color: #fff;
   }
 
-  @media(max-width: 500px){
-    #roulette-wrapper {
-      width: 90%;
-      height: auto;
+  button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 10px;
+    background: #ff6f61;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  button:hover {
+    background: #ff3b2e;
+    transform: translateY(-2px);
+  }
+
+  /* Статус и изображение */
+  #status {
+    margin-top: 15px;
+    font-size: 1.2em;
+    min-height: 1.5em;
+  }
+
+  #imageContainer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  #generatedImage {
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    display: none;
+  }
+
+  /* Мелкие стили для адаптивности */
+  @media(max-width: 600px){
+    h1 {
+      font-size: 2em;
     }
-    #controls {
-      flex-direction: column;
-      align-items: center;
+    .mode-btn {
+      font-size: 1em;
+      padding: 10px 20px;
     }
   }
 </style>
 </head>
 <body>
 
-<h1>Рулетка судьбы</h1>
+<h1>Генератор и поиск изображений</h1>
 
-<div id="menu">
-  <h2>Выберите предустановленную рулетку или создайте свою</h2>
-  <div>
-    <button class="preset-btn" data-sectors='["Удача", "Неудача", "Золото", "Провал"]'>Классическая</button>
-    <button class="preset-btn" data-sectors='["Счастье", "Беда", "Удача", "Неудача"]'>Карта удачи</button>
-    <button class="preset-btn" data-sectors='["Путешествие", "Работа", "Любовь", "Деньги"]'>Жизненные сферы</button>
-  </div>
-  <div id="createSection">
-    <input type="text" id="newSectorsInput" placeholder='Введите сектора через запятую' />
-    <button id="createBtn">Создать свою</button>
-  </div>
-  <button id="startBtn">Начать игру</button>
+<!-- Меню выбора режима -->
+<div id="modeSelector">
+  <button class="mode-btn active" data-mode="generate">Генерация картинки</button>
+  <button class="mode-btn" data-mode="search">Поиск из интернета</button>
 </div>
 
-<div id="gameArea">
-  <div id="roulette-wrapper">
-    <div id="pointer"></div>
-    <div id="roulette"></div>
+<!-- Контейнер с формами -->
+<div id="contentContainer">
+  <!-- Генерация картинки -->
+  <div id="generateSection">
+    <h2>Описание изображения</h2>
+    <input type="text" id="promptInput" placeholder="Введите описание изображения..." />
+    <button id="generateBtn">Генерировать изображение</button>
   </div>
-  <div id="result">Нажмите на рулетку или кнопку "Крутить", чтобы начать</div>
-  <div id="controls">
-    <button id="spinBtn">Крутить</button>
+
+  <!-- Поиск из интернета -->
+  <div id="searchSection" style="display:none;">
+    <h2>Поиск изображения</h2>
+    <input type="text" id="searchInput" placeholder="Введите запрос для поиска..." />
+    <button id="searchBtn">Искать изображение</button>
   </div>
+</div>
+
+<!-- Результат -->
+<div id="status"></div>
+<div id="imageContainer">
+  <img id="generatedImage" src="" alt="Результат" />
 </div>
 
 <script>
-  const defaultSets = {
-    classical: ["Удача", "Неудача", "Золото", "Провал"],
-    luckMap: ["Счастье", "Беда", "Удача", "Неудача"],
-    lifeSpheres: ["Путешествие", "Работа", "Любовь", "Деньги"]
-  };
+  // API ключи (замените на свои)
+  const deepAI_API_KEY = 'YOUR_DEEPAI_API_KEY'; // для генерации
+  const bingApiKey = 'YOUR_BING_API_KEY'; // для поиска
 
-  let sectors = [];
-  let isSpinning = false;
+  let currentMode = 'generate';
 
-  const roulette = document.getElementById('roulette');
-  const resultDiv = document.getElementById('result');
-  const spinBtn = document.getElementById('spinBtn');
-  const startBtn = document.getElementById('startBtn');
-  const createBtn = document.getElementById('createBtn');
-  const newSectorsInput = document.getElementById('newSectorsInput');
+  const modeButtons = document.querySelectorAll('.mode-btn');
+  const generateSection = document.getElementById('generateSection');
+  const searchSection = document.getElementById('searchSection');
 
-  const menu = document.getElementById('menu');
-  const gameArea = document.getElementById('gameArea');
+  const promptInput = document.getElementById('promptInput');
+  const generateBtn = document.getElementById('generateBtn');
 
-  // Создаем сектора
-function createSegments() {
-    roulette.innerHTML = '';
-    const count = sectors.length;
-    if (count === 0) {
-      resultDiv.innerText = 'Добавьте сектора для вращения!';
-      return;
-    }
-    const anglePerSector = 360 / count;
-    sectors.forEach((sector, index) => {
-      const segment = document.createElement('div');
-      segment.innerText = sector;
-      segment.style.position = 'absolute';
-      segment.style.width = '50%';
-      segment.style.height = '50%';
-      segment.style.top = '50%';
-      segment.style.left = '50%';
-      segment.style.transformOrigin = '0% 0%';
-      segment.style.transform = `rotate(${index * anglePerSector}deg) skewY(-${90 - anglePerSector}deg)`;
-      segment.style.backgroundColor = index % 2 === 0 ? '#89f7fe' : '#66a6ff';
-      segment.style.border = '1px solid #fff';
-      segment.style.display = 'flex';
-      segment.style.alignItems = 'center';
-      segment.style.justifyContent = 'center';
-      segment.style.padding = '8px';
-      segment.style.boxSizing = 'border-box';
-      segment.style.fontSize = '0.9em';
-      segment.style.fontWeight = 'bold';
-      segment.style.color = '#fff';
-      roulette.appendChild(segment);
-    });
-  }
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
 
-function spin() {
-    if (isSpinning || sectors.length === 0) return;
-    isSpinning = true;
-    resultDiv.innerText = '';
+  const statusDiv = document.getElementById('status');
+  const imgElem = document.getElementById('generatedImage');
 
-    const count = sectors.length;
-    const anglePerSector = 360 / count;
-    const spinsCount = Math.floor(Math.random() * 3) + 4; // минимум 4 круга
-    const randomIndex = Math.floor(Math.random() * count);
-    const stopAngle = 360 * spinsCount + (count - randomIndex) * anglePerSector + anglePerSector / 2;
-
-    // Запускаем анимацию
-    roulette.style.transition = 'transform 4s cubic-bezier(0.33, 1, 0.68, 1)';
-    roulette.style.transform = `rotate(${stopAngle}deg)`;
-
-    // После окончания вращения
-    setTimeout(() => {
-      const normalizedDeg = stopAngle % 360;
-      const index = Math.floor(normalizedDeg / anglePerSector);
-      const resultSector = sectors[(sectors.length - index) % sectors.length];
-      resultDiv.innerText = `Вам выпало: ${resultSector}`;
-      isSpinning = false;
-    }, 4000);
-  }
-
-function addSector() {
-    const newSector = newSectorsInput.value.trim();
-    if (newSector && !sectors.includes(newSector)) {
-      sectors.push(newSector);
-      createSegments();
-      newSectorsInput.value = '';
-    } else {
-      alert('Введите уникальное название сектора');
-    }
-  }
-
-function loadPreset(sectorsArray) {
-  sectors = [...sectorsArray];
-  createSegments();
-}
-
-function init() {
-  // Обработка предустановленных кнопок
-  document.querySelectorAll('.preset-btn').forEach(btn => {
+  // Переключение режимов
+  modeButtons.forEach(btn => {
     btn.onclick = () => {
-      const sectorsStr = JSON.parse(btn.dataset.sectors);
-      loadPreset(sectorsStr);
+      modeButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMode = btn.dataset.mode;
+      if (currentMode === 'generate') {
+        generateSection.style.display = 'block';
+        searchSection.style.display = 'none';
+      } else {
+        generateSection.style.display = 'none';
+        searchSection.style.display = 'block';
+      }
+      // Очистка результатов
+      statusDiv.innerText = '';
+      imgElem.style.display = 'none';
     };
   });
 
-  document.getElementById('createBtn').onclick = () => {
-    const input = document.getElementById('newSectorsInput').value.trim();
-    if (!input) {
-      alert('Введите сектора через запятую');
+  // Генерация изображения
+  document.getElementById('generateBtn').onclick = () => {
+    const prompt = promptInput.value.trim();
+    if (!prompt) {
+      alert('Введите описание!');
       return;
     }
-    const newSectors = input.split(',').map(s => s.trim()).filter(s => s);
-    if (newSectors.length === 0) {
-      alert('Введите хотя бы один сектор');
-      return;
-    }
-    sectors = [...newSectors];
-    createSegments();
+    statusDiv.innerText = 'Генерация изображения...';
+    imgElem.style.display = 'none';
+
+    fetch('https://api.deepai.org/api/text2img', {
+      method: 'POST',
+      headers: {
+        'Api-Key': deepAI_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text: prompt })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.output_url) {
+        imgElem.src = data.output_url;
+        imgElem.style.display = 'block';
+        statusDiv.innerText = 'Генерация завершена!';
+      } else {
+        statusDiv.innerText = 'Ошибка при генерации изображения.';
+      }
+    })
+    .catch(() => {
+      statusDiv.innerText = 'Ошибка сети или API.';
+    });
   };
 
-  document.getElementById('startBtn').onclick = () => {
-    if (sectors.length === 0) {
-      alert('Выберите или создайте рулетку!');
+  // Поиск изображения через Bing Image Search API
+  document.getElementById('searchBtn').onclick = () => {
+    const query = searchInput.value.trim();
+    if (!query) {
+      alert('Введите запрос для поиска!');
       return;
     }
-    menu.style.display = 'none';
-    gameArea.style.display = 'flex';
+    statusDiv.innerText = 'Поиск изображений...';
+    imgElem.style.display = 'none';
+
+    fetch(`https://api.bing.microsoft.com/v7. SEARCH/images?q=${encodeURIComponent(query)}&count=1`, {
+      headers: {
+        'Ocp-Apim-Subscription-Key': bingApiKey
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.value && data.value.length > 0) {
+        const imgUrl = data.value[0].contentUrl;
+        imgElem.src = imgUrl;
+        imgElem.style.display = 'block';
+        statusDiv.innerText = 'Результат получен!';
+      } else {
+        statusDiv.innerText = 'Изображения не найдены.';
+      }
+    })
+    .catch(() => {
+      statusDiv.innerText = 'Ошибка сети или API Bing.';
+    });
   };
-
-  document.getElementById('spinBtn').addEventListener('click', spin);
-  document.getElementById('roulette').addEventListener('click', spin);
-}
-
-// Инициализация
-init();
-
 </script>
 
 </body>
