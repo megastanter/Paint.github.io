@@ -14,8 +14,9 @@
     padding: 20px;
   }
 
+  /* Основной стиль калькулятора */
   .calculator {
-    background-color: #ff6347; /* оранжево-красный фон */
+    background-color: #ff6347;
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -24,7 +25,7 @@
   }
 
   .display {
-    background-color: #ff7f50; /* ярко-оранжевый дисплей */
+    background-color: #ff7f50;
     padding: 10px;
     font-size: 24px;
     border-radius: 8px;
@@ -46,7 +47,7 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    background-color: #ff8c00; /* темно-оранжевый */
+    background-color: #ff8c00;
     color: #fff;
     transition: background-color 0.2s;
   }
@@ -56,7 +57,7 @@
   }
 
   .operator {
-    background-color: #dc143c; /* красный для операторов */
+    background-color: #dc143c;
   }
 
   .operator:hover {
@@ -64,7 +65,7 @@
   }
 
   .clear {
-    background-color: #a0522d; /* коричнево-красный для С */
+    background-color: #a0522d;
   }
 
   .clear:hover {
@@ -77,7 +78,8 @@
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    width: 320px;
+    width: 360px;
+    margin-bottom: 30px;
   }
 
   .converter h2 {
@@ -85,7 +87,38 @@
     margin-bottom: 15px;
   }
 
-  .converter input {
+  /* Категории */
+  .categories {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-bottom: 10px;
+  }
+
+  .category-btn {
+    padding: 8px 12px;
+    margin: 5px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ffa500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .category-btn:hover {
+    background-color: #ff8c00;
+  }
+
+  /* Внутри конвертера */
+  #conversionSection {
+    display: none;
+  }
+
+  .active {
+    display: block;
+  }
+
+  input[type=number] {
     width: calc(50% - 10px);
     padding: 10px;
     font-size: 16px;
@@ -94,7 +127,7 @@
     margin-right: 10px;
   }
 
-  .converter select {
+  select {
     width: calc(50% - 10px);
     padding: 10px;
     font-size: 16px;
@@ -126,7 +159,6 @@
     font-size: 18px;
     text-align: center;
   }
-
 </style>
 </head>
 <body>
@@ -158,20 +190,149 @@
   </div>
 </div>
 
-<!-- Конвертер -->
+<!-- Расширенный конвертер -->
 <div class="converter">
-  <h2>Конвертер температуры</h2>
-  <input type="number" id="tempInput" placeholder="Введите значение" />
-  <select id="unitFrom">
-    <option value="C">Цельсий (°C)</option>
-    <option value="F">Фаренгейт (°F)</option>
-  </select>
-  <button class="convert-btn" onclick="convertTemperature()">Конвертировать</button>
-  <div class="result" id="conversionResult"></div>
+  <h2>Расширенный конвертер</h2>
+  <div class="categories">
+    <button class="category-btn" onclick="showCategory('temp')">Температура</button>
+    <button class="category-btn" onclick="showCategory('currency')">Валюта</button>
+    <button class="category-btn" onclick="showCategory('length')">Длина</button>
+    <button class="category-btn" onclick="showCategory('mass')">Масса</button>
+    <button class="category-btn" onclick="showCategory('area')">Площадь</button>
+    <button class="category-btn" onclick="showCategory('time')">Время</button>
+    <button class="category-btn" onclick="showCategory('volume')">Объем</button>
+    <button class="category-btn" onclick="showCategory('speed')">Скорость</button>
+    <button class="category-btn" onclick="showCategory('finance')">Финансы</button>
+    <button class="category-btn" onclick="showCategory('date')">Дата</button>
+    <button class="category-btn" onclick="showCategory('discount')">Скидка</button>
+  </div>
+
+  <!-- Раздел для разных категорий -->
+  <div id="conversionSection">
+
+    <!-- Температура -->
+    <div id="temp" class="categoryContent">
+      <input type="number" id="tempInput" placeholder="Введите значение" />
+      <select id="tempFrom">
+        <option value="C">Цельсий (°C)</option>
+        <option value="F">Фаренгейт (°F)</option>
+      </select>
+      <button class="convert-btn" onclick="convertTemperature()">Конвертировать</button>
+      <div class="result" id="tempResult"></div>
+    </div>
+
+    <!-- Валюта (пример, фиксированный курс) -->
+    <div id="currency" class="categoryContent" style="display:none;">
+      <input type="number" id="currencyInput" placeholder="Введите сумму" />
+      <select id="currencyFrom">
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="RUB">RUB</option>
+      </select>
+      <button class="convert-btn" onclick="convertCurrency()">Конвертировать</button>
+      <div class="result" id="currencyResult"></div>
+    </div>
+
+    <!-- Длина -->
+    <div id="length" class="categoryContent" style="display:none;">
+      <input type="number" id="lengthInput" placeholder="Введите значение" />
+      <select id="lengthFrom">
+        <option value="m">Метр (м)</option>
+        <option value="km">Километр (км)</option>
+        <option value="cm">Сантиметр (см)</option>
+        <option value="mile">Миля</option>
+        <option value="yard">Ярд</option>
+        <option value="ft">Фут</option>
+      </select>
+      <button class="convert-btn" onclick="convertLength()">Конвертировать</button>
+      <div class="result" id="lengthResult"></div>
+    </div>
+
+    <!-- Масса -->
+    <div id="mass" class="categoryContent" style="display:none;">
+      <input type="number" id="massInput" placeholder="Введите значение" />
+      <select id="massFrom">
+        <option value="kg">Килограмм (кг)</option>
+        <option value="g">Грамм (г)</option>
+        <option value="lb">Фунт</option>
+        <option value="oz">Унция</option>
+      </select>
+      <button class="convert-btn" onclick="convertMass()">Конвертировать</button>
+      <div class="result" id="massResult"></div>
+    </div>
+
+    <!-- Площадь -->
+    <div id="area" class="categoryContent" style="display:none;">
+      <input type="number" id="areaInput" placeholder="Введите значение" />
+      <select id="areaFrom">
+        <option value="sq_m">Кв.метр</option>
+        <option value="sq_km">Кв.километр</option>
+        <option value="hectare">Гектар</option>
+        <option value="sq_mile">Кв.мили</option>
+        <option value="sq_yard">Кв.ярд</option>
+      </select>
+      <button class="convert-btn" onclick="convertArea()">Конвертировать</button>
+      <div class="result" id="areaResult"></div>
+    </div>
+
+    <!-- Время -->
+    <div id="time" class="categoryContent" style="display:none;">
+      <input type="number" id="timeInput" placeholder="Введите значение" />
+      <select id="timeFrom">
+        <option value="sec">Секунда</option>
+        <option value="min">Минута</option>
+        <option value="hour">Час</option>
+        <option value="day">День</option>
+        <option value="year">Год</option>
+      </select>
+      <button class="convert-btn" onclick="convertTime()">Конвертировать</button>
+      <div class="result" id="timeResult"></div>
+    </div>
+
+    <!-- Объем -->
+    <div id="volume" class="categoryContent" style="display:none;">
+      <input type="number" id="volumeInput" placeholder="Введите значение" />
+      <select id="volumeFrom">
+        <option value="l">Литр</option>
+        <option value="ml">Миллилитр</option>
+        <option value="m3">Кубический метр</option>
+        <option value="gal">Галлон</option>
+        <option value="cup">Чашка</option>
+      </select>
+      <button class="convert-btn" onclick="convertVolume()">Конвертировать</button>
+      <div class="result" id="volumeResult"></div>
+    </div>
+
+    <!-- Скорость -->
+    <div id="speed" class="categoryContent" style="display:none;">
+      <input type="number" id="speedInput" placeholder="Введите значение" />
+      <select id="speedFrom">
+        <option value="mps">м/с</option>
+        <option value="kmph">км/ч</option>
+        <option value="mph">миль/ч</option>
+        <option value="knot">узел</option>
+      </select>
+      <button class="convert-btn" onclick="convertSpeed()">Конвертировать</button>
+      <div class="result" id="speedResult"></div>
+    </div>
+
+  </div>
 </div>
 
 <script>
-  // Калькулятор
+  // Функция переключения категорий
+  function showCategory(category) {
+    const categories = document.querySelectorAll('.categoryContent');
+    categories.forEach(cat => {
+      cat.style.display = 'none';
+    });
+    document.getElementById(category).style.display = 'block';
+  }
+
+  // Изначально показываем температуру
+  showCategory('temp');
+
+  // Функции калькулятора
   let currentInput = '0';
   let previousInput = '';
   let operation = null;
@@ -237,8 +398,8 @@
   // Конвертер температуры
   function convertTemperature() {
     const inputValue = parseFloat(document.getElementById('tempInput').value);
-    const fromUnit = document.getElementById('unitFrom').value;
-    const resultDiv = document.getElementById('conversionResult');
+    const fromUnit = document.getElementById('tempFrom').value;
+    const resultDiv = document.getElementById('tempResult');
 
     if (isNaN(inputValue)) {
       resultDiv.innerText = 'Пожалуйста, введите число.';
@@ -247,18 +408,206 @@
 
     let convertedValue;
     if (fromUnit === 'C') {
-      // Цельсий в Фаренгейт
       convertedValue = (inputValue * 9/5) + 32;
       resultDiv.innerText = `${inputValue}°C = ${convertedValue.toFixed(2)}°F`;
     } else {
-      // Фаренгейт в Цельсий
       convertedValue = (inputValue - 32) * 5/9;
       resultDiv.innerText = `${inputValue}°F = ${convertedValue.toFixed(2)}°C`;
     }
   }
 
-  updateDisplay();
-</script>
+  // Валюта (примерный курс, можно обновлять)
+  function convertCurrency() {
+    const amount = parseFloat(document.getElementById('currencyInput').value);
+    const from = document.getElementById('currencyFrom').value;
+    const rates = {
+      USD: { EUR: 0.85, RUB: 75 },
+      EUR: { USD: 1.18, RUB: 88 },
+      RUB: { USD: 0.013, EUR: 0.011 }
+    };
+    const resultDiv = document.getElementById('currencyResult');
 
+    if (isNaN(amount)) {
+      resultDiv.innerText = 'Пожалуйста, введите сумму.';
+      return;
+    }
+
+    // Конвертация в другую валюту (например, EUR или RUB)
+    let targetCurrencies = Object.keys(rates[from]);
+    let results = targetCurrencies.map(target => {
+      let rate = rates[from][target];
+      return `${target}: ${(amount * rate).toFixed(2)}`;
+    });
+    resultDiv.innerText = results.join(', ');
+  }
+
+  // Длина
+  function convertLength() {
+    const value = parseFloat(document.getElementById('lengthInput').value);
+    const fromUnit = document.getElementById('lengthFrom').value;
+    const toUnits = {
+      m: 1,
+      km: 1000,
+      cm: 0.01,
+      mile: 1609.34,
+      yard: 0.9144,
+      ft: 0.3048
+    };
+
+    const resultDiv = document.getElementById('lengthResult');
+
+    if (isNaN(value)) {
+      resultDiv.innerText = 'Пожалуйста, введите число.';
+      return;
+    }
+
+    const inMeters = value * toUnits[fromUnit];
+    let results = Object.entries(toUnits).map(([unit, factor]) => {
+      if (unit !== fromUnit) {
+        return `${unit}: ${(inMeters / factor).toFixed(4)}`;
+      }
+    }).filter(Boolean);
+    resultDiv.innerText = results.join(', ');
+  }
+
+  // Масса
+  function convertMass() {
+    const value = parseFloat(document.getElementById('massInput').value);
+    const fromUnit = document.getElementById('massFrom').value;
+    const toUnits = {
+      kg: 1,
+      g: 0.001,
+      lb: 0.453592,
+      oz: 0.0283495
+    };
+
+    const resultDiv = document.getElementById('massResult');
+
+    if (isNaN(value)) {
+      resultDiv.innerText = 'Пожалуйста, введите число.';
+      return;
+    }
+
+    const inKg = value * toUnits[fromUnit];
+    let results = Object.entries(toUnits).map(([unit, factor]) => {
+      if (unit !== fromUnit) {
+        return `${unit}: ${(inKg / factor).toFixed(4)}`;
+      }
+    }).filter(Boolean);
+    resultDiv.innerText = results.join(', ');
+  }
+
+  // Площадь
+  function convertArea() {
+    const value = parseFloat(document.getElementById('areaInput').value);
+    const fromUnit = document.getElementById('areaFrom').value;
+    const toUnits = {
+      sq_m: 1,
+      sq_km: 1e6,
+      hectare: 1e4,
+      sq_mile: 2.59e6,
+      sq_yard: 0.836127
+    };
+
+    const resultDiv = document.getElementById('areaResult');
+
+    if (isNaN(value)) {
+      resultDiv.innerText = 'Пожалуйста, введите число.';
+      return;
+    }
+
+    const inSqM = value * toUnits[fromUnit];
+    let results = Object.entries(toUnits).map(([unit, factor]) => {
+      if (unit !== fromUnit) {
+        return `${unit}: ${(inSqM / factor).toFixed(4)}`;
+      }
+    }).filter(Boolean);
+    resultDiv.innerText = results.join(', ');
+  }
+
+  // Время
+  function convertTime() {
+    const value = parseFloat(document.getElementById('timeInput').value);
+    const fromUnit = document.getElementById('timeFrom').value;
+    const toUnits = {
+      sec: 1,
+      min: 60,
+      hour: 3600,
+      day: 86400,
+      year: 31536000
+    };
+
+    const resultDiv = document.getElementById('timeResult');
+
+    if (isNaN(value)) {
+      resultDiv.innerText = 'Пожалуйста, введите число.';
+      return;
+    }
+
+    const inSeconds = value * toUnits[fromUnit];
+    let results = Object.entries(toUnits).map(([unit, factor]) => {
+      if (unit !== fromUnit) {
+        return `${unit}: ${(inSeconds / factor).toFixed(4)}`;
+      }
+    }).filter(Boolean);
+    resultDiv.innerText = results.join(', ');
+  }
+
+  // Объем
+  function convertVolume() {
+    const value = parseFloat(document.getElementById('volumeInput').value);
+    const fromUnit = document.getElementById('volumeFrom').value;
+    const toUnits = {
+      l: 1,
+      ml: 0.001,
+      m3: 1000,
+      gal: 3.78541,
+      cup: 0.236588
+    };
+
+    const resultDiv = document.getElementById('volumeResult');
+
+    if (isNaN(value)) {
+      resultDiv.innerText = 'Пожалуйста, введите число.';
+      return;
+    }
+
+    const inLiters = value * toUnits[fromUnit];
+    let results = Object.entries(toUnits).map(([unit, factor]) => {
+      if (unit !== fromUnit) {
+        return `${unit}: ${(inLiters / factor).toFixed(4)}`;
+      }
+    }).filter(Boolean);
+    resultDiv.innerText = results.join(', ');
+  }
+
+  // Скорость
+  function convertSpeed() {
+    const value = parseFloat(document.getElementById('speedInput').value);
+    const fromUnit = document.getElementById('speedFrom').value;
+    const toUnits = {
+      mps: 1,
+      kmph: 1000/3600,
+      mph: 0.44704,
+      knot: 0.514444
+    };
+
+    const resultDiv = document.getElementById('speedResult');
+
+    if (isNaN(value)) {
+      resultDiv.innerText = 'Пожалуйста, введите число.';
+      return;
+    }
+
+    const inMps = value * toUnits[fromUnit];
+    let results = Object.entries(toUnits).map(([unit, factor]) => {
+      if (unit !== fromUnit) {
+        return `${unit}: ${(inMps / factor).toFixed(4)}`;
+      }
+    }).filter(Boolean);
+    resultDiv.innerText = results.join(', ');
+  }
+
+</script>
 </body>
 </html>
