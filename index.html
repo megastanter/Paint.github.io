@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Рулетка судьбы</title>
+<title>Рулетка</title>
 <style>
   * {
     box-sizing: border-box;
@@ -13,7 +13,7 @@
     margin: 0;
     padding: 0;
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    background: linear-gradient(135deg, #89f7fe, #66a6ff);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -25,16 +25,108 @@
   h1 {
     margin: 20px 0;
     font-size: 2.5em;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
     text-align: center;
+    color: #fff;
   }
 
-  #container {
+  #menu {
+    width: 90%;
+    max-width: 800px;
+    margin: 20px 0;
+    background: rgba(255,255,255,0.2);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  #menu h2 {
+    margin-top: 0;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 2em;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+  }
+
+  .preset-btn {
+    display: inline-block;
+    margin: 8px;
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #89f7fe, #66a6ff);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  .preset-btn:hover {
+    background: linear-gradient(135deg, #66a6ff, #89f7fe);
+    transform: translateY(-2px);
+  }
+
+  #createSection {
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 600px;
+  }
+
+  #createSection input {
+    padding: 10px;
+    font-size: 1em;
+    border-radius: 6px;
+    border: 2px solid #fff;
+    outline: none;
+    transition: border-color 0.3s;
+    width: 250px;
+    margin-bottom: 10px;
+  }
+
+  #createSection button {
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #89f7fe, #66a6ff);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  #createSection button:hover {
+    background: linear-gradient(135deg, #66a6ff, #89f7fe);
+    transform: translateY(-2px);
+  }
+
+  #startBtn {
+    margin-top: 15px;
+    padding: 10px 30px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #89f7fe, #66a6ff);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: background 0.3s, transform 0.2s;
+  }
+
+  #startBtn:hover {
+    background: linear-gradient(135deg, #66a6ff, #89f7fe);
+    transform: translateY(-2px);
+  }
+
+  #gameArea {
+    display: none;
     width: 90%;
+    max-width: 700px;
+    margin: 20px 0;
+    flex-direction: column;
+    align-items: center;
   }
 
   #roulette-wrapper {
@@ -48,40 +140,45 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 8px solid #fff;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    border: 10px solid #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
     cursor: pointer;
     position: relative;
-    background: #444;
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
     overflow: hidden;
   }
 
   #pointer {
     position: absolute;
-    top: -20px;
+    top: -25px;
     left: 50%;
     transform: translateX(-50%);
     width: 0; 
     height: 0; 
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 40px solid #fff;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 50px solid #fff;
     z-index: 10;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
   }
 
   #result {
     font-size: 1.8em;
     margin-top: 20px;
     min-height: 2em;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
     text-align: center;
+    padding: 10px 15px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
   }
 
   #controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 15px;
     margin-top: 20px;
     justify-content: center;
     width: 100%;
@@ -93,14 +190,14 @@
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    background-color: #fff;
-    color: #333;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    transition: background 0.3s, transform 0.2s;
+    background: linear-gradient(135deg, #89f7fe, #66a6ff);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
   }
 
   button:hover {
-    background-color: #ddd;
+    background: linear-gradient(135deg, #66a6ff, #89f7fe);
     transform: translateY(-2px);
   }
 
@@ -108,14 +205,24 @@
     padding: 10px;
     font-size: 1em;
     border-radius: 6px;
-    border: 2px solid #ccc;
-    width: 200px;
+    border: 2px solid #fff;
+    outline: none;
+    transition: border-color 0.3s;
+    width: 250px;
+  }
+
+  input[type="text"]:focus {
+    border-color: #fff;
   }
 
   @media(max-width: 500px){
     #roulette-wrapper {
       width: 90%;
       height: auto;
+    }
+    #controls {
+      flex-direction: column;
+      align-items: center;
     }
   }
 </style>
@@ -124,7 +231,21 @@
 
 <h1>Рулетка судьбы</h1>
 
-<div id="container">
+<div id="menu">
+  <h2>Выберите предустановленную рулетку или создайте свою</h2>
+  <div>
+    <button class="preset-btn" data-sectors='["Удача", "Неудача", "Золото", "Провал"]'>Классическая</button>
+    <button class="preset-btn" data-sectors='["Счастье", "Беда", "Удача", "Неудача"]'>Карта удачи</button>
+    <button class="preset-btn" data-sectors='["Путешествие", "Работа", "Любовь", "Деньги"]'>Жизненные сферы</button>
+  </div>
+  <div id="createSection">
+    <input type="text" id="newSectorsInput" placeholder='Введите сектора через запятую' />
+    <button id="createBtn">Создать свою</button>
+  </div>
+  <button id="startBtn">Начать игру</button>
+</div>
+
+<div id="gameArea">
   <div id="roulette-wrapper">
     <div id="pointer"></div>
     <div id="roulette"></div>
@@ -132,23 +253,28 @@
   <div id="result">Нажмите на рулетку или кнопку "Крутить", чтобы начать</div>
   <div id="controls">
     <button id="spinBtn">Крутить</button>
-    <button id="addSectorBtn">Добавить сектор</button>
-    <input type="text" id="newSectorInput" placeholder="Новый сектор" />
   </div>
 </div>
 
 <script>
-  const sectors = [
-    'Счастье', 'Беда', 'Удача', 'Неудача', 'Золото', 'Бронза', 'Счастье', 'Провал'
-  ];
+  const defaultSets = {
+    classical: ["Удача", "Неудача", "Золото", "Провал"],
+    luckMap: ["Счастье", "Беда", "Удача", "Неудача"],
+    lifeSpheres: ["Путешествие", "Работа", "Любовь", "Деньги"]
+  };
+
+  let sectors = [];
+  let isSpinning = false;
 
   const roulette = document.getElementById('roulette');
   const resultDiv = document.getElementById('result');
   const spinBtn = document.getElementById('spinBtn');
-  const addSectorBtn = document.getElementById('addSectorBtn');
-  const newSectorInput = document.getElementById('newSectorInput');
+  const startBtn = document.getElementById('startBtn');
+  const createBtn = document.getElementById('createBtn');
+  const newSectorsInput = document.getElementById('newSectorsInput');
 
-  let isSpinning = false;
+  const menu = document.getElementById('menu');
+  const gameArea = document.getElementById('gameArea');
 
   // Создаем сектора
 function createSegments() {
@@ -169,15 +295,16 @@ function createSegments() {
       segment.style.left = '50%';
       segment.style.transformOrigin = '0% 0%';
       segment.style.transform = `rotate(${index * anglePerSector}deg) skewY(-${90 - anglePerSector}deg)`;
-      segment.style.backgroundColor = index % 2 === 0 ? '#ffcc00' : '#ff6600';
+      segment.style.backgroundColor = index % 2 === 0 ? '#89f7fe' : '#66a6ff';
       segment.style.border = '1px solid #fff';
       segment.style.display = 'flex';
-      segment.style.alignItems = 'flex-start';
+      segment.style.alignItems = 'center';
       segment.style.justifyContent = 'center';
-      segment.style.padding = '10px';
+      segment.style.padding = '8px';
       segment.style.boxSizing = 'border-box';
       segment.style.fontSize = '0.9em';
       segment.style.fontWeight = 'bold';
+      segment.style.color = '#fff';
       roulette.appendChild(segment);
     });
   }
@@ -208,21 +335,61 @@ function spin() {
   }
 
 function addSector() {
-    const newSector = newSectorInput.value.trim();
+    const newSector = newSectorsInput.value.trim();
     if (newSector && !sectors.includes(newSector)) {
       sectors.push(newSector);
       createSegments();
-      newSectorInput.value = '';
+      newSectorsInput.value = '';
     } else {
       alert('Введите уникальное название сектора');
     }
   }
 
-createSegments();
+function loadPreset(sectorsArray) {
+  sectors = [...sectorsArray];
+  createSegments();
+}
 
-document.getElementById('spinBtn').addEventListener('click', spin);
-document.getElementById('addSectorBtn').addEventListener('click', addSector);
-document.getElementById('roulette').addEventListener('click', spin);
+function init() {
+  // Обработка предустановленных кнопок
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.onclick = () => {
+      const sectorsStr = JSON.parse(btn.dataset.sectors);
+      loadPreset(sectorsStr);
+    };
+  });
+
+  document.getElementById('createBtn').onclick = () => {
+    const input = document.getElementById('newSectorsInput').value.trim();
+    if (!input) {
+      alert('Введите сектора через запятую');
+      return;
+    }
+    const newSectors = input.split(',').map(s => s.trim()).filter(s => s);
+    if (newSectors.length === 0) {
+      alert('Введите хотя бы один сектор');
+      return;
+    }
+    sectors = [...newSectors];
+    createSegments();
+  };
+
+  document.getElementById('startBtn').onclick = () => {
+    if (sectors.length === 0) {
+      alert('Выберите или создайте рулетку!');
+      return;
+    }
+    menu.style.display = 'none';
+    gameArea.style.display = 'flex';
+  };
+
+  document.getElementById('spinBtn').addEventListener('click', spin);
+  document.getElementById('roulette').addEventListener('click', spin);
+}
+
+// Инициализация
+init();
+
 </script>
 
 </body>
