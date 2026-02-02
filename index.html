@@ -9,9 +9,9 @@
     font-family: Arial, sans-serif;
     background-color: #ffe5b4;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
+    padding: 20px;
   }
 
   .calculator {
@@ -19,7 +19,8 @@
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    width: 300px;
+    width: 320px;
+    margin-bottom: 30px;
   }
 
   .display {
@@ -69,10 +70,68 @@
   .clear:hover {
     background-color: #8b4513;
   }
+
+  /* Стиль для конвертера */
+  .converter {
+    background-color: #ff6347;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    width: 320px;
+  }
+
+  .converter h2 {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .converter input {
+    width: calc(50% - 10px);
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-right: 10px;
+  }
+
+  .converter select {
+    width: calc(50% - 10px);
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+  }
+
+  .convert-btn {
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ff8c00;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .convert-btn:hover {
+    background-color: #ff7000;
+  }
+
+  .result {
+    margin-top: 10px;
+    font-size: 18px;
+    text-align: center;
+  }
+
 </style>
 </head>
 <body>
 
+<!-- Калькулятор -->
 <div class="calculator">
   <div class="display" id="display">0</div>
   <div class="buttons">
@@ -99,7 +158,20 @@
   </div>
 </div>
 
+<!-- Конвертер -->
+<div class="converter">
+  <h2>Конвертер температуры</h2>
+  <input type="number" id="tempInput" placeholder="Введите значение" />
+  <select id="unitFrom">
+    <option value="C">Цельсий (°C)</option>
+    <option value="F">Фаренгейт (°F)</option>
+  </select>
+  <button class="convert-btn" onclick="convertTemperature()">Конвертировать</button>
+  <div class="result" id="conversionResult"></div>
+</div>
+
 <script>
+  // Калькулятор
   let currentInput = '0';
   let previousInput = '';
   let operation = null;
@@ -160,6 +232,29 @@
     previousInput = '';
     operation = null;
     updateDisplay();
+  }
+
+  // Конвертер температуры
+  function convertTemperature() {
+    const inputValue = parseFloat(document.getElementById('tempInput').value);
+    const fromUnit = document.getElementById('unitFrom').value;
+    const resultDiv = document.getElementById('conversionResult');
+
+    if (isNaN(inputValue)) {
+      resultDiv.innerText = 'Пожалуйста, введите число.';
+      return;
+    }
+
+    let convertedValue;
+    if (fromUnit === 'C') {
+      // Цельсий в Фаренгейт
+      convertedValue = (inputValue * 9/5) + 32;
+      resultDiv.innerText = `${inputValue}°C = ${convertedValue.toFixed(2)}°F`;
+    } else {
+      // Фаренгейт в Цельсий
+      convertedValue = (inputValue - 32) * 5/9;
+      resultDiv.innerText = `${inputValue}°F = ${convertedValue.toFixed(2)}°C`;
+    }
   }
 
   updateDisplay();
