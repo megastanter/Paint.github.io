@@ -3,280 +3,227 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</title>рулетка</title>
+<title>Рулетка судьбы</title>
 <style>
+  * {
+    box-sizing: border-box;
+  }
+
   body {
     margin: 0;
-    font-family: 'Montserrat', sans-serif;
-    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    justify-content: flex-start;
     min-height: 100vh;
-    color: #222;
-  }
-  h1 {
-    margin-bottom: 20px;
     color: #fff;
   }
-  #inputs {
+
+  h1 {
+    margin: 20px 0;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    text-align: center;
+  }
+
+  #container {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    width: 100%;
+    flex-direction: column;
+    align-items: center;
     max-width: 600px;
+    width: 90%;
   }
-  #inputs input {
-    flex: 1;
-    padding: 10px;
-    font-size: 1em;
-    border-radius: 8px;
-    border: none;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+
+  #roulette-wrapper {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    margin: 20px 0;
   }
-  #buttons {
+
+  #roulette {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 8px solid #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+    cursor: pointer;
+    position: relative;
+    background: #444;
+    overflow: hidden;
+  }
+
+  #pointer {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; 
+    height: 0; 
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 40px solid #fff;
+    z-index: 10;
+  }
+
+  #result {
+    font-size: 1.8em;
+    margin-top: 20px;
+    min-height: 2em;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+    text-align: center;
+  }
+
+  #controls {
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
     justify-content: center;
+    width: 100%;
   }
+
   button {
-    padding: 12px 20px;
-    font-size: 1em;
+    padding: 12px 24px;
+    font-size: 1.1em;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background 0.3s;
-    background-color: #4CAF50;
-    color: #fff;
+    background-color: #fff;
+    color: #333;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: background 0.3s, transform 0.2s;
   }
+
   button:hover {
-    background-color: #45a049;
+    background-color: #ddd;
+    transform: translateY(-2px);
   }
-  #list {
-    margin-top: 20px;
-    width: 100%;
-    max-width: 600px;
-  }
-  #list ul {
-    list-style: none;
-    padding: 0;
-  }
-  #list li {
-    background: rgba(255,255,255,0.2);
-    margin-bottom: 8px;
+
+  input[type="text"] {
     padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-size: 1em;
+    border-radius: 6px;
+    border: 2px solid #ccc;
+    width: 200px;
   }
-  #list button {
-    background-color: #f44336;
+
+  @media(max-width: 500px){
+    #roulette-wrapper {
+      width: 90%;
+      height: auto;
+    }
   }
-  /* Круглая рулетка */
-#wheelContainer {
-  margin-top: 30px;
-  width: 400px;
-  height: 400px;
-  position: relative;
-  cursor:pointer;
-}
-#wheel {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 10px solid #fff;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
-}
-#pointer {
-  position: absolute;
-  top: -20px;
-  left: calc(50% - 10px);
-  width: 0; 
-  height: 0; 
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 20px solid #fff;
-  z-index: 10;
-}
-#spinBtn {
-  margin-top: 20px;
-  padding: 15px 30px;
-  font-size: 1.5em;
-  border-radius: 10px;
-  border: none;
-  background-color: #2196F3;
-  color: #fff;
-  cursor:pointer;
-  transition: background 0.3s;
-}
-#spinBtn:hover {
-  background-color: #0b7dda;
-}
-#result {
-  margin-top: 30px;
-  font-size: 2em;
-  font-weight: bold;
-  color: #fff;
-}
 </style>
 </head>
 <body>
 
-<h1>Создай свою рулетку</h1>
+<h1>Рулетка судьбы</h1>
 
-<div id="inputs">
-  <input type="text" id="optionInput" placeholder="Добавить вариант" />
+<div id="container">
+  <div id="roulette-wrapper">
+    <div id="pointer"></div>
+    <div id="roulette"></div>
+  </div>
+  <div id="result">Нажмите на рулетку или кнопку "Крутить", чтобы начать</div>
+  <div id="controls">
+    <button id="spinBtn">Крутить</button>
+    <button id="addSectorBtn">Добавить сектор</button>
+    <input type="text" id="newSectorInput" placeholder="Новый сектор" />
+  </div>
 </div>
-<div id="buttons">
-  <button onclick="addOption()">Добавить</button>
-  <button onclick="clearOptions()">Очистить список</button>
-</div>
-
-<div id="list">
-  <h2 style="color:#fff;">Ваши варианты:</h2>
-  <ul id="optionsList"></ul>
-</div>
-
-<!-- Колесо фортуны -->
-<div id="wheelContainer">
-  <div id="pointer"></div>
-  <canvas id="wheel" width="400" height="400"></canvas>
-</div>
-
-<button id="spinBtn" onclick="spin()">Крутить колесо</button>
-<div id="result"></div>
 
 <script>
-  const options = [];
+  const sectors = [
+    'Счастье', 'Беда', 'Удача', 'Неудача', 'Золото', 'Бронза', 'Счастье', 'Провал'
+  ];
 
-  const canvas = document.getElementById('wheel');
-  const ctx = canvas.getContext('2d');
-  const wheelContainer = document.getElementById('wheelContainer');
+  const roulette = document.getElementById('roulette');
+  const resultDiv = document.getElementById('result');
+  const spinBtn = document.getElementById('spinBtn');
+  const addSectorBtn = document.getElementById('addSectorBtn');
+  const newSectorInput = document.getElementById('newSectorInput');
 
-  let currentRotation = 0; // угол текущего вращения
   let isSpinning = false;
-  let selectedOption = '';
 
-  function addOption() {
-    const input = document.getElementById('optionInput');
-    const value = input.value.trim();
-    if(value && !options.includes(value)){
-      options.push(value);
-      updateList();
-      input.value='';
-      drawWheel();
-    } else {
-      alert('Введите уникальный вариант');
+  // Создаем сектора
+function createSegments() {
+    roulette.innerHTML = '';
+    const count = sectors.length;
+    if (count === 0) {
+      resultDiv.innerText = 'Добавьте сектора для вращения!';
+      return;
     }
-  }
-
-  function updateList() {
-    const ul = document.getElementById('optionsList');
-    ul.innerHTML='';
-    options.forEach((opt, index) => {
-      const li = document.createElement('li');
-      li.textContent = opt;
-      const delBtn = document.createElement('button');
-      delBtn.textContent='Удалить';
-      delBtn.onclick=()=>{ removeOption(index); };
-      li.appendChild(delBtn);
-      ul.appendChild(li);
+    const anglePerSector = 360 / count;
+    sectors.forEach((sector, index) => {
+      const segment = document.createElement('div');
+      segment.innerText = sector;
+      segment.style.position = 'absolute';
+      segment.style.width = '50%';
+      segment.style.height = '50%';
+      segment.style.top = '50%';
+      segment.style.left = '50%';
+      segment.style.transformOrigin = '0% 0%';
+      segment.style.transform = `rotate(${index * anglePerSector}deg) skewY(-${90 - anglePerSector}deg)`;
+      segment.style.backgroundColor = index % 2 === 0 ? '#ffcc00' : '#ff6600';
+      segment.style.border = '1px solid #fff';
+      segment.style.display = 'flex';
+      segment.style.alignItems = 'flex-start';
+      segment.style.justifyContent = 'center';
+      segment.style.padding = '10px';
+      segment.style.boxSizing = 'border-box';
+      segment.style.fontSize = '0.9em';
+      segment.style.fontWeight = 'bold';
+      roulette.appendChild(segment);
     });
-    drawWheel();
   }
 
-  function removeOption(index) {
-    options.splice(index,1);
-    updateList();
-  }
-
-  function clearOptions() {
-    options.length=0;
-    updateList();
-    document.getElementById('result').textContent='';
-    drawWheel();
-  }
-
-  function drawWheel() {
-    const optionsCount = options.length;
-    ctx.clearRect(0, 0, 400, 400);
-    if(optionsCount===0) return;
-
-    const arcSize = Math.PI*2 / optionsCount;
-    ctx.save();
-    ctx.translate(200,200);
-    ctx.rotate(currentRotation * Math.PI/180);
-    ctx.translate(-200,-200);
-
-    for(let i=0; i<optionsCount; i++) {
-      ctx.beginPath();
-      ctx.moveTo(200,200);
-      ctx.arc(200,200,180,i*arcSize,(i+1)*arcSize);
-      ctx.closePath();
-      ctx.fillStyle = `hsl(${i*360/optionsCount}, 70%, 50%)`;
-      ctx.fill();
-
-      // Добавление текста
-      ctx.save();
-      ctx.translate(200,200);
-      ctx.rotate(i*arcSize + arcSize/2);
-      ctx.textAlign='right';
-      ctx.fillStyle='#fff';
-      ctx.font='14px Montserrat';
-      ctx.fillText(options[i], 170, 5);
-      ctx.restore();
-    }
-
-    ctx.restore();
-  }
-
-  document.getElementById('wheelContainer').addEventListener('click', () => {
-    if(!isSpinning && options.length>0){
-      spin();
-    }
-  });
-
-  function spin() {
-    if(options.length===0 || isSpinning) return;
+function spin() {
+    if (isSpinning || sectors.length === 0) return;
     isSpinning = true;
-    document.getElementById('result').textContent='';
+    resultDiv.innerText = '';
 
-    // случайный угол для остановки
-    const randIndex = Math.floor(Math.random() * options.length);
-    selectedOption = options[randIndex];
+    const count = sectors.length;
+    const anglePerSector = 360 / count;
+    const spinsCount = Math.floor(Math.random() * 3) + 4; // минимум 4 круга
+    const randomIndex = Math.floor(Math.random() * count);
+    const stopAngle = 360 * spinsCount + (count - randomIndex) * anglePerSector + anglePerSector / 2;
 
-    const arcSize = 360 / options.length;
-    const stopAngle = 360 * 4 + (360 - randIndex * arcSize - arcSize/2); // 4 полных оборота + целевой сектор
+    // Запускаем анимацию
+    roulette.style.transition = 'transform 4s cubic-bezier(0.33, 1, 0.68, 1)';
+    roulette.style.transform = `rotate(${stopAngle}deg)`;
 
-    const duration = 4000; // длительность вращения
-    const start = performance.now();
-
-    function animate(currentTime) {
-      const elapsed = currentTime - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // easing
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
-      currentRotation = easeProgress * stopAngle;
-      drawWheel();
-      if(progress <1){
-        requestAnimationFrame(animate);
-      } else {
-        currentRotation = stopAngle % 360;
-        isSpinning = false;
-        document.getElementById('result').textContent='🎉 Выпало: ' + selectedOption + ' 🎉';
-      }
-    }
-    requestAnimationFrame(animate);
+    // После окончания вращения
+    setTimeout(() => {
+      const normalizedDeg = stopAngle % 360;
+      const index = Math.floor(normalizedDeg / anglePerSector);
+      const resultSector = sectors[(sectors.length - index) % sectors.length];
+      resultDiv.innerText = `Вам выпало: ${resultSector}`;
+      isSpinning = false;
+    }, 4000);
   }
 
-  // Изначально рисуем колесо
-  drawWheel();
+function addSector() {
+    const newSector = newSectorInput.value.trim();
+    if (newSector && !sectors.includes(newSector)) {
+      sectors.push(newSector);
+      createSegments();
+      newSectorInput.value = '';
+    } else {
+      alert('Введите уникальное название сектора');
+    }
+  }
 
+createSegments();
+
+document.getElementById('spinBtn').addEventListener('click', spin);
+document.getElementById('addSectorBtn').addEventListener('click', addSector);
+document.getElementById('roulette').addEventListener('click', spin);
 </script>
+
 </body>
 </html>
