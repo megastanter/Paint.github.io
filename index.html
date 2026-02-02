@@ -3,164 +3,166 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>генератор изображений</title>
+<title>Калькулятор</title>
 <style>
   body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #ff4e50, #ff6f61);
+    font-family: Arial, sans-serif;
+    background-color: #ffe5b4;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    padding: 40px 20px;
-    margin: 0;
-    min-height: 100vh;
+    height: 100vh;
+  }
+
+  .calculator {
+    background-color: #ff6347; /* оранжево-красный фон */
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    width: 300px;
+  }
+
+  .display {
+    background-color: #ff7f50; /* ярко-оранжевый дисплей */
+    padding: 10px;
+    font-size: 24px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    text-align: right;
     color: #fff;
+    min-height: 40px;
   }
 
-  h1 {
-    font-size: 3em;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
-    text-align: center;
-  }
-
-  #form {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    max-width: 700px;
-    background: rgba(255,255,255,0.1);
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-  }
-
-  input[type="text"] {
-    padding: 15px;
-    font-size: 1.3em;
-    border-radius: 12px;
-    border: 2px solid #fff;
-    outline: none;
-    margin-bottom: 20px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
-
-  input[type="text"]:focus {
-    border-color: #ffd700;
-    box-shadow: 0 0 10px #ffd700;
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
   }
 
   button {
     padding: 15px;
-    font-size: 1.4em;
+    font-size: 18px;
     border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #ff7e5f, #feb47b);
-    color: #fff;
+    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
-    transition: background 0.3s, transform 0.2s;
+    background-color: #ff8c00; /* темно-оранжевый */
+    color: #fff;
+    transition: background-color 0.2s;
   }
 
   button:hover {
-    background: linear-gradient(135deg, #feb47b, #ff7e5f);
-    transform: translateY(-2px);
+    background-color: #ff7000;
   }
 
-  #status {
-    margin-top: 20px;
-    font-size: 1.3em;
-    min-height: 1.5em;
-    text-align: center;
+  .operator {
+    background-color: #dc143c; /* красный для операторов */
   }
 
-  #imageContainer {
-    margin-top: 30px;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+  .operator:hover {
+    background-color: #b22222;
   }
 
-  #generatedImage {
-    max-width: 100%;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-    display: none;
-    transition: transform 0.3s;
+  .clear {
+    background-color: #a0522d; /* коричнево-красный для С */
   }
 
-  #generatedImage:hover {
-    transform: scale(1.02);
-  }
-
-  /* Адаптивность */
-  @media(max-width: 600px){
-    h1 {
-      font-size: 2em;
-    }
-    input[type="text"] {
-      font-size: 1em;
-    }
-    button {
-      font-size: 1em;
-    }
+  .clear:hover {
+    background-color: #8b4513;
   }
 </style>
 </head>
 <body>
 
-<h1>Крутой Генератор Изображений</h1>
-
-<div id="form">
-  <input type="text" id="promptInput" placeholder="Введите описание картинки..." />
-  <button id="generateBtn">Генерировать</button>
-</div>
-
-<div id="status"></div>
-<div id="imageContainer">
-  <img id="generatedImage" src="" alt="Сгенерированное изображение" />
+<div class="calculator">
+  <div class="display" id="display">0</div>
+  <div class="buttons">
+    <button class="clear" onclick="clearDisplay()">C</button>
+    <button onclick="appendNumber('7')">7</button>
+    <button onclick="appendNumber('8')">8</button>
+    <button onclick="appendNumber('9')">9</button>
+    <button class="operator" onclick="setOperation('+')">+</button>
+    
+    <button onclick="appendNumber('4')">4</button>
+    <button onclick="appendNumber('5')">5</button>
+    <button onclick="appendNumber('6')">6</button>
+    <button class="operator" onclick="setOperation('-')">-</button>
+    
+    <button onclick="appendNumber('1')">1</button>
+    <button onclick="appendNumber('2')">2</button>
+    <button onclick="appendNumber('3')">3</button>
+    <button class="operator" onclick="setOperation('*')">&times;</button>
+    
+    <button onclick="appendNumber('0')">0</button>
+    <button onclick="appendNumber('.')">.</button>
+    <button onclick="calculate()" style="grid-column: span 2;">=</button>
+    <button class="operator" onclick="setOperation('/')">/</button>
+  </div>
 </div>
 
 <script>
-  const apiKey = 'YOUR_DEEPAI_API_KEY'; // вставьте свой API ключ сюда
+  let currentInput = '0';
+  let previousInput = '';
+  let operation = null;
 
-  const generateBtn = document.getElementById('generateBtn');
-  const promptInput = document.getElementById('promptInput');
-  const statusDiv = document.getElementById('status');
-  const imageElem = document.getElementById('generatedImage');
+  const display = document.getElementById('display');
 
-  generateBtn.onclick = () => {
-    const prompt = promptInput.value.trim();
-    if (!prompt) {
-      alert('Пожалуйста, введите описание!');
-      return;
+  function updateDisplay() {
+    display.innerText = currentInput;
+  }
+
+  function appendNumber(number) {
+    if (currentInput === '0' && number !== '.') {
+      currentInput = number;
+    } else {
+      currentInput += number;
     }
-    statusDiv.innerText = 'Генерация изображения...';
-    imageElem.style.display = 'none';
+    updateDisplay();
+  }
 
-    fetch('https://api.deepai.org/api/text2img', {
-      method: 'POST',
-      headers: {
-        'Api-Key': apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ text: prompt })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.output_url) {
-        imageElem.src = data.output_url;
-        imageElem.style.display = 'block';
-        statusDiv.innerText = 'Генерация завершена!';
-      } else {
-        statusDiv.innerText = 'Ошибка при генерации изображения.';
-      }
-    })
-    .catch(() => {
-      statusDiv.innerText = 'Ошибка сети или API.';
-    });
-  };
+  function setOperation(op) {
+    if (operation !== null) {
+      calculate();
+    }
+    previousInput = currentInput;
+    currentInput = '0';
+    operation = op;
+  }
+
+  function calculate() {
+    let prev = parseFloat(previousInput);
+    let current = parseFloat(currentInput);
+    if (isNaN(prev) || isNaN(current)) return;
+
+    let result;
+    switch (operation) {
+      case '+':
+        result = prev + current;
+        break;
+      case '-':
+        result = prev - current;
+        break;
+      case '*':
+        result = prev * current;
+        break;
+      case '/':
+        result = current === 0 ? 'Ошибка' : prev / current;
+        break;
+      default:
+        return;
+    }
+    currentInput = result.toString();
+    operation = null;
+    updateDisplay();
+  }
+
+  function clearDisplay() {
+    currentInput = '0';
+    previousInput = '';
+    operation = null;
+    updateDisplay();
+  }
+
+  updateDisplay();
 </script>
 
 </body>
