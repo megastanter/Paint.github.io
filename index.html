@@ -2,349 +2,305 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>калькулятор</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Геометрия Даш - Улучшенная версия</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
-    background-color: #e0f7fa; /* светло-голубой фон */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px;
+    background: linear-gradient(135deg, #ece9e6, #ffffff);
     margin: 0;
-  }
-
-  h1 {
-    color: #039be5;
-    margin-bottom: 30px;
-    font-size: 2.5em;
-  }
-
-  .calculator-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #b3e5fc; /* светлый голубой */
-    padding: 30px;
-    border-radius: 25px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    max-width: 380px;
-    width: 100%;
-  }
-
-  /* дисплей */
-  .display {
-    background-color: #81d4fa;
     padding: 20px;
-    font-size: 2.2em;
-    border-radius: 15px;
-    width: 100%;
-    text-align: right;
-    color: #fff;
-    overflow-wrap: break-word;
-    min-height: 60px;
-    margin-bottom: 25px;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
   }
-
-  /* кнопки */
-  .buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    width: 100%;
-  }
-
-  button {
-    padding: 20px 0;
-    font-size: 1.4em;
-    border: none;
-    border-radius: 15px;
-    cursor: pointer;
-    background-color: #039be5;
-    color: #fff;
-    transition: all 0.2s;
-  }
-
-  button:hover {
-    background-color: #0277bd;
-    transform: scale(1.05);
-  }
-
-  /* отдельные стили для операторов и очистки */
-  .operator {
-    background-color: #0288d1;
-  }
-
-  .operator:hover {
-    background-color: #026aa7;
-  }
-
-  .clear {
-    background-color: #01579b;
-  }
-
-  .clear:hover {
-    background-color: #003c60;
-  }
-
-  /* стили для расширенного функционала снизу */
-  .extra-functions {
-    margin-top: 30px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  /* переключатели режимов */
-  .mode-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-
-  .mode-btn {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 12px;
-    background-color: #039be5;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.2s;
-  }
-
-  .mode-btn:hover {
-    background-color: #0277bd;
-  }
-
-  /* блоки функций */
-  .function-block {
-    display: none;
-    width: 100%;
-    margin-top: 15px;
-  }
-
-  /* активный блок */
-  .function-block.active {
-    display: block;
-  }
-
-  /* input и select стили */
-  .func-input {
-    width: calc(50% - 10px);
-    padding: 12px;
-    font-size: 1.2em;
-    border: 2px solid #039be5;
+  #gameContainer {
+    width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    border: 4px solid #333;
     border-radius: 10px;
-    margin-bottom: 10px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
   }
-
-  .func-select {
+  #canvas {
     width: 100%;
-    padding: 12px;
-    font-size: 1.2em;
-    border: 2px solid #039be5;
-    border-radius: 10px;
-    margin-bottom: 10px;
-  }
-
-  .convert-btn {
-    padding: 12px 20px;
-    font-size: 1.2em;
-    border: none;
-    border-radius: 12px;
-    background-color: #039be5;
-    color: #fff;
+    height: 500px;
+    border: 2px solid #555;
+    background: #fafafa;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.2s;
   }
-
-  .convert-btn:hover {
-    background-color: #0277bd;
-  }
-
-  /* результат */
-  .result {
-    margin-top: 12px;
-    font-size: 1.4em;
-    color: #03396c;
+  #levelTitle {
     text-align: center;
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  #progress {
+    margin-top: 10px;
+    font-size: 18px;
+    text-align: center;
+  }
+  #nextLevelBtn {
+    display: block;
+    margin: 15px auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  #nextLevelBtn:hover {
+    background-color: #0056b3;
   }
 </style>
 </head>
 <body>
 
-<h1>калькулятор</h1>
-
-<div class="calculator-container">
-  <!-- дисплей -->
-  <div class="display" id="display">0</div>
-  
-  <!-- кнопки -->
-  <div class="buttons">
-    <button class="clear" onclick="clearDisplay()">C</button>
-    <button onclick="appendNumber('7')">7</button>
-    <button onclick="appendNumber('8')">8</button>
-    <button onclick="appendNumber('9')">9</button>
-    <button class="operator" onclick="setOperation('/')">/</button>
-    
-    <button onclick="appendNumber('4')">4</button>
-    <button onclick="appendNumber('5')">5</button>
-    <button onclick="appendNumber('6')">6</button>
-    <button class="operator" onclick="setOperation('*')">&times;</button>
-    
-    <button onclick="appendNumber('1')">1</button>
-    <button onclick="appendNumber('2')">2</button>
-    <button onclick="appendNumber('3')">3</button>
-    <button class="operator" onclick="setOperation('-')">-</button>
-    
-    <button onclick="appendNumber('0')">0</button>
-    <button onclick="appendNumber('.')">.</button>
-    <button style="grid-column: span 2;" onclick="calculate()">=</button>
-    <button class="operator" onclick="setOperation('+')">+</button>
-  </div>
-
-  <!-- расширенный функционал -->
-  <div class="extra-functions">
-    <div class="mode-buttons">
-      <button class="mode-btn" onclick="showFunction('scientific')">Научный</button>
-      <button class="mode-btn" onclick="showFunction('basic')">Базовый</button>
-    </div>
-
-    <!-- Научный режим -->
-    <div id="scientific" class="function-block active">
-      <h3>Научные функции</h3>
-      <button onclick="scientificOperation('sin')">sin</button>
-      <button onclick="scientificOperation('cos')">cos</button>
-      <button onclick="scientificOperation('tan')">tan</button>
-      <button onclick="scientificOperation('sqrt')">√</button>
-    </div>
-
-    <!-- Базовый режим -->
-    <div id="basic" class="function-block">
-      <h3>Дополнительные функции</h3>
-      <button onclick="changeSign()">±</button>
-      <button onclick="percent()">%</button>
-    </div>
-  </div>
+<h1 style="text-align:center;">Геометрия Даш - Улучшенная версия</h1>
+<div id="gameContainer">
+  <div id="levelTitle">Уровень 1</div>
+  <canvas id="canvas" width="760" height="500"></canvas>
+  <div id="progress">Прогресс: 0/0</div>
+  <button id="nextLevelBtn">Следующий уровень</button>
 </div>
 
 <script>
-  // Основной калькулятор
-  let currentInput = '0';
-  let previousInput = '';
-  let operation = null;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-  const display = document.getElementById('display');
+const levelTitle = document.getElementById('levelTitle');
+const progressText = document.getElementById('progress');
+const nextButton = document.getElementById('nextLevelBtn');
 
-  function updateDisplay() {
-    display.innerText = currentInput;
+let currentLevelIndex = 0;
+
+// Различные уровни с более сложными объектами и преградами
+const levels = [
+  {
+    description: 'Нажмите на все красные кубы, избегая препятствий!',
+    objects: [
+      { type: 'square', x: 50, y: 50, size: 50, color: 'red', clicked: false, id: 1 },
+      { type: 'square', x: 200, y: 100, size: 50, color: 'red', clicked: false, id: 2 },
+      { type: 'square', x: 350, y: 50, size: 50, color: 'red', clicked: false, id: 3 },
+    ],
+    targetColor: 'red',
+    obstacles: [
+      { type: 'barrier', x: 100, y: 200, width: 200, height: 20 },
+      { type: 'barrier', x: 300, y: 300, width: 250, height: 20 },
+    ],
+    goal: 3
+  },
+  {
+    description: 'Кликайте на зеленых круги, избегая препятствий!',
+    objects: [
+      { type: 'circle', x: 100, y: 150, radius: 30, color: 'green', clicked: false, id: 4 },
+      { type: 'circle', x: 250, y: 250, radius: 30, color: 'green', clicked: false, id: 5 },
+      { type: 'circle', x: 400, y: 150, radius: 30, color: 'green', clicked: false, id: 6 },
+    ],
+    targetColor: 'green',
+    obstacles: [
+      { type: 'barrier', x: 150, y: 200, width: 20, height: 150 },
+      { type: 'barrier', x: 350, y: 100, width: 20, height: 300 },
+    ],
+    goal: 3
+  },
+  {
+    description: 'Нажимайте на синие треугольники, избегая преград!',
+    objects: [
+      { type: 'triangle', x: 150, y: 100, size: 50, color: 'blue', clicked: false, id: 7 },
+      { type: 'triangle', x: 300, y: 200, size: 50, color: 'blue', clicked: false, id: 8 },
+    ],
+    targetColor: 'blue',
+    obstacles: [
+      { type: 'barrier', x: 200, y: 150, width: 100, height: 20 },
+      { type: 'barrier', x: 250, y: 250, width: 20, height: 100 },
+    ],
+    goal: 2
+  }
+];
+
+let currentLevel = levels[currentLevelIndex];
+
+function drawObject(obj) {
+  ctx.save();
+  ctx.translate(obj.x, obj.y);
+  ctx.fillStyle = obj.color;
+  if (obj.type === 'square') {
+    ctx.fillRect(-obj.size/2, -obj.size/2, obj.size, obj.size);
+  } else if (obj.type === 'circle') {
+    ctx.beginPath();
+    ctx.arc(0, 0, obj.radius, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (obj.type === 'triangle') {
+    ctx.beginPath();
+    ctx.moveTo(0, -obj.size/2);
+    ctx.lineTo(-obj.size/2, obj.size/2);
+    ctx.lineTo(obj.size/2, obj.size/2);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBarrier(barrier) {
+  ctx.fillStyle = '#555';
+  ctx.fillRect(barrier.x, barrier.y, barrier.width, barrier.height);
+}
+
+function drawLevel() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Рисуем препятствия
+  if (currentLevel.obstacles) {
+    currentLevel.obstacles.forEach(drawBarrier);
   }
 
-  function appendNumber(number) {
-    if (currentInput === '0' && number !== '.') {
-      currentInput = number;
-    } else {
-      currentInput += number;
+  // Рисуем объекты
+  currentLevel.objects.forEach(obj => {
+    drawObject(obj);
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const clickedCount = currentLevel.objects.filter(o => o.clicked).length;
+  progressText.innerText = `Прогресс: ${clickedCount}/${currentLevel.goal}`;
+}
+
+function checkCollision(x, y) {
+  // Проверка на препятствия
+  for (const barrier of currentLevel.obstacles) {
+    if (
+      x >= barrier.x && x <= barrier.x + barrier.width &&
+      y >= barrier.y && y <= barrier.y + barrier.height
+    ) {
+      return true; // столкновение с преградой
     }
-    updateDisplay();
   }
+  return false;
+}
 
-  function setOperation(op) {
-    if (operation !== null) {
-      calculate();
+function handleClick(x, y) {
+  const level = currentLevel;
+  let levelComplete = false;
+
+  for (let obj of level.objects) {
+    if (!obj.clicked) {
+      if (obj.type === 'square') {
+        if (
+          x >= obj.x - obj.size/2 && x <= obj.x + obj.size/2 &&
+          y >= obj.y - obj.size/2 && y <= obj.y + obj.size/2
+        ) {
+          // Проверка на столкновение с препятствием
+          if (checkCollision(x, y)) {
+            alert('Столкновение с препятствием!');
+            return;
+          }
+          if (obj.color === level.targetColor) {
+            obj.clicked = true;
+            updateProgress();
+            // Проверка завершения уровня
+            if (currentLevel.objects.filter(o => o.clicked).length >= currentLevel.goal) {
+              alert('Вы прошли уровень!');
+              levelComplete = true;
+            }
+            break;
+          } else {
+            alert('Неверный объект!');
+            return;
+          }
+        }
+      } else if (obj.type === 'circle') {
+        const dx = x - obj.x;
+        const dy = y - obj.y;
+        if (dx * dx + dy * dy <= obj.radius * obj.radius) {
+          // Столкновение с препятствием
+          if (checkCollision(x, y)) {
+            alert('Столкновение с препятствием!');
+            return;
+          }
+          if (obj.color === level.targetColor) {
+            obj.clicked = true;
+            updateProgress();
+            if (currentLevel.objects.filter(o => o.clicked).length >= currentLevel.goal) {
+              alert('Вы прошли уровень!');
+              levelComplete = true;
+            }
+            break;
+          } else {
+            alert('Неверный объект!');
+            return;
+          }
+        }
+      } else if (obj.type === 'triangle') {
+        // Проверка попадания по треугольнику (примерно)
+        // Для простоты используем bounding box
+        const minX = obj.x - obj.size/2;
+        const maxX = obj.x + obj.size/2;
+        const minY = obj.y - obj.size/2;
+        const maxY = obj.y + obj.size/2;
+        if (
+          x >= minX && x <= maxX &&
+          y >= minY && y <= maxY
+        ) {
+          // Проверка на столкновение с препятствием
+          if (checkCollision(x, y)) {
+            alert('Столкновение с препятствием!');
+            return;
+          }
+          if (obj.color === level.targetColor) {
+            obj.clicked = true;
+            updateProgress();
+            if (currentLevel.objects.filter(o => o.clicked).length >= currentLevel.goal) {
+              alert('Вы прошли уровень!');
+              levelComplete = true;
+            }
+            break;
+          } else {
+            alert('Неверный объект!');
+            return;
+          }
+        }
+      }
     }
-    previousInput = currentInput;
-    currentInput = '0';
-    operation = op;
   }
 
-  function calculate() {
-    const prev = parseFloat(previousInput);
-    const current = parseFloat(currentInput);
-    if (isNaN(prev) || isNaN(current)) return;
-
-    let result;
-    switch (operation) {
-      case '+':
-        result = prev + current;
-        break;
-      case '-':
-        result = prev - current;
-        break;
-      case '*':
-        result = prev * current;
-        break;
-      case '/':
-        result = current === 0 ? 'Ошибка' : prev / current;
-        break;
-      default:
-        return;
-    }
-    currentInput = result.toString();
-    operation = null;
-    updateDisplay();
+  if (levelComplete) {
+    // Можно автоматически перейти к следующему уровню или ждать кнопку
   }
+}
 
-  function clearDisplay() {
-    currentInput = '0';
-    previousInput = '';
-    operation = null;
-    updateDisplay();
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  handleClick(x, y);
+});
+
+nextButton.onclick = () => {
+  if (currentLevelIndex < levels.length - 1) {
+    currentLevelIndex++;
+    currentLevel = levels[currentLevelIndex];
+    levelTitle.innerText = `Уровень ${currentLevelIndex + 1}: ${currentLevel.description}`;
+    drawLevel();
+  } else {
+    alert('Это все уровни!');
   }
+};
 
-  function changeSign() {
-    let num = parseFloat(currentInput);
-    if (isNaN(num)) return;
-    num = -num;
-    currentInput = num.toString();
-    updateDisplay();
-  }
+// Инициализация уровня
+function startLevel() {
+  currentLevel = levels[currentLevelIndex];
+  // Сбросить прогресс
+  currentLevel.objects.forEach(o => o.clicked = false);
+  drawLevel();
+}
 
-  function percent() {
-    let num = parseFloat(currentInput);
-    if (isNaN(num)) return;
-    num = num / 100;
-    currentInput = num.toString();
-    updateDisplay();
-  }
-
-  // Научные функции
-  function scientificOperation(op) {
-    const num = parseFloat(currentInput);
-    if (isNaN(num)) return;
-    let result;
-    switch (op) {
-      case 'sin':
-        result = Math.sin(num);
-        break;
-      case 'cos':
-        result = Math.cos(num);
-        break;
-      case 'tan':
-        result = Math.tan(num);
-        break;
-      case 'sqrt':
-        result = Math.sqrt(num);
-        break;
-    }
-    currentInput = result.toFixed(6);
-    updateDisplay();
-  }
-
-  // Переключение режима
-  function showFunction(mode) {
-    const blocks = document.querySelectorAll('.function-block');
-    blocks.forEach(b => b.classList.remove('active'));
-    document.getElementById(mode).classList.add('active');
-  }
-
-  // Инициализация дисплея
-  updateDisplay();
+startLevel();
 </script>
+
 </body>
 </html>
