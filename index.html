@@ -3,304 +3,456 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Геометрия Даш - Улучшенная версия</title>
+<title>Майнкрафт: День и ночь + Инструменты</title>
 <style>
   body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #ece9e6, #ffffff);
     margin: 0;
-    padding: 20px;
+    background: #222;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-  #gameContainer {
-    width: 800px;
-    margin: 0 auto;
-    background: #fff;
-    border: 4px solid #333;
-    border-radius: 10px;
-    padding: 20px;
-    position: relative;
-    box-shadow: 0 0 20px rgba(0,0,0,0.2);
-  }
-  #canvas {
-    width: 100%;
-    height: 500px;
+  canvas {
     border: 2px solid #555;
-    background: #fafafa;
-    border-radius: 8px;
-    cursor: pointer;
+    margin-top: 20px;
   }
-  #levelTitle {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-  #progress {
+  #info {
     margin-top: 10px;
-    font-size: 18px;
-    text-align: center;
-  }
-  #nextLevelBtn {
-    display: block;
-    margin: 15px auto;
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
     color: #fff;
-    cursor: pointer;
-    transition: background 0.3s;
   }
-  #nextLevelBtn:hover {
-    background-color: #0056b3;
+  #toolbar {
+    display: flex;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .block-option {
+    width: 40px;
+    height: 40px;
+    margin: 2px;
+    border: 2px solid #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+  }
+  .block-option:hover {
+    border-color: yellow;
+  }
+  .block-option.selected {
+    border-color: yellow;
+  }
+  #timeDisplay {
+    margin-top: 10px;
+    color: #fff;
+  }
+  #toolsPanel {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+  }
+  .tool {
+    margin: 0 5px;
+    padding: 5px 10px;
+    background: #444;
+    border: 2px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+  }
+  .tool.selected {
+    border-color: yellow;
   }
 </style>
 </head>
 <body>
 
-<h1 style="text-align:center;">Геометрия Даш - Улучшенная версия</h1>
-<div id="gameContainer">
-  <div id="levelTitle">Уровень 1</div>
-  <canvas id="canvas" width="760" height="500"></canvas>
-  <div id="progress">Прогресс: 0/0</div>
-  <button id="nextLevelBtn">Следующий уровень</button>
-</div>
+<h1>Майнкрафт: День и ночь + Инструменты</h1>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="info">Используйте WASD для перемещения, мышь для разрушения/строительства.</div>
+<div id="toolbar"></div>
+<div id="timeDisplay"></div>
+<div id="toolsPanel"></div>
 
 <script>
-const canvas = document.getElementById('canvas');
+// ================== БЛОКИ ==================
+
+const blockTypes = {
+  air: { color: 'transparent', name: 'Пусто', solid: false },
+  grass: { color: '#228B22', name: 'Трава', solid: true },
+  dirt: { color: '#8B4513', name: 'Грунт', solid: true },
+  stone: { color: '#888888', name: 'Камень', solid: true },
+  coal: { color: '#333', name: 'Уголь', solid: true },
+  iron: { color: '#bbb', name: 'Железо', solid: true },
+  gold: { color: '#ffd700', name: 'Золото', solid: true },
+  bedrock: { color: '#222', name: 'Бедрок', solid: true, indestructible: true },
+  water: { color: '#3399ff', name: 'Вода', solid: false, transparent: true },
+  lava: { color: '#ff6600', name: 'Лава', solid: false, transparent: true },
+  wood: { color: '#A0522D', name: 'Дерево', solid: true },
+  glass: { color: '#87CEFA', name: 'Стекло', solid: false, transparent: true }
+};
+
+// ================== МИР ==================
+
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const levelTitle = document.getElementById('levelTitle');
-const progressText = document.getElementById('progress');
-const nextButton = document.getElementById('nextLevelBtn');
+const TILE_SIZE = 40;
+const WORLD_WIDTH = 100;
+const WORLD_HEIGHT = 60;
 
-let currentLevelIndex = 0;
-
-// Различные уровни с более сложными объектами и преградами
-const levels = [
-  {
-    description: 'Нажмите на все красные кубы, избегая препятствий!',
-    objects: [
-      { type: 'square', x: 50, y: 50, size: 50, color: 'red', clicked: false, id: 1 },
-      { type: 'square', x: 200, y: 100, size: 50, color: 'red', clicked: false, id: 2 },
-      { type: 'square', x: 350, y: 50, size: 50, color: 'red', clicked: false, id: 3 },
-    ],
-    targetColor: 'red',
-    obstacles: [
-      { type: 'barrier', x: 100, y: 200, width: 200, height: 20 },
-      { type: 'barrier', x: 300, y: 300, width: 250, height: 20 },
-    ],
-    goal: 3
-  },
-  {
-    description: 'Кликайте на зеленых круги, избегая препятствий!',
-    objects: [
-      { type: 'circle', x: 100, y: 150, radius: 30, color: 'green', clicked: false, id: 4 },
-      { type: 'circle', x: 250, y: 250, radius: 30, color: 'green', clicked: false, id: 5 },
-      { type: 'circle', x: 400, y: 150, radius: 30, color: 'green', clicked: false, id: 6 },
-    ],
-    targetColor: 'green',
-    obstacles: [
-      { type: 'barrier', x: 150, y: 200, width: 20, height: 150 },
-      { type: 'barrier', x: 350, y: 100, width: 20, height: 300 },
-    ],
-    goal: 3
-  },
-  {
-    description: 'Нажимайте на синие треугольники, избегая преград!',
-    objects: [
-      { type: 'triangle', x: 150, y: 100, size: 50, color: 'blue', clicked: false, id: 7 },
-      { type: 'triangle', x: 300, y: 200, size: 50, color: 'blue', clicked: false, id: 8 },
-    ],
-    targetColor: 'blue',
-    obstacles: [
-      { type: 'barrier', x: 200, y: 150, width: 100, height: 20 },
-      { type: 'barrier', x: 250, y: 250, width: 20, height: 100 },
-    ],
-    goal: 2
-  }
-];
-
-let currentLevel = levels[currentLevelIndex];
-
-function drawObject(obj) {
-  ctx.save();
-  ctx.translate(obj.x, obj.y);
-  ctx.fillStyle = obj.color;
-  if (obj.type === 'square') {
-    ctx.fillRect(-obj.size/2, -obj.size/2, obj.size, obj.size);
-  } else if (obj.type === 'circle') {
-    ctx.beginPath();
-    ctx.arc(0, 0, obj.radius, 0, Math.PI * 2);
-    ctx.fill();
-  } else if (obj.type === 'triangle') {
-    ctx.beginPath();
-    ctx.moveTo(0, -obj.size/2);
-    ctx.lineTo(-obj.size/2, obj.size/2);
-    ctx.lineTo(obj.size/2, obj.size/2);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-function drawBarrier(barrier) {
-  ctx.fillStyle = '#555';
-  ctx.fillRect(barrier.x, barrier.y, barrier.width, barrier.height);
-}
-
-function drawLevel() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Рисуем препятствия
-  if (currentLevel.obstacles) {
-    currentLevel.obstacles.forEach(drawBarrier);
-  }
-
-  // Рисуем объекты
-  currentLevel.objects.forEach(obj => {
-    drawObject(obj);
-  });
-
-  updateProgress();
-}
-
-function updateProgress() {
-  const clickedCount = currentLevel.objects.filter(o => o.clicked).length;
-  progressText.innerText = `Прогресс: ${clickedCount}/${currentLevel.goal}`;
-}
-
-function checkCollision(x, y) {
-  // Проверка на препятствия
-  for (const barrier of currentLevel.obstacles) {
-    if (
-      x >= barrier.x && x <= barrier.x + barrier.width &&
-      y >= barrier.y && y <= barrier.y + barrier.height
-    ) {
-      return true; // столкновение с преградой
+// Создаем мир
+const world = [];
+for (let y = 0; y < WORLD_HEIGHT; y++) {
+  const row = [];
+  for (let x = 0; x < WORLD_WIDTH; x++) {
+    if (y > 55) {
+      row.push({ type: 'air' });
+    } else if (y > 50) {
+      row.push({ type: 'dirt' });
+    } else if (y > 45) {
+      row.push({ type: 'stone' });
+    } else if (y === 45) {
+      row.push({ type: 'bedrock' });
+    } else if (y > 40 && Math.random() < 0.1) {
+      row.push({ type: 'coal' });
+    } else if (y > 30 && Math.random() < 0.05) {
+      row.push({ type: 'iron' });
+    } else if (y > 20 && Math.random() < 0.02) {
+      row.push({ type: 'gold' });
+    } else if (y > 10 && Math.random() < 0.05) {
+      row.push({ type: 'water' });
+    } else {
+      row.push({ type: 'grass' });
     }
   }
-  return false;
+  world.push(row);
 }
 
-function handleClick(x, y) {
-  const level = currentLevel;
-  let levelComplete = false;
+// ================== Мобы ==================
 
-  for (let obj of level.objects) {
-    if (!obj.clicked) {
-      if (obj.type === 'square') {
-        if (
-          x >= obj.x - obj.size/2 && x <= obj.x + obj.size/2 &&
-          y >= obj.y - obj.size/2 && y <= obj.y + obj.size/2
-        ) {
-          // Проверка на столкновение с препятствием
-          if (checkCollision(x, y)) {
-            alert('Столкновение с препятствием!');
-            return;
-          }
-          if (obj.color === level.targetColor) {
-            obj.clicked = true;
-            updateProgress();
-            // Проверка завершения уровня
-            if (currentLevel.objects.filter(o => o.clicked).length >= currentLevel.goal) {
-              alert('Вы прошли уровень!');
-              levelComplete = true;
-            }
-            break;
-          } else {
-            alert('Неверный объект!');
-            return;
-          }
-        }
-      } else if (obj.type === 'circle') {
-        const dx = x - obj.x;
-        const dy = y - obj.y;
-        if (dx * dx + dy * dy <= obj.radius * obj.radius) {
-          // Столкновение с препятствием
-          if (checkCollision(x, y)) {
-            alert('Столкновение с препятствием!');
-            return;
-          }
-          if (obj.color === level.targetColor) {
-            obj.clicked = true;
-            updateProgress();
-            if (currentLevel.objects.filter(o => o.clicked).length >= currentLevel.goal) {
-              alert('Вы прошли уровень!');
-              levelComplete = true;
-            }
-            break;
-          } else {
-            alert('Неверный объект!');
-            return;
-          }
-        }
-      } else if (obj.type === 'triangle') {
-        // Проверка попадания по треугольнику (примерно)
-        // Для простоты используем bounding box
-        const minX = obj.x - obj.size/2;
-        const maxX = obj.x + obj.size/2;
-        const minY = obj.y - obj.size/2;
-        const maxY = obj.y + obj.size/2;
-        if (
-          x >= minX && x <= maxX &&
-          y >= minY && y <= maxY
-        ) {
-          // Проверка на столкновение с препятствием
-          if (checkCollision(x, y)) {
-            alert('Столкновение с препятствием!');
-            return;
-          }
-          if (obj.color === level.targetColor) {
-            obj.clicked = true;
-            updateProgress();
-            if (currentLevel.objects.filter(o => o.clicked).length >= currentLevel.goal) {
-              alert('Вы прошли уровень!');
-              levelComplete = true;
-            }
-            break;
-          } else {
-            alert('Неверный объект!');
-            return;
-          }
+const mobs = [];
+const MAX_MOBS = 20;
+
+// Функция для создания моба
+function createMob(x, y, type='zombie') {
+  const colors = {
+    zombie: '#00FF00',
+    skeleton: '#FFFFFF',
+    spider: '#000000',
+    slime: '#7FFF00'
+  };
+  return {
+    x: x,
+    y: y,
+    width: TILE_SIZE * 0.8,
+    height: TILE_SIZE * 0.8,
+    vx: (Math.random() < 0.5 ? -1 : 1) * (1 + Math.random()), // скорость
+    vy: 0,
+    color: colors[type] || '#FF0000',
+    type: type,
+    health: 100,
+    maxHealth: 100,
+    state: 'wandering',
+    behavior: 'patrol',
+    animationFrame: 0,
+    animationCounter: 0
+  };
+}
+
+// Создаем мобов
+for (let i = 0; i < MAX_MOBS; i++) {
+  const x = Math.random() * (WORLD_WIDTH * TILE_SIZE);
+  const y = 0;
+  mobs.push(createMob(x, y));
+}
+
+// ================== ИНТЕРФЕЙС ==================
+
+const toolbar = document.getElementById('toolbar');
+let selectedBlockType = 'dirt';
+
+Object.keys(blockTypes).forEach(type => {
+  const btn = document.createElement('div');
+  btn.className = 'block-option' + (type === selectedBlockType ? ' selected' : '');
+  btn.style.backgroundColor = blockTypes[type].color;
+  btn.title = blockTypes[type].name;
+  btn.onclick = () => {
+    selectedBlockType = type;
+    document.querySelectorAll('.block-option').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  };
+  toolbar.appendChild(btn);
+});
+
+// ================== ИГРОК ==================
+
+const player = {
+  x: 50 * TILE_SIZE,
+  y: (WORLD_HEIGHT - 10) * TILE_SIZE,
+  width: TILE_SIZE * 0.8,
+  height: TILE_SIZE * 0.8,
+  vx: 0,
+  vy: 0,
+  speed: 4,
+  jumpStrength: 12,
+  onGround: false,
+  health: 100,
+  maxHealth: 100,
+  armor: 0,
+  invincible: false,
+  invincibleTimer: 0,
+  color: '#FFFF00'
+};
+
+const keys = {};
+
+window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', e => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+// Мышь
+canvas.addEventListener('click', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  const worldX = Math.floor((cameraX + mouseX) / TILE_SIZE);
+  const worldY = Math.floor((cameraY + mouseY) / TILE_SIZE);
+
+  if (worldX >= 0 && worldX < WORLD_WIDTH && worldY >= 0 && worldY < WORLD_HEIGHT) {
+    const block = world[worldY][worldX];
+    if (mode === 'destroy') {
+      if (block.type !== 'bedrock' && !block.indestructible) {
+        world[worldY][worldX] = { type: 'air' };
+      }
+    } else if (mode === 'build') {
+      if (block.type === 'air') {
+        world[worldY][worldX] = { type: selectedBlockType };
+      }
+    }
+  }
+});
+
+// ================== КАМЕРА ==================
+
+let cameraX = 0;
+let cameraY = 0;
+
+// ================== ВРЕМЯ ==================
+
+let timeOfDay = 0; // 0 - день, 1 - ночь
+let dayDuration = 600; // количество кадров до смены
+let timeCounter = 0;
+
+const timeDisplay = document.getElementById('timeDisplay');
+
+function updateTime() {
+  timeCounter++;
+  if (timeCounter >= dayDuration) {
+    timeCounter = 0;
+    timeOfDay = (timeOfDay === 0) ? 1 : 0; // переключение дня/ночи
+  }
+  // Обновляем отображение
+  if (timeOfDay === 0) {
+    timeDisplay.innerText = 'День';
+  } else {
+    timeDisplay.innerText = 'Ночь';
+  }
+}
+
+// ================== ФУНКЦИИ ==================
+
+function updatePhysics() {
+  // Передвижение игрока
+  if (keys['a']) {
+    player.vx = -player.speed;
+  } else if (keys['d']) {
+    player.vx = player.speed;
+  } else {
+    player.vx = 0;
+  }
+
+  if (keys['w'] && player.onGround) {
+    player.vy = -player.jumpStrength;
+    player.onGround = false;
+  }
+
+  // Гравитация
+  player.vy += 0.5;
+
+  // Обновление
+  player.x += player.vx;
+  player.y += player.vy;
+
+  // Коллизия с землей
+  const footX = Math.floor((player.x + player.width/2) / TILE_SIZE);
+  const footY = Math.floor((player.y + player.height) / TILE_SIZE);
+  if (footY >= 0 && footY < WORLD_HEIGHT && footX >= 0 && world[footY][footX]) {
+    const blockType = world[footY][footX].type;
+    if (blockType !== 'air' && blockType !== 'water' && blockType !== 'lava') {
+      player.y = (footY) * TILE_SIZE - player.height;
+      player.vy = 0;
+      player.onGround = true;
+    } else if (blockType === 'bedrock') {
+      player.y = (footY) * TILE_SIZE - player.height;
+      player.vy = 0;
+      player.onGround = true;
+    }
+  } else {
+    player.onGround = false;
+  }
+
+  // Обновление мобов
+  mobs.forEach(m => {
+    // патрулирование
+    m.x += m.vx;
+    if (m.x < 0 || m.x > (WORLD_WIDTH - 1) * TILE_SIZE) {
+      m.vx *= -1;
+    }
+    const gridX = Math.floor((m.x + m.width/2) / TILE_SIZE);
+    const gridY = Math.floor((m.y + m.height) / TILE_SIZE);
+    if (gridY >= 0 && gridY < WORLD_HEIGHT && gridX >= 0 && gridX < WORLD_WIDTH) {
+      const block = world[gridY][gridX];
+      if (block.type !== 'air' && block.type !== 'water' && block.type !== 'lava') {
+        m.vx *= -1;
+      }
+    }
+    // атака
+    const dx = (m.x + m.width/2) - (player.x + player.width/2);
+    const dy = (m.y + m.height/2) - (player.y + player.height/2);
+    const dist = Math.hypot(dx, dy);
+    if (dist < 30) {
+      attackPlayer(m);
+    }
+  });
+
+  // Анимации
+  if (player.vx !== 0 && player.onGround) {
+    player.animationCounter++;
+    if (player.animationCounter >= 10) {
+      player.animationFrame = (player.animationFrame + 1) % 4;
+      player.animationCounter = 0;
+    }
+  } else {
+    player.animationFrame = 0;
+  }
+
+  if (player.invincible) {
+    player.invincibleTimer--;
+    if (player.invincibleTimer <= 0) {
+      player.invincible = false;
+    }
+  }
+}
+
+function attackPlayer(mob) {
+  if (!player.invincible) {
+    player.health -= 10;
+    player.invincible = true;
+    player.invincibleTimer = 60;
+  }
+}
+
+// ================== ВРЕМЯ ==================
+
+function gameLoop() {
+  updateTime();
+  updatePhysics();
+  // Обновление камеры
+  cameraX = player.x - canvas.width/2 + player.width/2;
+  cameraY = player.y - canvas.height/2 + player.height/2;
+  if (cameraX < 0) cameraX = 0;
+  if (cameraY < 0) cameraY = 0;
+  if (cameraX > WORLD_WIDTH * TILE_SIZE - canvas.width) cameraX = WORLD_WIDTH * TILE_SIZE - canvas.width;
+  if (cameraY > WORLD_HEIGHT * TILE_SIZE - canvas.height) cameraY = WORLD_HEIGHT * TILE_SIZE - canvas.height;
+
+  drawScene();
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ================== ОТОБРАЖЕНИЕ ==================
+
+function drawScene() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Небо и тень день/ночь
+  if (timeOfDay === 0) {
+    ctx.fillStyle = '#87CEEB'; // день
+  } else {
+    ctx.fillStyle = '#000000'; // ночь
+  }
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Блоки
+  const startX = Math.floor(cameraX / TILE_SIZE);
+  const startY = Math.floor(cameraY / TILE_SIZE);
+  const endX = Math.ceil((cameraX + canvas.width) / TILE_SIZE);
+  const endY = Math.ceil((cameraY + canvas.height) / TILE_SIZE);
+
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      if (x >= 0 && x < WORLD_WIDTH && y >= 0 && y < WORLD_HEIGHT) {
+        const block = world[y][x];
+        if (block.type !== 'air') {
+          ctx.fillStyle = blockTypes[block.type].color;
+          ctx.globalAlpha = blockTypes[block.type].transparent ? 0.5 : 1;
+          ctx.fillRect(x * TILE_SIZE - cameraX, y * TILE_SIZE - cameraY, TILE_SIZE, TILE_SIZE);
+          ctx.globalAlpha = 1;
         }
       }
     }
   }
 
-  if (levelComplete) {
-    // Можно автоматически перейти к следующему уровню или ждать кнопку
-  }
+  // Мобы
+  mobs.forEach(m => {
+    ctx.fillStyle = m.color;
+    ctx.fillRect(m.x - cameraX, m.y - cameraY, m.width, m.height);
+  });
+
+  // Игрок
+  ctx.fillStyle = '#FFFF00';
+  ctx.fillRect(player.x - cameraX, player.y - cameraY, player.width, player.height);
+
+  // Здоровье
+  ctx.fillStyle = '#000';
+  ctx.fillRect(10, 10, 200, 20);
+  ctx.fillStyle = '#0f0';
+  ctx.fillRect(10, 10, 200 * (player.health / player.maxHealth), 20);
+  ctx.strokeStyle = '#fff';
+  ctx.strokeRect(10, 10, 200, 20);
 }
 
-canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  handleClick(x, y);
-});
+// ================== ИНИЦИАЛИЗАЦИЯ ==================
 
-nextButton.onclick = () => {
-  if (currentLevelIndex < levels.length - 1) {
-    currentLevelIndex++;
-    currentLevel = levels[currentLevelIndex];
-    levelTitle.innerText = `Уровень ${currentLevelIndex + 1}: ${currentLevel.description}`;
-    drawLevel();
-  } else {
-    alert('Это все уровни!');
-  }
+let mode = 'destroy';
+const modeBtn = document.createElement('button');
+modeBtn.innerText = 'Режим: Разрушить';
+document.body.appendChild(modeBtn);
+modeBtn.onclick = () => {
+  mode = (mode === 'destroy') ? 'build' : 'destroy';
+  modeBtn.innerText = 'Режим: ' + (mode === 'destroy' ? 'Разрушить' : 'Строить');
 };
 
-// Инициализация уровня
-function startLevel() {
-  currentLevel = levels[currentLevelIndex];
-  // Сбросить прогресс
-  currentLevel.objects.forEach(o => o.clicked = false);
-  drawLevel();
-}
+const modeLabel = document.createElement('div');
+modeLabel.innerText = 'Текущий режим: ' + mode;
+document.body.appendChild(modeLabel);
 
-startLevel();
+window.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', e => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+// ================== ПОДПИСАНИЕ ==================
+
+gameLoop();
+
 </script>
-
 </body>
 </html>
