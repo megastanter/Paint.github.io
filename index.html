@@ -3,89 +3,58 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Генерация изображений без API ключа</title>
+<title>Российское интернет-радио</title>
 <style>
   body {
     font-family: Arial, sans-serif;
     background-color: #222;
     color: #fff;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
   }
   h1 {
     margin-bottom: 20px;
   }
-  input[type="text"] {
-    width: 80%;
+  select {
     padding: 10px;
     font-size: 16px;
-    margin-bottom: 10px;
+    width: 80%;
+    margin-bottom: 20px;
   }
-  button {
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  #result {
-    margin-top: 20px;
-    max-width: 100%;
-  }
-  #result img {
-    max-width: 100%;
-    border: 2px solid #555;
+  #player {
+    width: 80%;
   }
 </style>
 </head>
 <body>
 
-<h1>Генерация изображений по описанию</h1>
-<input type="text" id="prompt" placeholder="Опишите изображение..." />
-<button onclick="generateImage()">Генерировать</button>
+<h1>Российское интернет-радио</h1>
 
-<div id="result"></div>
+<select id="radioSelect" onchange="playStation()">
+  <option value="">Выберите радиостанцию</option>
+  <option value="https://icecast.rusradio.com/rusradio.mp3">Русское Радио</option>
+  <option value="https://icecast.radiozen.ru/radiozen.mp3">Radio Zen</option>
+  <option value="https://listen.radiorecord.ru/radiorecord.mp3">Radio Record</option>
+  <option value="https://icecast.rockfm.ru/rockfm.mp3">Rock FM</option>
+  <option value="https://icecast.radio6.ru/radio6.mp3">Радио 6</option>
+  <option value="https://icecast.radiomayak.ru/mayak.mp3">Маяк</option>
+  <option value="https://icecast.radiostyle.ru/radiostyle.mp3">Радио Стиль</option>
+  <option value="https://icecast.radiomir.ru/mir.mp3">Радио Мир</option>
+  <option value="https://icecast.radio7.ru/radio7.mp3">Радио 7</option>
+</select>
+
+<audio id="player" controls autoplay></audio>
 
 <script>
-async function generateImage() {
-  const prompt = document.getElementById('prompt').value.trim();
-  if (!prompt) {
-    alert('Пожалуйста, введите описание.');
-    return;
-  }
-  
-  document.getElementById('result').innerHTML = 'Генерация...';
-
-  // Предполагается, что у вас есть локальный сервер, например, на порту 7860, который принимает POST-запросы
-  // к API Stable Diffusion WebUI или другому подобному серверу.
-  // Обычно API выглядит так:
-  // POST http://localhost:7860/sdapi/v1/txt2img
-  // с телом JSON: { "prompt": "ваше описание", "steps": 50 }
-
-  const response = await fetch('http://localhost:7860/sdapi/v1/txt2img', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      prompt: prompt,
-      steps: 50
-    })
-  });
-
-  if (!response.ok) {
-    document.getElementById('result').innerHTML = 'Ошибка при генерации.';
-    return;
-  }
-
-  const data = await response.json();
-
-  // Обычно результат содержит массив изображений в формате base64
-  if (data.images && data.images.length > 0) {
-    const imgSrc = 'data:image/png;base64,' + data.images[0];
-    document.getElementById('result').innerHTML = `<img src="${imgSrc}" alt="Generated Image" />`;
-  } else {
-    document.getElementById('result').innerHTML = 'Изображение не получено.';
+function playStation() {
+  const select = document.getElementById('radioSelect');
+  const audio = document.getElementById('player');
+  const url = select.value;
+  if (url) {
+    audio.src = url;
+    audio.play();
   }
 }
 </script>
