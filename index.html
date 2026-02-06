@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Генератор картинок без API ключа</title>
+<title>Генерация изображений без API ключа</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -28,48 +28,65 @@
     font-size: 16px;
     cursor: pointer;
   }
-  #images {
+  #result {
     margin-top: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
+    max-width: 100%;
   }
-  img {
-    max-width: 200px;
+  #result img {
+    max-width: 100%;
     border: 2px solid #555;
   }
 </style>
 </head>
 <body>
 
-<h1>Генератор картинок без API ключа</h1>
+<h1>Генерация изображений по описанию</h1>
 <input type="text" id="prompt" placeholder="Опишите изображение..." />
-<button onclick="generateImages()">Создать картинки</button>
+<button onclick="generateImage()">Генерировать</button>
 
-<div id="images"></div>
+<div id="result"></div>
 
 <script>
-async function generateImages() {
+async function generateImage() {
   const prompt = document.getElementById('prompt').value.trim();
   if (!prompt) {
     alert('Пожалуйста, введите описание.');
     return;
   }
-  document.getElementById('images').innerHTML = 'Генерация...';
+  
+  document.getElementById('result').innerHTML = 'Генерация...';
 
-  // Craiyon не имеет официального API, но есть обходные пути или можно открыть их сайт.
-  // Для простоты, используем их сайт через iframe или автоматический клик.
+  // Предполагается, что у вас есть локальный сервер, например, на порту 7860, который принимает POST-запросы
+  // к API Stable Diffusion WebUI или другому подобному серверу.
+  // Обычно API выглядит так:
+  // POST http://localhost:7860/sdapi/v1/txt2img
+  // с телом JSON: { "prompt": "ваше описание", "steps": 50 }
 
-  // Для демонстрации — вставим ссылку на результаты после генерации
-  // В реальности потребуется отправить запрос к их API или автоматизировать браузер.
+  const response = await fetch('http://localhost:7860/sdapi/v1/txt2img', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      prompt: prompt,
+      steps: 50
+    })
+  });
 
-  // Но для простоты, покажу пример с генерацией через их сайт:
-  // Открываем новую вкладку с их сайтом с предзаполненным запросом (неофициально)
+  if (!response.ok) {
+    document.getElementById('result').innerHTML = 'Ошибка при генерации.';
+    return;
+  }
 
-  const url = `https://www.craiyon.com/?q=${encodeURIComponent(prompt)}`;
-  // либо можно просто показать ссылку
-  document.getElementById('images').innerHTML = `<a href="${url}" target="_blank">Перейти к генерации на Craiyon</a>`;
+  const data = await response.json();
+
+  // Обычно результат содержит массив изображений в формате base64
+  if (data.images && data.images.length > 0) {
+    const imgSrc = 'data:image/png;base64,' + data.images[0];
+    document.getElementById('result').innerHTML = `<img src="${imgSrc}" alt="Generated Image" />`;
+  } else {
+    document.getElementById('result').innerHTML = 'Изображение не получено.';
+  }
 }
 </script>
 
