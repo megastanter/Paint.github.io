@@ -2,62 +2,178 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Российское интернет-радио</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Генератор случайных чисел</title>
 <style>
+  /* Основной стиль страницы */
   body {
-    font-family: Arial, sans-serif;
-    background-color: #222;
-    color: #fff;
-    padding: 20px;
+    margin: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
+    background: linear-gradient(135deg, #ff6f61, #ffb347);
+    overflow: hidden;
   }
+
+  /* Анимация "текучего" фона с градиентами */
+  body::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, #ff6f61, #ffb347, #ff6f61);
+    background-size: 600% 600%;
+    animation: flow 20s ease infinite;
+    z-index: -1;
+  }
+
+  @keyframes flow {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+  }
+
+  /* Контейнер с контентом */
+  .container {
+    position: relative;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 40px 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    animation: fadeIn 1s ease-in-out;
+  }
+
+  /* Анимация появления контейнера */
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+
   h1 {
+    font-size: 2.2em;
     margin-bottom: 20px;
+    color: #fff;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.3);
   }
-  select {
-    padding: 10px;
-    font-size: 16px;
-    width: 80%;
-    margin-bottom: 20px;
+
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
-  #player {
-    width: 80%;
+
+  input[type=number] {
+    width: 100%;
+    padding: 12px 15px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1em;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  input[type=number]:focus {
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  }
+
+  /* Стиль кнопки */
+  button {
+    margin-top: 25px;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #ff6f61, #ffb347);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    background: linear-gradient(135deg, #ffb347, #ff6f61);
+    transform: scale(1.05);
+  }
+
+  /* Эффект при нажатии */
+  button:active {
+    transform: scale(0.98);
+  }
+
+  /* Результат */
+  .result {
+    margin-top: 30px;
+    font-size: 2.5em;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+
+  /* Анимация появления результата */
+  .result.show {
+    animation: popIn 0.5s ease forwards;
+  }
+
+  @keyframes popIn {
+    0% {opacity: 0; transform: scale(0.8);}
+    100% {opacity: 1; transform: scale(1);}
   }
 </style>
 </head>
 <body>
+<div class="container">
+  <h1>Генератор случайных чисел</h1>
+  <label for="minRange">Минимум:</label>
+  <input type="number" id="minRange" min="1" max="1000000000" value="1" />
 
-<h1>Российское интернет-радио</h1>
+  <label for="maxRange">Максимум:</label>
+  <input type="number" id="maxRange" min="1" max="1000000000" value="1000000000" />
 
-<select id="radioSelect" onchange="playStation()">
-  <option value="">Выберите радиостанцию</option>
-  <option value="https://icecast.rusradio.com/rusradio.mp3">Русское Радио</option>
-  <option value="https://icecast.radiozen.ru/radiozen.mp3">Radio Zen</option>
-  <option value="https://listen.radiorecord.ru/radiorecord.mp3">Radio Record</option>
-  <option value="https://icecast.rockfm.ru/rockfm.mp3">Rock FM</option>
-  <option value="https://icecast.radio6.ru/radio6.mp3">Радио 6</option>
-  <option value="https://icecast.radiomayak.ru/mayak.mp3">Маяк</option>
-  <option value="https://icecast.radiostyle.ru/radiostyle.mp3">Радио Стиль</option>
-  <option value="https://icecast.radiomir.ru/mir.mp3">Радио Мир</option>
-  <option value="https://icecast.radio7.ru/radio7.mp3">Радио 7</option>
-</select>
-
-<audio id="player" controls autoplay></audio>
+  <button id="generateBtn">Генерировать</button>
+  <div class="result" id="result">Здесь появится число</div>
+</div>
 
 <script>
-function playStation() {
-  const select = document.getElementById('radioSelect');
-  const audio = document.getElementById('player');
-  const url = select.value;
-  if (url) {
-    audio.src = url;
-    audio.play();
-  }
-}
-</script>
+  const generateBtn = document.getElementById('generateBtn');
+  const resultDiv = document.getElementById('result');
 
+generateBtn.onclick = () => {
+  const minInput = document.getElementById('minRange');
+  const maxInput = document.getElementById('maxRange');
+
+  let min = parseInt(minInput.value);
+  let max = parseInt(maxInput.value);
+
+  if (isNaN(min) || isNaN(max)) {
+    alert('Пожалуйста, введите корректные числа!');
+    return;
+  }
+
+  if (min > max) {
+    [min, max] = [max, min]; // меняем местами, если неправильно введено
+  }
+
+  const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // Обновляем результат с анимацией
+  resultDiv.textContent = randomNumber;
+  resultDiv.classList.remove('show');
+  void resultDiv.offsetWidth; // сброс анимации
+  resultDiv.classList.add('show');
+};
+</script>
+</div>
 </body>
 </html>
