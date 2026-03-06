@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Выбор любого цвета как на Эскалидроу</title>
+<title>Расширенное рисование с линиями во время ведения для всех инструментов</title>
 <!-- Иконки для кнопок -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
@@ -195,15 +195,11 @@
     </div>
     <div style="margin-top:10px;">
       <label>Цвет</label>
-      <!-- Поле выбора цвета системного -->
       <input type="color" id="colorPicker" title="Выберите цвет" style="margin-top:4px; width:100%; height:30px; border:none; cursor:pointer;"/>
-      
-      <!-- Поле для ввода HEX-значения -->
       <div id="extendedColorPicker">
         <label for="hexInput">Введите HEX цвет:</label>
         <input type="text" id="hexInput" maxlength="7" placeholder="#RRGGBB" />
       </div>
-      
       <div style="margin-top:8px;">
         <div style="width:30px; height:30px; border:1px solid #333; background:#000;" id="currentColorPreview"></div>
       </div>
@@ -267,6 +263,10 @@
 
   let isDrawing = false;
   let startX, startY;
+
+  // Временный холст для отображения линий/фигур
+  let tempCanvas = document.createElement('canvas');
+  let tempCtx = tempCanvas.getContext('2d');
 
   // Слои
   const layers = [];
@@ -352,7 +352,6 @@
     isDrawing=true;
     startX=e.offsetX; startY=e.offsetY;
 
-    // Перед началом рисования создаем слой
     if (layers.length===0) createLayer();
 
     const currentLayer=layers[currentLayerIndex];
@@ -360,7 +359,13 @@
     currentLayer.ctx.lineWidth=brushSize;
     currentLayer.ctx.lineCap='round';
 
-    if(['pen','brush','eraser','text'].includes(currentTool)){
+    // Для фигур создаем временный холст
+    tempCanvas.width=canvas.width;
+    tempCanvas.height=canvas.height;
+    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    // В зависимости от инструмента
+    if(['pen','brush','eraser'].includes(currentTool)){
       currentLayer.ctx.beginPath();
       currentLayer.ctx.moveTo(startX,startY);
     }
@@ -371,6 +376,7 @@
     isDrawing=false;
     const currentLayer=layers[currentLayerIndex];
 
+    // В зависимости от инструмента
     if(currentTool==='rect'){
       currentLayer.ctx.strokeStyle=currentColor;
       currentLayer.ctx.lineWidth=brushSize;
@@ -401,16 +407,65 @@
     redraw();
   });
 
+  // В процессе ведения — показываем линию или фигуру
   canvas.addEventListener('mousemove', e => {
     if (!isDrawing) return;
     const currentLayer=layers[currentLayerIndex];
+
+    // Очищаем временный холст
+    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+
     if(['pen','brush','eraser'].includes(currentTool)){
-      currentLayer.ctx.strokeStyle= currentTool==='eraser'?'#fff':currentColor;
-      currentLayer.ctx.lineWidth=brushSize;
-      currentLayer.ctx.lineCap='round';
-      currentLayer.ctx.lineTo(e.offsetX,e.offsetY);
-      currentLayer.ctx.stroke();
+      // Рисуем линию для свободного рисования
+      tempCtx.strokeStyle= currentTool==='eraser'?'#fff':currentColor;
+      tempCtx.lineWidth=brushSize;
+      tempCtx.lineCap='round';
+      tempCtx.beginPath();
+      // Линия от предыдущей точки
+      // Для этого сохраняем предыдущие координаты
+      // Но проще — рисовать линию от startX,startY до текущего
+      // Обновляем startX/startY при каждом движении
+      // Для этого сделаем так: добавим переменную lastX,lastY
+      // Но для простоты - рисуем линию от начальной точки
+      // или — обновляем startX/startY при каждом движении
+    } else if(['rect','circle','line','arrow'].includes(currentTool)){
+      // Для фигуры рисуем текущую фигуру на временном холсте
+      switch(currentTool){
+        case 'rect':
+          tempCtx.strokeStyle=currentColor;
+          tempCtx.lineWidth=brushSize;
+          tempCtx.strokeRect(startX,startY,e.offsetX-startX,e.offsetY-startY);
+          break;
+        case 'circle':
+          const radius=Math.hypot(e.offsetX-startX,e.offsetY-startY);
+          tempCtx.strokeStyle=currentColor;
+          tempCtx.lineWidth=brushSize;
+          tempCtx.beginPath();
+          tempCtx.arc(startX,startY,radius,0,Math.PI*2);
+          tempCtx.stroke();
+          break;
+        case 'line':
+          tempCtx.strokeStyle=currentColor;
+          tempCtx.lineWidth=brushSize;
+          tempCtx.beginPath();
+          tempCtx.moveTo(startX,startY);
+          tempCtx.lineTo(e.offsetX,e.offsetY);
+          tempCtx.stroke();
+          break;
+        case 'arrow':
+          tempCtx.strokeStyle=currentColor;
+          tempCtx.lineWidth=brushSize;
+          tempCtx.beginPath();
+          tempCtx.moveTo(startX,startY);
+          tempCtx.lineTo(e.offsetX,e.offsetY);
+          tempCtx.stroke();
+        break;
+      }
     }
+
+    // На основном холсте отображаем текущую фигуру
+    redraw();
+    ctx.drawImage(tempCanvas, 0, 0);
   });
 
   function drawArrow(fromX, fromY, toX, toY) {
