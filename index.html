@@ -3,77 +3,120 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Мой сайт с Minecraft</title>
+<title>Музыкальный плеер</title>
 <style>
   body {
     margin: 0;
     font-family: 'Arial', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
     background-color: #222;
-    transition: background-color 10s linear;
-  }
-
-  .menu {
-    background: rgba(0, 0, 0, 0.6);
-    padding: 40px;
-    border-radius: 20px;
-    text-align: center;
     color: #fff;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    transition: background 1s, box-shadow 1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
   }
 
   h1 {
     margin-bottom: 20px;
-    font-size: 2em;
+  }
+
+  input[type="text"] {
+    padding: 10px;
+    font-size: 1em;
+    width: 300px;
+    border: none;
+    border-radius: 5px;
   }
 
   button {
-    padding: 15px 30px;
-    font-size: 1.2em;
+    padding: 10px 20px;
+    margin-left: 10px;
+    font-size: 1em;
     border: none;
-    border-radius: 10px;
+    border-radius: 5px;
     background-color: #4CAF50;
     color: white;
     cursor: pointer;
-    transition: background-color 0.3s;
   }
 
   button:hover {
     background-color: #45a049;
   }
+
+  #player {
+    margin-top: 20px;
+    width: 560px;
+    height: 315px;
+    display: none; /* по умолчанию скрыт */
+  }
 </style>
 </head>
 <body>
 
-<div class="menu">
-  <h1>Добро пожаловать в Minecraft</h1>
-  <button id="enterMinecraft">Играть в браузерную версию Minecraft</button>
+<h1>Поиск и воспроизведение музыки</h1>
+<div>
+  <input type="text" id="searchInput" placeholder="Введите название трека или исполнителя" />
+  <button id="searchBtn">Поиск</button>
 </div>
 
+<div id="player"></div>
+
 <script>
-  const body = document.body;
-  const colors = [
-    '#222', '#444', '#666', '#888', '#aaa', '#ccc', '#eee', '#fff'
-  ];
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const playerContainer = document.getElementById('player');
 
-  let currentColorIndex = 0;
+  // Загрузка API YouTube IFrame Player API
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
 
-  function changeBackgroundColor() {
-    currentColorIndex = (currentColorIndex + 1) % colors.length;
-    body.style.backgroundColor = colors[currentColorIndex];
+  let player;
+
+  // Эта функция вызывается API YouTube после загрузки
+  function onYouTubeIframeAPIReady() {
+    // Изначально ничего не создаем
   }
 
-  // Меняем цвет каждые 10 секунд
-  setInterval(changeBackgroundColor, 10000);
+  // Обработчик поиска
+  searchBtn.onclick = () => {
+    const query = encodeURIComponent(searchInput.value);
+    if (!query) return alert('Пожалуйста, введите название трека или исполнителя');
 
-  // Обработка кнопки
-  document.getElementById('enterMinecraft').onclick = () => {
-    window.open('https://classic.minecraft.net/', '_blank');
+    // Ищем видео на YouTube по запросу
+    fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${query}&key=YOUR_API_KEY`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.items.length > 0) {
+          const videoId = data.items[0].id.videoId;
+          loadVideo(videoId);
+        } else {
+          alert('Видео не найдено');
+        }
+      })
+      .catch(error => {
+        console.error('Ошибка поиска:', error);
+        alert('Произошла ошибка при поиске');
+      });
   };
+
+  function loadVideo(videoId) {
+    if (player) {
+      player.loadVideoById(videoId);
+    } else {
+      player = new YT.Player('player', {
+        height: '315',
+        width: '560',
+        videoId: videoId,
+        events: {
+          'onReady': () => {
+            document.getElementById('player').style.display = 'block';
+          }
+        }
+      });
+    }
+    document.getElementById('player').style.display = 'block';
+  }
 </script>
 
 </body>
