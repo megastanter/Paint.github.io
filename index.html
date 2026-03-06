@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Painter</title>
+<title>Выбор любого цвета как на Эскалидроу</title>
 <!-- Иконки для кнопок -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
@@ -98,6 +98,22 @@
     border-color: #000;
   }
 
+  /* Расширенный выбор цвета */
+  #extendedColorPicker {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+  }
+  #hexInput {
+    width: 100%;
+    padding: 4px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-top: 4px;
+  }
+
   /* Холст контейнер */
   #canvasContainer {
     flex: 1;
@@ -142,25 +158,6 @@
     color: #e74c3c;
     font-size: 1.2em;
   }
-
-  /* Модальное окно */
-  #modalOverlay {
-    position: fixed;
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.4);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-  }
-  #modal {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-  }
 </style>
 </head>
 <body>
@@ -198,7 +195,15 @@
     </div>
     <div style="margin-top:10px;">
       <label>Цвет</label>
-      <div id="colorPalette"></div>
+      <!-- Поле выбора цвета системного -->
+      <input type="color" id="colorPicker" title="Выберите цвет" style="margin-top:4px; width:100%; height:30px; border:none; cursor:pointer;"/>
+      
+      <!-- Поле для ввода HEX-значения -->
+      <div id="extendedColorPicker">
+        <label for="hexInput">Введите HEX цвет:</label>
+        <input type="text" id="hexInput" maxlength="7" placeholder="#RRGGBB" />
+      </div>
+      
       <div style="margin-top:8px;">
         <div style="width:30px; height:30px; border:1px solid #333; background:#000;" id="currentColorPreview"></div>
       </div>
@@ -236,13 +241,36 @@
   let currentColor = '#000000';
   let brushSize = 5;
 
+  const colorPicker = document.getElementById('colorPicker');
+  const hexInput = document.getElementById('hexInput');
+
+  // Обновляем текущий цвет при выборе через системный пикер
+  colorPicker.addEventListener('input', () => {
+    currentColor = colorPicker.value;
+    document.getElementById('currentColorPreview').style.backgroundColor = currentColor;
+    hexInput.value = currentColor;
+  });
+
+  // Обновляем цвет при вводе HEX
+  hexInput.addEventListener('input', () => {
+    const val = hexInput.value;
+    if(/^#([0-9A-Fa-f]{6})$/.test(val)){
+      currentColor = val;
+      colorPicker.value=val;
+      document.getElementById('currentColorPreview').style.backgroundColor=val;
+    }
+  });
+
+  // Изначально задаем текущий цвет
+  document.getElementById('currentColorPreview').style.backgroundColor = currentColor;
+  hexInput.value=currentColor;
+
   let isDrawing = false;
   let startX, startY;
 
   // Слои
   const layers = [];
   let currentLayerIndex = 0;
-  let showLayers = true;
 
   function createLayer(name='Layer') {
     const layer = {
@@ -308,21 +336,6 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // Цвета
-  const colors=['#000','#e74c3c','#3498db','#27ae60','#f39c12','#8e44ad','#f1c40f','#16a085','#d35400','#c0392b','#7f8c8d','#95a5a6','#34495e','#bdc3c7','#2ecc71','#e67e22'];
-  const paletteContainer=document.getElementById('colorPalette');
-  colors.forEach(c => {
-    const swatch=document.createElement('div');
-    swatch.className='color-swatch';
-    swatch.style.backgroundColor=c;
-    swatch.onclick= ()=> {
-      currentColor=c;
-      document.getElementById('currentColorPreview').style.backgroundColor=c;
-    };
-    paletteContainer.appendChild(swatch);
-  });
-  document.getElementById('currentColorPreview').style.backgroundColor=currentColor;
-
   // Инструменты
   document.querySelectorAll('#tools button').forEach(btn => {
     btn.onclick= ()=> {
@@ -338,17 +351,13 @@
   canvas.addEventListener('mousedown', e => {
     isDrawing=true;
     startX=e.offsetX; startY=e.offsetY;
-    ctx.strokeStyle=currentTool==='eraser'?'#fff':currentColor;
-    ctx.lineWidth=brushSize;
-    ctx.lineCap='round';
 
-    // Перед началом рисования создаем слой, если его нет
+    // Перед началом рисования создаем слой
     if (layers.length===0) createLayer();
 
-    // Рисуем на текущем слое
     const currentLayer=layers[currentLayerIndex];
-    currentLayer.ctx.strokeStyle= ctx.strokeStyle;
-    currentLayer.ctx.lineWidth= ctx.lineWidth;
+    currentLayer.ctx.strokeStyle= currentTool==='eraser'?'#fff':currentColor;
+    currentLayer.ctx.lineWidth=brushSize;
     currentLayer.ctx.lineCap='round';
 
     if(['pen','brush','eraser','text'].includes(currentTool)){
@@ -521,14 +530,8 @@
     redraw();
   };
 
-  // Горячие клавиши (обработка отмены и повторения)
-  document.addEventListener('keydown', e => {
-    // Можно реализовать undo/redo
-  });
-
   // Изначально создаем слой
   createLayer();
-
 </script>
 </body>
-</html></html>
+</html>
