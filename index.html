@@ -3,14 +3,78 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>web Minecraft</title>
-<link rel="stylesheet" href="styles.css" />
+<title>Мой сайт с Minecraft</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #222;
+    transition: background-color 10s linear;
+  }
+
+  .menu {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: background 1s, box-shadow 1s;
+  }
+
+  h1 {
+    margin-bottom: 20px;
+    font-size: 2em;
+  }
+
+  button {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 10px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+</style>
 </head>
 <body>
+
 <div class="menu">
   <h1>Добро пожаловать в Minecraft</h1>
-  <button id="enterGame">Войти в игру</button>
+  <button id="enterMinecraft">Играть в браузерную версию Minecraft</button>
 </div>
-<script src="script.js"></script>
+
+<script>
+  const body = document.body;
+  const colors = [
+    '#222', '#444', '#666', '#888', '#aaa', '#ccc', '#eee', '#fff'
+  ];
+
+  let currentColorIndex = 0;
+
+  function changeBackgroundColor() {
+    currentColorIndex = (currentColorIndex + 1) % colors.length;
+    body.style.backgroundColor = colors[currentColorIndex];
+  }
+
+  // Меняем цвет каждые 10 секунд
+  setInterval(changeBackgroundColor, 10000);
+
+  // Обработка кнопки
+  document.getElementById('enterMinecraft').onclick = () => {
+    window.open('https://classic.minecraft.net/', '_blank');
+  };
+</script>
+
 </body>
 </html>
