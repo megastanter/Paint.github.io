@@ -1,1 +1,89 @@
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: #fff;
+}
 
+header {
+  text-align: center;
+  padding: 20px;
+  background-color: rgba(0,0,0,0.3);
+}
+
+h1 {
+  font-family: 'Trebuchet MS', sans-serif;
+  font-size: 36px;
+  margin: 0;
+}
+
+#levels-container {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 10px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.level-button {
+  padding: 10px;
+  background-color: rgba(255,255,255,0.2);
+  border: 2px solid #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.level-button:hover {
+  background-color: rgba(255,255,255,0.4);
+}
+
+#crossword-section {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+}
+
+#crossword-container {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(10, 30px);
+  gap: 4px;
+  justify-content: center;
+}
+
+.crossword-cell {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #fff;
+  background-color: #444;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  line-height: 30px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.crossword-cell.filled {
+  background-color: #fff;
+  color: #000;
+}
+
+button#back-to-levels {
+  padding: 8px 16px;
+  margin-bottom: 20px;
+  background-color: #ff9800;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+button#back-to-levels:hover {
+  background-color: #fb8c00;
+}
