@@ -161,9 +161,6 @@
     width: 90%;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   }
-  #modal input[type="file"] {
-    width: 100%;
-  }
 </style>
 </head>
 <body>
@@ -257,7 +254,7 @@
     layer.canvas.height = canvas.height;
     layer.ctx = layer.canvas.getContext('2d');
     layers.push(layer);
-    currentLayerIndex = layers.length - 1;
+    currentLayerIndex=layers.length-1;
     updateLayerList();
   }
 
@@ -280,7 +277,7 @@
         e.stopPropagation();
         layers.splice(idx,1);
         if (currentLayerIndex>=layers.length) currentLayerIndex=layers.length-1;
-        updateLayerSelection();
+        updateLayerList();
         redraw();
       };
       li.appendChild(btn);
@@ -289,8 +286,7 @@
   }
 
   function updateLayerSelection() {
-    const listItems=document.querySelectorAll('#layerList li');
-    listItems.forEach((li,idx)=>{
+    document.querySelectorAll('#layerList li').forEach((li,idx)=>{
       li.classList.toggle('active', idx===currentLayerIndex);
     });
   }
@@ -301,8 +297,8 @@
   // Размер холста
   function resizeCanvas() {
     const rect = document.getElementById('canvasContainer').getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    canvas.width=rect.width;
+    canvas.height=rect.height;
     layers.forEach(l => {
       l.canvas.width=canvas.width;
       l.canvas.height=canvas.height;
@@ -312,8 +308,8 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // Цветовая палитра
-  const colors=['#000000','#e74c3c','#3498db','#27ae60','#f39c12','#8e44ad','#f1c40f','#16a085','#d35400','#c0392b','#7f8c8d','#95a5a6','#34495e','#bdc3c7','#2ecc71','#e67e22'];
+  // Цвета
+  const colors=['#000','#e74c3c','#3498db','#27ae60','#f39c12','#8e44ad','#f1c40f','#16a085','#d35400','#c0392b','#7f8c8d','#95a5a6','#34495e','#bdc3c7','#2ecc71','#e67e22'];
   const paletteContainer=document.getElementById('colorPalette');
   colors.forEach(c => {
     const swatch=document.createElement('div');
@@ -338,13 +334,7 @@
     brushSize=parseInt(this.value);
   };
 
-  // Выбор слоя
-  function setCurrentLayer(index) {
-    currentLayerIndex=index;
-    updateLayerSelection();
-  }
-
-  // Рисование
+  // Обработка рисования
   canvas.addEventListener('mousedown', e => {
     isDrawing=true;
     startX=e.offsetX; startY=e.offsetY;
@@ -352,54 +342,65 @@
     ctx.lineWidth=brushSize;
     ctx.lineCap='round';
 
+    // Перед началом рисования создаем слой, если его нет
+    if (layers.length===0) createLayer();
+
+    // Рисуем на текущем слое
+    const currentLayer=layers[currentLayerIndex];
+    currentLayer.ctx.strokeStyle= ctx.strokeStyle;
+    currentLayer.ctx.lineWidth= ctx.lineWidth;
+    currentLayer.ctx.lineCap='round';
+
     if(['pen','brush','eraser','text'].includes(currentTool)){
-      ctx.beginPath();
-      ctx.moveTo(startX,startY);
+      currentLayer.ctx.beginPath();
+      currentLayer.ctx.moveTo(startX,startY);
     }
   });
 
   canvas.addEventListener('mouseup', e => {
     if (!isDrawing) return;
     isDrawing=false;
+    const currentLayer=layers[currentLayerIndex];
 
     if(currentTool==='rect'){
-      ctx.strokeStyle=currentColor;
-      ctx.lineWidth=brushSize;
-      ctx.strokeRect(startX,startY,e.offsetX-startX,e.offsetY-startY);
+      currentLayer.ctx.strokeStyle=currentColor;
+      currentLayer.ctx.lineWidth=brushSize;
+      currentLayer.ctx.strokeRect(startX,startY,e.offsetX-startX,e.offsetY-startY);
     } else if(currentTool==='circle'){
-      ctx.strokeStyle=currentColor;
-      ctx.lineWidth=brushSize;
+      currentLayer.ctx.strokeStyle=currentColor;
+      currentLayer.ctx.lineWidth=brushSize;
       const radius=Math.hypot(e.offsetX-startX,e.offsetY-startY);
-      ctx.beginPath();
-      ctx.arc(startX,startY,radius,0,Math.PI*2);
-      ctx.stroke();
+      currentLayer.ctx.beginPath();
+      currentLayer.ctx.arc(startX,startY,radius,0,Math.PI*2);
+      currentLayer.ctx.stroke();
     } else if(currentTool==='line'){
-      ctx.strokeStyle=currentColor;
-      ctx.lineWidth=brushSize;
-      ctx.beginPath();
-      ctx.moveTo(startX,startY);
-      ctx.lineTo(e.offsetX,e.offsetY);
-      ctx.stroke();
+      currentLayer.ctx.strokeStyle=currentColor;
+      currentLayer.ctx.lineWidth=brushSize;
+      currentLayer.ctx.beginPath();
+      currentLayer.ctx.moveTo(startX,startY);
+      currentLayer.ctx.lineTo(e.offsetX,e.offsetY);
+      currentLayer.ctx.stroke();
     } else if(currentTool==='arrow'){
-      ctx.strokeStyle=currentColor;
-      ctx.lineWidth=brushSize;
-      ctx.beginPath();
-      ctx.moveTo(startX,startY);
-      ctx.lineTo(e.offsetX,e.offsetY);
-      ctx.stroke();
+      currentLayer.ctx.strokeStyle=currentColor;
+      currentLayer.ctx.lineWidth=brushSize;
+      currentLayer.ctx.beginPath();
+      currentLayer.ctx.moveTo(startX,startY);
+      currentLayer.ctx.lineTo(e.offsetX,e.offsetY);
+      currentLayer.ctx.stroke();
       drawArrow(startX,startY,e.offsetX,e.offsetY);
     }
     redraw();
   });
 
   canvas.addEventListener('mousemove', e => {
-    if(!isDrawing) return;
+    if (!isDrawing) return;
+    const currentLayer=layers[currentLayerIndex];
     if(['pen','brush','eraser'].includes(currentTool)){
-      ctx.strokeStyle= currentTool==='eraser'?'#fff':currentColor;
-      ctx.lineWidth=brushSize;
-      ctx.lineCap='round';
-      ctx.lineTo(e.offsetX,e.offsetY);
-      ctx.stroke();
+      currentLayer.ctx.strokeStyle= currentTool==='eraser'?'#fff':currentColor;
+      currentLayer.ctx.lineWidth=brushSize;
+      currentLayer.ctx.lineCap='round';
+      currentLayer.ctx.lineTo(e.offsetX,e.offsetY);
+      currentLayer.ctx.stroke();
     }
   });
 
@@ -424,12 +425,7 @@
     });
   }
 
-  // Обновление текущего слоя
-  function refreshLayer() {
-    // Можно добавить выделение текущего слоя
-  }
-
-  // Добавление слоя
+  // Создание нового слоя
   document.getElementById('addLayerBtn').onclick=()=>{
     createLayer('Layer '+(layers.length+1));
   };
@@ -445,10 +441,6 @@
   };
 
   // Переключение слоя вверх/вниз
-  document.getElementById('toggleLayersBtn').onclick=()=>{
-    showLayers=!showLayers;
-    redraw();
-  };
   document.getElementById('moveLayerUp').onclick=()=>{
     if(currentLayerIndex<layers.length-1){
       [layers[currentLayerIndex],layers[currentLayerIndex+1]] = [layers[currentLayerIndex+1],layers[currentLayerIndex]];
@@ -481,14 +473,20 @@
     ctx.filter='none';
   };
   document.getElementById('rotateBtn').onclick=()=>{
+    ctx.save();
     ctx.translate(canvas.width/2,canvas.height/2);
     ctx.rotate(Math.PI/12);
     ctx.translate(-canvas.width/2,-canvas.height/2);
     redraw();
+    ctx.restore();
   };
   document.getElementById('scaleBtn').onclick=()=>{
+    ctx.save();
+    ctx.translate(canvas.width/2,canvas.height/2);
     ctx.scale(1.2,1.2);
+    ctx.translate(-canvas.width/2,-canvas.height/2);
     redraw();
+    ctx.restore();
   };
 
   // Импорт/экспорт
@@ -499,7 +497,6 @@
     a.download='drawing.png';
     a.click();
   };
-
   document.getElementById('importBtn').onclick=()=>{
     document.getElementById('fileInput').click();
   };
@@ -524,13 +521,9 @@
     redraw();
   };
 
-  // Горячие клавиши
+  // Горячие клавиши (обработка отмены и повторения)
   document.addEventListener('keydown', e => {
-    if(e.ctrlKey && e.key==='z') {
-      // Undo
-    } else if(e.ctrlKey && e.key==='y') {
-      // Redo
-    }
+    // Можно реализовать undo/redo
   });
 
   // Изначально создаем слой
@@ -538,4 +531,4 @@
 
 </script>
 </body>
-</html>
+</html></html>
