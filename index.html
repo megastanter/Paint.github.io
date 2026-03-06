@@ -3,121 +3,497 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Музыкальный плеер</title>
+<title>Улучшенный редактор рисования</title>
 <style>
+  /* Общие стили */
   body {
     margin: 0;
     font-family: 'Arial', sans-serif;
-    background-color: #222;
-    color: #fff;
     display: flex;
     flex-direction: column;
+    height: 100vh;
+    background: linear-gradient(to right, #ece9e6, #ffffff);
+    overflow: hidden;
+  }
+
+  header {
+    background-color: #222;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 1.4em;
+    display: flex;
     align-items: center;
-    padding: 20px;
+    justify-content: space-between;
   }
 
-  h1 {
-    margin-bottom: 20px;
-  }
-
-  input[type="text"] {
-    padding: 10px;
-    font-size: 1em;
-    width: 300px;
-    border: none;
-    border-radius: 5px;
+  /* Панель инструментов */
+  #toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   button {
-    padding: 10px 20px;
-    margin-left: 10px;
-    font-size: 1em;
+    background-color: #444;
     border: none;
-    border-radius: 5px;
-    background-color: #4CAF50;
-    color: white;
+    border-radius: 4px;
+    padding: 8px 12px;
     cursor: pointer;
+    color: #fff;
+    font-size: 0.9em;
+    transition: background 0.2s;
   }
 
   button:hover {
-    background-color: #45a049;
+    background-color: #666;
   }
 
-  #player {
-    margin-top: 20px;
-    width: 560px;
-    height: 315px;
-    display: none; /* по умолчанию скрыт */
+  /* Панель слоёв */
+  #layersPanel {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px;
+  }
+
+  #layersPanel button {
+    margin-top: 4px;
+    padding: 4px 8px;
+    font-size: 0.8em;
+  }
+
+  /* Боковая панель инструментов и настроек */
+  #sidePanel {
+    background: #f4f4f4;
+    width: 220px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
+
+  /* Основная часть */
+  .main {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 70px);
+  }
+
+  /* Холст */
+  #canvasContainer {
+    flex: 1;
+    position: relative;
+    background: #fff;
+    margin: 0;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Цветовая палитра */
+  #colorPalette {
+    display: grid;
+    grid-template-columns: repeat(12, 20px);
+    gap: 4px;
+    max-height: 150px;
+    overflow: auto;
+    border: 1px solid #ccc;
+    padding: 4px;
+    background: #fff;
+  }
+
+  .color-swatch {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    border: 1px solid #888;
+    border-radius: 3px;
+  }
+
+  /* Инструменты */
+  #brushSize {
+    width: 60px;
+  }
+
+  /* Эффекты и анимации */
+  .selected {
+    outline: 3px solid #ffcc00;
+    outline-offset: -2px;
+  }
+
+  /* Модальные окна */
+  #modalOverlay {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+
+  #modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 80%;
+    max-height: 80%;
+    overflow: auto;
   }
 </style>
 </head>
 <body>
 
-<h1>Поиск и воспроизведение музыки</h1>
-<div>
-  <input type="text" id="searchInput" placeholder="Введите название трека или исполнителя" />
-  <button id="searchBtn">Поиск</button>
+<header>
+  <div style="display:flex; align-items:center;">
+    <button id="undoBtn" title="Отмена (Ctrl+Z)">↺</button>
+    <button id="redoBtn" title="Повтор (Ctrl+Y)">↻</button>
+    <button id="saveBtn" title="Сохранить изображение">💾</button>
+    <button id="importBtn" title="Импортировать изображение">📥</button>
+    <button id="exportBtn" title="Экспортировать изображение">📤</button>
+    <button id="addLayerBtn" title="Добавить слой">➕ слой</button>
+    <button id="deleteLayerBtn" title="Удалить текущий слой">🗑️</button>
+    <button id="toggleLayerView" title="Переключить слои">🌐</button>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px;">
+    Инструмент:
+    <button class="tool-btn" id="selectTool">⬜</button>
+    <button class="tool-btn" id="penTool">✏️</button>
+    <button class="tool-btn" id="brushTool">🖌️</button>
+    <button class="tool-btn" id="rectTool">▭</button>
+    <button class="tool-btn" id="circleTool">⚪</button>
+    <button class="tool-btn" id="lineTool">〰️</button>
+    <button class="tool-btn" id="eraserTool">🧽</button>
+    <button class="tool-btn" id="textTool">🅰️</button>
+    <button class="tool-btn" id="arrowTool">➡️</button>
+    <div style="display:flex; align-items:center; gap:4px;">
+      Размер кисти:
+      <input type="range" id="brushSize" min="1" max="50" value="5"/>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <div id="sidePanel">
+    <div>
+      <h4>Цветовая палитра</h4>
+      <div id="colorPalette"></div>
+      <div style="margin-top:8px;">
+        Текущий цвет:
+        <div id="currentColorPreview" style="width:30px; height:30px; border:1px solid #555; background:#000;"></div>
+      </div>
+    </div>
+    <div>
+      <h4>Эффекты</h4>
+      <button id="gradientBtn">Градиент</button>
+      <button id="blurBtn">Размытие</button>
+      <button id="rotateBtn">Повернуть</button>
+      <button id="scaleBtn">Масштабировать</button>
+    </div>
+    <div>
+      <h4>Управление слоями</h4>
+      <button id="moveLayerUp">⬆️ Повысить слой</button>
+      <button id="moveLayerDown">⬇️ Опустить слой</button>
+    </div>
+  </div>
+  <div id="canvasContainer">
+    <canvas id="canvas"></canvas>
+  </div>
 </div>
 
-<div id="player"></div>
+<!-- Модальное окно для импорта/экспорта -->
+<div id="modalOverlay">
+  <div id="modal">
+    <h3>Импорт изображения</h3>
+    <input type="file" id="fileInput"/>
+    <button id="closeModal">Закрыть</button>
+  </div>
+</div>
 
 <script>
-  const searchInput = document.getElementById('searchInput');
-  const searchBtn = document.getElementById('searchBtn');
-  const playerContainer = document.getElementById('player');
+  // Инициализация
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
 
-  // Загрузка API YouTube IFrame Player API
-  var tag = document.createElement('script');
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.head.appendChild(tag);
+  let currentTool = 'pen'; // pen, brush, rect, circle, line, eraser, text, arrow
+  let currentColor = '#000000';
+  let brushSize = 5;
 
-  let player;
+  let isDrawing = false;
+  let startX = 0;
+  let startY = 0;
 
-  // Эта функция вызывается API YouTube после загрузки
-  function onYouTubeIframeAPIReady() {
-    // Изначально ничего не создаем
+  // Слои
+  const layers = [];
+  let currentLayerIndex = 0;
+  let showLayers = true;
+
+  // Создаем базовый слой
+  function createLayer(name='Layer') {
+    const layer = {
+      name: name,
+      canvas: document.createElement('canvas'),
+      visible: true
+    };
+    layer.canvas.width = canvas.width;
+    layer.canvas.height = canvas.height;
+    layer.ctx = layer.canvas.getContext('2d');
+    layers.push(layer);
+    currentLayerIndex = layers.length -1;
+    updateLayerList();
   }
 
-  // Обработчик поиска
-  searchBtn.onclick = () => {
-    const query = encodeURIComponent(searchInput.value);
-    if (!query) return alert('Пожалуйста, введите название трека или исполнителя');
+  // Обновление списка слоёв
+  function updateLayerList() {
+    // Можно реализовать отображение слоёв в UI
+  }
 
-    // Ищем видео на YouTube по запросу
-    fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${query}&key=YOUR_API_KEY`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.items.length > 0) {
-          const videoId = data.items[0].id.videoId;
-          loadVideo(videoId);
-        } else {
-          alert('Видео не найдено');
-        }
-      })
-      .catch(error => {
-        console.error('Ошибка поиска:', error);
-        alert('Произошла ошибка при поиске');
-      });
+  // Изначально создаем слой
+  createLayer();
+
+  // Настройка размеров холста
+  function resizeCanvas() {
+    canvas.width = document.getElementById('canvasContainer').clientWidth;
+    canvas.height = document.getElementById('canvasContainer').clientHeight;
+    // Обновляем размеры всех слоёв
+    layers.forEach(layer => {
+      layer.canvas.width = canvas.width;
+      layer.canvas.height = canvas.height;
+    });
+    redraw();
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // Палитра цветов
+  const colorOptions = [
+    "#000000", "#434343", "#666666", "#999999", "#cccccc", "#efefef", "#f7f7f7", "#ffffff",
+    "#ff0000", "#ff7f00", "#ffff00", "#00ff00", "#0000ff", "#4b0082", "#8f00ff",
+    "#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4",
+    "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722",
+    "#795548", "#9e9e9e", "#607d8b"
+  ];
+
+  const palette = document.getElementById('colorPalette');
+  colorOptions.forEach(c => {
+    const swatch = document.createElement('div');
+    swatch.className = 'color-swatch';
+    swatch.style.backgroundColor = c;
+    swatch.onclick = () => {
+      currentColor = c;
+      document.getElementById('currentColorPreview').style.backgroundColor = c;
+    };
+    palette.appendChild(swatch);
+  });
+  document.getElementById('currentColorPreview').style.backgroundColor = currentColor;
+
+  // Инструменты
+  document.getElementById('selectTool').onclick = () => currentTool='select';
+  document.getElementById('penTool').onclick = () => currentTool='pen';
+  document.getElementById('brushTool').onclick = () => currentTool='brush';
+  document.getElementById('rectTool').onclick = () => currentTool='rect';
+  document.getElementById('circleTool').onclick = () => currentTool='circle';
+  document.getElementById('lineTool').onclick = () => currentTool='line';
+  document.getElementById('eraserTool').onclick = () => currentTool='eraser';
+  document.getElementById('textTool').onclick = () => currentTool='text';
+  document.getElementById('arrowTool').onclick = () => currentTool='arrow';
+
+  // Размер кисти
+  document.getElementById('brushSize').oninput = e => {
+    brushSize = parseInt(e.target.value);
   };
 
-  function loadVideo(videoId) {
-    if (player) {
-      player.loadVideoById(videoId);
-    } else {
-      player = new YT.Player('player', {
-        height: '315',
-        width: '560',
-        videoId: videoId,
-        events: {
-          'onReady': () => {
-            document.getElementById('player').style.display = 'block';
-          }
-        }
-      });
-    }
-    document.getElementById('player').style.display = 'block';
-  }
-</script>
+  // Начало рисования
+  canvas.addEventListener('mousedown', e => {
+    isDrawing=true;
+    startX=e.offsetX; startY=e.offsetY;
 
+    if (currentTool==='pen' || currentTool==='brush' || currentTool==='eraser' || currentTool==='text') {
+      ctx.strokeStyle = currentTool==='eraser' ? '#fff' : currentColor;
+      ctx.lineWidth = brushSize;
+      ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+    }
+  });
+
+  // Конец рисования
+  canvas.addEventListener('mouseup', e => {
+    if (!isDrawing) return;
+    isDrawing=false;
+    // Закончить фигуру
+    if (currentTool==='rect') {
+      ctx.strokeStyle=currentColor;
+      ctx.lineWidth=brushSize;
+      ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
+    } else if (currentTool==='circle') {
+      ctx.strokeStyle=currentColor;
+      ctx.lineWidth=brushSize;
+      const radius = Math.hypot(e.offsetX - startX, e.offsetY - startY);
+      ctx.beginPath();
+      ctx.arc(startX, startY, radius, 0, Math.PI*2);
+      ctx.stroke();
+    } else if (currentTool==='line') {
+      ctx.strokeStyle=currentColor;
+      ctx.lineWidth=brushSize;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+    } else if (currentTool==='arrow') {
+      ctx.strokeStyle=currentColor;
+      ctx.lineWidth=brushSize;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+      // Рисуем стрелку
+      drawArrow(startX, startY, e.offsetX, e.offsetY);
+    }
+    redraw();
+  });
+
+  // Рисование
+  canvas.addEventListener('mousemove', e => {
+    if (!isDrawing) return;
+    if (currentTool==='pen' || currentTool==='brush' || currentTool==='eraser') {
+      ctx.strokeStyle= currentTool==='eraser' ? '#fff' : currentColor;
+      ctx.lineWidth=brushSize;
+      ctx.lineCap='round';
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+    }
+  });
+
+  // Функция стрелки
+  function drawArrow(fromX, fromY, toX, toY) {
+    const headlen=10;
+    const angle=Math.atan2(toY - fromY, toX - fromX);
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen*Math.cos(angle - Math.PI/6), toY - headlen*Math.sin(angle - Math.PI/6));
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen*Math.cos(angle + Math.PI/6), toY - headlen*Math.sin(angle + Math.PI/6));
+    ctx.stroke();
+  }
+
+  // Очистка и перерисовка
+  function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    layers.forEach(layer => {
+      if (layer.visible) {
+        ctx.drawImage(layer.canvas, 0, 0);
+      }
+    });
+  }
+
+  // Добавление слоя
+  document.getElementById('addLayerBtn').onclick=() => {
+    createLayer('Layer '+(layers.length+1));
+  };
+
+  // Удаление слоя
+  document.getElementById('deleteLayerBtn').onclick=() => {
+    if (layers.length>1) {
+      layers.splice(currentLayerIndex,1);
+      currentLayerIndex=Math.max(0, currentLayerIndex-1);
+      redraw();
+    }
+  };
+
+  // Переключение слоя вверх/вниз
+  document.getElementById('moveLayerUp').onclick=() => {
+    if (currentLayerIndex<layers.length-1) {
+      [layers[currentLayerIndex],layers[currentLayerIndex+1]] = [layers[currentLayerIndex+1],layers[currentLayerIndex]];
+      currentLayerIndex++;
+      redraw();
+    }
+  };
+
+  document.getElementById('moveLayerDown').onclick=() => {
+    if (currentLayerIndex>0) {
+      [layers[currentLayerIndex],layers[currentLayerIndex-1]] = [layers[currentLayerIndex-1],layers[currentLayerIndex]];
+      currentLayerIndex--;
+      redraw();
+    }
+  };
+
+  // Эффекты
+  document.getElementById('gradientBtn').onclick=() => {
+    const gradient = ctx.createLinearGradient(0,0,canvas.width,0);
+    gradient.addColorStop(0,'#ff0000');
+    gradient.addColorStop(0.5,'#00ff00');
+    gradient.addColorStop(1,'#0000ff');
+    ctx.fillStyle=gradient;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  };
+
+  document.getElementById('blurBtn').onclick=() => {
+    ctx.filter='blur(4px)';
+    redraw();
+    ctx.filter='none';
+  };
+
+  document.getElementById('rotateBtn').onclick=() => {
+    ctx.translate(canvas.width/2,canvas.height/2);
+    ctx.rotate(Math.PI/12);
+    ctx.translate(-canvas.width/2,-canvas.height/2);
+    redraw();
+  };
+
+  document.getElementById('scaleBtn').onclick=() => {
+    ctx.scale(1.2,1.2);
+    redraw();
+  };
+
+  // Импорт-экспорт
+  document.getElementById('saveBtn').onclick=() => {
+    const dataURL=canvas.toDataURL('image/png');
+    const a=document.createElement('a');
+    a.href=dataURL;
+    a.download='drawing.png';
+    a.click();
+  };
+
+  document.getElementById('importBtn').onclick=() => {
+    document.getElementById('fileInput').click();
+  };
+
+  document.getElementById('fileInput').onchange= e => {
+    const file=e.target.files[0];
+    const reader=new FileReader();
+    reader.onload= ()=> {
+      const img=new Image();
+      img.onload= ()=> {
+        ctx.drawImage(img,0,0);
+        redraw();
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Переключение видимости слоёв
+  document.getElementById('toggleLayerView').onclick=() => {
+    showLayers=!showLayers;
+    redraw();
+  };
+
+  // Горячие клавиши
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key==='z') {
+      // Undo
+    } else if (e.ctrlKey && e.key==='y') {
+      // Redo
+    }
+  });
+
+  // Изначально создаем слой
+  createLayer();
+
+</script>
 </body>
 </html>
