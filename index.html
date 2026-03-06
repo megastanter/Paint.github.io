@@ -3,33 +3,24 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Decision Roulette web</title>
+<title>Block Blast web</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <header>
-  <h1>Decision Roulette web</h1>
+  <h1>Block Blast</h1>
+  <div class="score">Очки: <span id="score">0</span></div>
+  <div class="level">Уровень: <span id="level">1</span></div>
+  <button id="restart">Перезапустить</button>
 </header>
 <main>
-  <section id="input-section" class="card">
-    <h2>Добавьте варианты</h2>
-    <div class="input-group">
-      <input type="text" id="option-input" placeholder="Введите вариант" />
-      <button id="add-option">Добавить</button>
-    </div>
-    <ul id="options-list"></ul>
-  </section>
-  
-  <section id="roulette-section" class="card" style="display:none;">
-    <h2>Выбор: <span id="current-selection">?</span></h2>
-    <canvas id="roulette-canvas" width="600" height="600"></canvas>
-    <div class="buttons-container">
-      <button id="spin-btn" disabled>Крутить</button>
-      <button id="reset-btn" style="display:none;">Сбросить</button>
-    </div>
-    <div id="notification"></div>
-  </section>
+  <div id="game-container"></div>
+  <div id="game-over" class="hidden">
+    <h2>Игра окончена!</h2>
+    <button id="restart-over">Играть заново</button>
+  </div>
 </main>
+<audio id="pop-sound" src="pop.mp3"></audio>
 <script src="script.js"></script>
 </body>
 </html>
