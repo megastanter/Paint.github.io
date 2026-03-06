@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Улучшенный редактор рисования</title>
+<title>Painter</title>
+<!-- Иконки для кнопок -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
   /* Общие стили */
   body {
@@ -12,191 +14,207 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
-    background: linear-gradient(to right, #ece9e6, #ffffff);
+    background: #f0f2f5;
     overflow: hidden;
   }
 
   header {
-    background-color: #222;
-    color: #fff;
-    padding: 8px 12px;
-    font-size: 1.4em;
+    background-color: #2c3e50;
+    color: #ecf0f1;
     display: flex;
+    padding: 10px 15px;
     align-items: center;
     justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
 
   /* Панель инструментов */
   #toolbar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 15px;
   }
 
-  button {
-    background-color: #444;
+  /* Кнопки с иконками */
+  .btn {
+    background: #34495e;
     border: none;
     border-radius: 4px;
     padding: 8px 12px;
     cursor: pointer;
-    color: #fff;
-    font-size: 0.9em;
-    transition: background 0.2s;
-  }
-
-  button:hover {
-    background-color: #666;
-  }
-
-  /* Панель слоёв */
-  #layersPanel {
+    color: #ecf0f1;
+    font-size: 1em;
     display: flex;
-    flex-direction: column;
-    margin-left: 10px;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, transform 0.1s;
   }
-
-  #layersPanel button {
-    margin-top: 4px;
-    padding: 4px 8px;
-    font-size: 0.8em;
-  }
-
-  /* Боковая панель инструментов и настроек */
-  #sidePanel {
-    background: #f4f4f4;
-    width: 220px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    overflow-y: auto;
+  .btn:hover {
+    background: #3b5998;
+    transform: scale(1.05);
   }
 
   /* Основная часть */
   .main {
     display: flex;
     flex: 1;
-    height: calc(100vh - 70px);
+    overflow: hidden;
   }
 
-  /* Холст */
+  /* Боковая панель */
+  #sidePanel {
+    width: 240px;
+    background: #fff;
+    border-right: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    overflow-y: auto;
+  }
+
+  /* Инструменты и настройки */
+  #tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Цвета */
+  #colorPalette {
+    display: grid;
+    grid-template-columns: repeat(8, 20px);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .color-swatch {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    border: 2px solid #ccc;
+    border-radius: 3px;
+    transition: border-color 0.2s;
+  }
+  .color-swatch.active {
+    border-color: #000;
+  }
+
+  /* Холст контейнер */
   #canvasContainer {
     flex: 1;
     position: relative;
     background: #fff;
-    margin: 0;
   }
-
   canvas {
     width: 100%;
     height: 100%;
     display: block;
   }
 
-  /* Цветовая палитра */
-  #colorPalette {
-    display: grid;
-    grid-template-columns: repeat(12, 20px);
-    gap: 4px;
-    max-height: 150px;
-    overflow: auto;
-    border: 1px solid #ccc;
-    padding: 4px;
-    background: #fff;
+  /* Слои */
+  #layers {
+    margin-top: 20px;
   }
-
-  .color-swatch {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    border: 1px solid #888;
+  #layers h4 {
+    margin: 0 0 8px 0;
+  }
+  #layerList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #layerList li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: #ecf0f1;
+    margin-bottom: 4px;
     border-radius: 3px;
+    cursor: pointer;
+  }
+  #layerList li.active {
+    background: #bdc3c7;
+  }
+  #layerList button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #e74c3c;
+    font-size: 1.2em;
   }
 
-  /* Инструменты */
-  #brushSize {
-    width: 60px;
-  }
-
-  /* Эффекты и анимации */
-  .selected {
-    outline: 3px solid #ffcc00;
-    outline-offset: -2px;
-  }
-
-  /* Модальные окна */
+  /* Модальное окно */
   #modalOverlay {
     position: fixed;
     top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.4);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 999;
   }
-
   #modal {
     background: #fff;
     padding: 20px;
     border-radius: 8px;
-    max-width: 80%;
-    max-height: 80%;
-    overflow: auto;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  #modal input[type="file"] {
+    width: 100%;
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div style="display:flex; align-items:center;">
-    <button id="undoBtn" title="Отмена (Ctrl+Z)">↺</button>
-    <button id="redoBtn" title="Повтор (Ctrl+Y)">↻</button>
-    <button id="saveBtn" title="Сохранить изображение">💾</button>
-    <button id="importBtn" title="Импортировать изображение">📥</button>
-    <button id="exportBtn" title="Экспортировать изображение">📤</button>
-    <button id="addLayerBtn" title="Добавить слой">➕ слой</button>
-    <button id="deleteLayerBtn" title="Удалить текущий слой">🗑️</button>
-    <button id="toggleLayerView" title="Переключить слои">🌐</button>
-  </div>
-  <div style="display:flex; align-items:center; gap:8px;">
-    Инструмент:
-    <button class="tool-btn" id="selectTool">⬜</button>
-    <button class="tool-btn" id="penTool">✏️</button>
-    <button class="tool-btn" id="brushTool">🖌️</button>
-    <button class="tool-btn" id="rectTool">▭</button>
-    <button class="tool-btn" id="circleTool">⚪</button>
-    <button class="tool-btn" id="lineTool">〰️</button>
-    <button class="tool-btn" id="eraserTool">🧽</button>
-    <button class="tool-btn" id="textTool">🅰️</button>
-    <button class="tool-btn" id="arrowTool">➡️</button>
-    <div style="display:flex; align-items:center; gap:4px;">
-      Размер кисти:
-      <input type="range" id="brushSize" min="1" max="50" value="5"/>
-    </div>
+  <div id="toolbar">
+    <button class="btn" id="undoBtn" title="Отменить (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+    <button class="btn" id="redoBtn" title="Повторить (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+    <button class="btn" id="saveBtn" title="Сохранить"><i class="fas fa-save"></i></button>
+    <button class="btn" id="importBtn" title="Импортировать"><i class="fas fa-file-upload"></i></button>
+    <button class="btn" id="exportBtn" title="Экспортировать"><i class="fas fa-file-download"></i></button>
+    <button class="btn" id="addLayerBtn" title="Добавить слой"><i class="fas fa-layer-group"></i></button>
+    <button class="btn" id="deleteLayerBtn" title="Удалить слой"><i class="fas fa-trash"></i></button>
+    <button class="btn" id="toggleLayersBtn" title="Показать/скрыть слои"><i class="fas fa-eye"></i></button>
   </div>
 </header>
 
 <div class="main">
   <div id="sidePanel">
-    <div>
-      <h4>Цветовая палитра</h4>
+    <h4>Инструменты</h4>
+    <div id="tools">
+      <button class="btn" data-tool="select" title="Выделение"><i class="fas fa-mouse-pointer"></i></button>
+      <button class="btn" data-tool="pen" title="Карандаш"><i class="fas fa-pen"></i></button>
+      <button class="btn" data-tool="brush" title="Кисть"><i class="fas fa-brush"></i></button>
+      <button class="btn" data-tool="rect" title="Прямоугольник"><i class="fas fa-square"></i></button>
+      <button class="btn" data-tool="circle" title="Круг"><i class="fas fa-circle"></i></button>
+      <button class="btn" data-tool="line" title="Линия"><i class="fas fa-slash"></i></button>
+      <button class="btn" data-tool="arrow" title="Стрелка"><i class="fas fa-arrow-right"></i></button>
+      <button class="btn" data-tool="eraser" title="Ластик"><i class="fas fa-eraser"></i></button>
+      <button class="btn" data-tool="text" title="Текст"><i class="fas fa-font"></i></button>
+    </div>
+    <div style="margin-top:10px;">
+      <label>Размер кисти</label>
+      <input type="range" id="brushSize" min="1" max="50" value="5"/>
+    </div>
+    <div style="margin-top:10px;">
+      <label>Цвет</label>
       <div id="colorPalette"></div>
       <div style="margin-top:8px;">
-        Текущий цвет:
-        <div id="currentColorPreview" style="width:30px; height:30px; border:1px solid #555; background:#000;"></div>
+        <div style="width:30px; height:30px; border:1px solid #333; background:#000;" id="currentColorPreview"></div>
       </div>
     </div>
-    <div>
-      <h4>Эффекты</h4>
-      <button id="gradientBtn">Градиент</button>
-      <button id="blurBtn">Размытие</button>
-      <button id="rotateBtn">Повернуть</button>
-      <button id="scaleBtn">Масштабировать</button>
+    <div style="margin-top:10px;">
+      <button class="btn" id="gradientBtn" title="Градиент"><i class="fas fa-gradient"></i> Градиент</button>
+      <button class="btn" id="blurBtn" title="Размытие"><i class="fas fa-blur"></i></button>
+      <button class="btn" id="rotateBtn" title="Повернуть"><i class="fas fa-undo"></i></button>
+      <button class="btn" id="scaleBtn" title="Масштабировать"><i class="fas fa-compress"></i></button>
     </div>
-    <div>
-      <h4>Управление слоями</h4>
-      <button id="moveLayerUp">⬆️ Повысить слой</button>
-      <button id="moveLayerDown">⬇️ Опустить слой</button>
+    <div style="margin-top:20px;">
+      <h4>Слои</h4>
+      <ul id="layerList"></ul>
     </div>
   </div>
   <div id="canvasContainer">
@@ -204,34 +222,31 @@
   </div>
 </div>
 
-<!-- Модальное окно для импорта/экспорта -->
+<!-- Модальное окно для импорта -->
 <div id="modalOverlay">
   <div id="modal">
-    <h3>Импорт изображения</h3>
+    <h4>Импортировать изображение</h4>
     <input type="file" id="fileInput"/>
-    <button id="closeModal">Закрыть</button>
+    <button class="btn" id="closeModal">Закрыть</button>
   </div>
 </div>
 
 <script>
-  // Инициализация
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
 
-  let currentTool = 'pen'; // pen, brush, rect, circle, line, eraser, text, arrow
+  let currentTool = 'pen';
   let currentColor = '#000000';
   let brushSize = 5;
 
   let isDrawing = false;
-  let startX = 0;
-  let startY = 0;
+  let startX, startY;
 
   // Слои
   const layers = [];
   let currentLayerIndex = 0;
   let showLayers = true;
 
-  // Создаем базовый слой
   function createLayer(name='Layer') {
     const layer = {
       name: name,
@@ -242,133 +257,152 @@
     layer.canvas.height = canvas.height;
     layer.ctx = layer.canvas.getContext('2d');
     layers.push(layer);
-    currentLayerIndex = layers.length -1;
+    currentLayerIndex = layers.length - 1;
     updateLayerList();
   }
 
-  // Обновление списка слоёв
   function updateLayerList() {
-    // Можно реализовать отображение слоёв в UI
+    const list = document.getElementById('layerList');
+    list.innerHTML='';
+    layers.forEach((layer,idx)=>{
+      const li=document.createElement('li');
+      li.textContent=layer.name;
+      if (idx===currentLayerIndex) li.classList.add('active');
+      li.onclick= ()=> {
+        currentLayerIndex=idx;
+        updateLayerSelection();
+        redraw();
+      };
+      const btn=document.createElement('button');
+      btn.innerHTML='<i class="fas fa-trash"></i>';
+      btn.title='Удалить слой';
+      btn.onclick= (e) => {
+        e.stopPropagation();
+        layers.splice(idx,1);
+        if (currentLayerIndex>=layers.length) currentLayerIndex=layers.length-1;
+        updateLayerSelection();
+        redraw();
+      };
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+  }
+
+  function updateLayerSelection() {
+    const listItems=document.querySelectorAll('#layerList li');
+    listItems.forEach((li,idx)=>{
+      li.classList.toggle('active', idx===currentLayerIndex);
+    });
   }
 
   // Изначально создаем слой
   createLayer();
 
-  // Настройка размеров холста
+  // Размер холста
   function resizeCanvas() {
-    canvas.width = document.getElementById('canvasContainer').clientWidth;
-    canvas.height = document.getElementById('canvasContainer').clientHeight;
-    // Обновляем размеры всех слоёв
-    layers.forEach(layer => {
-      layer.canvas.width = canvas.width;
-      layer.canvas.height = canvas.height;
+    const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    layers.forEach(l => {
+      l.canvas.width=canvas.width;
+      l.canvas.height=canvas.height;
     });
     redraw();
   }
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // Палитра цветов
-  const colorOptions = [
-    "#000000", "#434343", "#666666", "#999999", "#cccccc", "#efefef", "#f7f7f7", "#ffffff",
-    "#ff0000", "#ff7f00", "#ffff00", "#00ff00", "#0000ff", "#4b0082", "#8f00ff",
-    "#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4",
-    "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722",
-    "#795548", "#9e9e9e", "#607d8b"
-  ];
-
-  const palette = document.getElementById('colorPalette');
-  colorOptions.forEach(c => {
-    const swatch = document.createElement('div');
-    swatch.className = 'color-swatch';
-    swatch.style.backgroundColor = c;
-    swatch.onclick = () => {
-      currentColor = c;
-      document.getElementById('currentColorPreview').style.backgroundColor = c;
+  // Цветовая палитра
+  const colors=['#000000','#e74c3c','#3498db','#27ae60','#f39c12','#8e44ad','#f1c40f','#16a085','#d35400','#c0392b','#7f8c8d','#95a5a6','#34495e','#bdc3c7','#2ecc71','#e67e22'];
+  const paletteContainer=document.getElementById('colorPalette');
+  colors.forEach(c => {
+    const swatch=document.createElement('div');
+    swatch.className='color-swatch';
+    swatch.style.backgroundColor=c;
+    swatch.onclick= ()=> {
+      currentColor=c;
+      document.getElementById('currentColorPreview').style.backgroundColor=c;
     };
-    palette.appendChild(swatch);
+    paletteContainer.appendChild(swatch);
   });
-  document.getElementById('currentColorPreview').style.backgroundColor = currentColor;
+  document.getElementById('currentColorPreview').style.backgroundColor=currentColor;
 
   // Инструменты
-  document.getElementById('selectTool').onclick = () => currentTool='select';
-  document.getElementById('penTool').onclick = () => currentTool='pen';
-  document.getElementById('brushTool').onclick = () => currentTool='brush';
-  document.getElementById('rectTool').onclick = () => currentTool='rect';
-  document.getElementById('circleTool').onclick = () => currentTool='circle';
-  document.getElementById('lineTool').onclick = () => currentTool='line';
-  document.getElementById('eraserTool').onclick = () => currentTool='eraser';
-  document.getElementById('textTool').onclick = () => currentTool='text';
-  document.getElementById('arrowTool').onclick = () => currentTool='arrow';
+  document.querySelectorAll('#tools button').forEach(btn => {
+    btn.onclick= ()=> {
+      currentTool=btn.dataset.tool;
+    };
+  });
 
-  // Размер кисти
-  document.getElementById('brushSize').oninput = e => {
-    brushSize = parseInt(e.target.value);
+  document.getElementById('brushSize').oninput=function() {
+    brushSize=parseInt(this.value);
   };
 
-  // Начало рисования
+  // Выбор слоя
+  function setCurrentLayer(index) {
+    currentLayerIndex=index;
+    updateLayerSelection();
+  }
+
+  // Рисование
   canvas.addEventListener('mousedown', e => {
     isDrawing=true;
     startX=e.offsetX; startY=e.offsetY;
+    ctx.strokeStyle=currentTool==='eraser'?'#fff':currentColor;
+    ctx.lineWidth=brushSize;
+    ctx.lineCap='round';
 
-    if (currentTool==='pen' || currentTool==='brush' || currentTool==='eraser' || currentTool==='text') {
-      ctx.strokeStyle = currentTool==='eraser' ? '#fff' : currentColor;
-      ctx.lineWidth = brushSize;
-      ctx.lineCap='round';
+    if(['pen','brush','eraser','text'].includes(currentTool)){
       ctx.beginPath();
-      ctx.moveTo(startX, startY);
+      ctx.moveTo(startX,startY);
     }
   });
 
-  // Конец рисования
   canvas.addEventListener('mouseup', e => {
     if (!isDrawing) return;
     isDrawing=false;
-    // Закончить фигуру
-    if (currentTool==='rect') {
+
+    if(currentTool==='rect'){
       ctx.strokeStyle=currentColor;
       ctx.lineWidth=brushSize;
-      ctx.strokeRect(startX, startY, e.offsetX - startX, e.offsetY - startY);
-    } else if (currentTool==='circle') {
+      ctx.strokeRect(startX,startY,e.offsetX-startX,e.offsetY-startY);
+    } else if(currentTool==='circle'){
       ctx.strokeStyle=currentColor;
       ctx.lineWidth=brushSize;
-      const radius = Math.hypot(e.offsetX - startX, e.offsetY - startY);
+      const radius=Math.hypot(e.offsetX-startX,e.offsetY-startY);
       ctx.beginPath();
-      ctx.arc(startX, startY, radius, 0, Math.PI*2);
+      ctx.arc(startX,startY,radius,0,Math.PI*2);
       ctx.stroke();
-    } else if (currentTool==='line') {
-      ctx.strokeStyle=currentColor;
-      ctx.lineWidth=brushSize;
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(e.offsetX, e.offsetY);
-      ctx.stroke();
-    } else if (currentTool==='arrow') {
+    } else if(currentTool==='line'){
       ctx.strokeStyle=currentColor;
       ctx.lineWidth=brushSize;
       ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.moveTo(startX,startY);
+      ctx.lineTo(e.offsetX,e.offsetY);
       ctx.stroke();
-      // Рисуем стрелку
-      drawArrow(startX, startY, e.offsetX, e.offsetY);
+    } else if(currentTool==='arrow'){
+      ctx.strokeStyle=currentColor;
+      ctx.lineWidth=brushSize;
+      ctx.beginPath();
+      ctx.moveTo(startX,startY);
+      ctx.lineTo(e.offsetX,e.offsetY);
+      ctx.stroke();
+      drawArrow(startX,startY,e.offsetX,e.offsetY);
     }
     redraw();
   });
 
-  // Рисование
   canvas.addEventListener('mousemove', e => {
-    if (!isDrawing) return;
-    if (currentTool==='pen' || currentTool==='brush' || currentTool==='eraser') {
-      ctx.strokeStyle= currentTool==='eraser' ? '#fff' : currentColor;
+    if(!isDrawing) return;
+    if(['pen','brush','eraser'].includes(currentTool)){
+      ctx.strokeStyle= currentTool==='eraser'?'#fff':currentColor;
       ctx.lineWidth=brushSize;
       ctx.lineCap='round';
-      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.lineTo(e.offsetX,e.offsetY);
       ctx.stroke();
     }
   });
 
-  // Функция стрелки
   function drawArrow(fromX, fromY, toX, toY) {
     const headlen=10;
     const angle=Math.atan2(toY - fromY, toX - fromX);
@@ -380,49 +414,60 @@
     ctx.stroke();
   }
 
-  // Очистка и перерисовка
+  // Перерисовка всех слоёв
   function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     layers.forEach(layer => {
-      if (layer.visible) {
-        ctx.drawImage(layer.canvas, 0, 0);
+      if(layer.visible){
+        ctx.drawImage(layer.canvas,0,0);
       }
     });
   }
 
+  // Обновление текущего слоя
+  function refreshLayer() {
+    // Можно добавить выделение текущего слоя
+  }
+
   // Добавление слоя
-  document.getElementById('addLayerBtn').onclick=() => {
+  document.getElementById('addLayerBtn').onclick=()=>{
     createLayer('Layer '+(layers.length+1));
   };
 
   // Удаление слоя
-  document.getElementById('deleteLayerBtn').onclick=() => {
-    if (layers.length>1) {
+  document.getElementById('deleteLayerBtn').onclick=()=>{
+    if(layers.length>1){
       layers.splice(currentLayerIndex,1);
-      currentLayerIndex=Math.max(0, currentLayerIndex-1);
+      if(currentLayerIndex>=layers.length) currentLayerIndex=layers.length-1;
+      updateLayerList();
       redraw();
     }
   };
 
   // Переключение слоя вверх/вниз
-  document.getElementById('moveLayerUp').onclick=() => {
-    if (currentLayerIndex<layers.length-1) {
+  document.getElementById('toggleLayersBtn').onclick=()=>{
+    showLayers=!showLayers;
+    redraw();
+  };
+  document.getElementById('moveLayerUp').onclick=()=>{
+    if(currentLayerIndex<layers.length-1){
       [layers[currentLayerIndex],layers[currentLayerIndex+1]] = [layers[currentLayerIndex+1],layers[currentLayerIndex]];
       currentLayerIndex++;
+      updateLayerList();
       redraw();
     }
   };
-
-  document.getElementById('moveLayerDown').onclick=() => {
-    if (currentLayerIndex>0) {
+  document.getElementById('moveLayerDown').onclick=()=>{
+    if(currentLayerIndex>0){
       [layers[currentLayerIndex],layers[currentLayerIndex-1]] = [layers[currentLayerIndex-1],layers[currentLayerIndex]];
       currentLayerIndex--;
+      updateLayerList();
       redraw();
     }
   };
 
   // Эффекты
-  document.getElementById('gradientBtn').onclick=() => {
+  document.getElementById('gradientBtn').onclick=()=>{
     const gradient = ctx.createLinearGradient(0,0,canvas.width,0);
     gradient.addColorStop(0,'#ff0000');
     gradient.addColorStop(0.5,'#00ff00');
@@ -430,27 +475,24 @@
     ctx.fillStyle=gradient;
     ctx.fillRect(0,0,canvas.width,canvas.height);
   };
-
-  document.getElementById('blurBtn').onclick=() => {
+  document.getElementById('blurBtn').onclick=()=>{
     ctx.filter='blur(4px)';
     redraw();
     ctx.filter='none';
   };
-
-  document.getElementById('rotateBtn').onclick=() => {
+  document.getElementById('rotateBtn').onclick=()=>{
     ctx.translate(canvas.width/2,canvas.height/2);
     ctx.rotate(Math.PI/12);
     ctx.translate(-canvas.width/2,-canvas.height/2);
     redraw();
   };
-
-  document.getElementById('scaleBtn').onclick=() => {
+  document.getElementById('scaleBtn').onclick=()=>{
     ctx.scale(1.2,1.2);
     redraw();
   };
 
-  // Импорт-экспорт
-  document.getElementById('saveBtn').onclick=() => {
+  // Импорт/экспорт
+  document.getElementById('saveBtn').onclick=()=>{
     const dataURL=canvas.toDataURL('image/png');
     const a=document.createElement('a');
     a.href=dataURL;
@@ -458,10 +500,9 @@
     a.click();
   };
 
-  document.getElementById('importBtn').onclick=() => {
+  document.getElementById('importBtn').onclick=()=>{
     document.getElementById('fileInput').click();
   };
-
   document.getElementById('fileInput').onchange= e => {
     const file=e.target.files[0];
     const reader=new FileReader();
@@ -476,17 +517,18 @@
     reader.readAsDataURL(file);
   };
 
-  // Переключение видимости слоёв
-  document.getElementById('toggleLayerView').onclick=() => {
-    showLayers=!showLayers;
+  // Включение/выключение слоя
+  let layersVisible=true;
+  document.getElementById('toggleLayersBtn').onclick=()=>{
+    layersVisible=!layersVisible;
     redraw();
   };
 
   // Горячие клавиши
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key==='z') {
+    if(e.ctrlKey && e.key==='z') {
       // Undo
-    } else if (e.ctrlKey && e.key==='y') {
+    } else if(e.ctrlKey && e.key==='y') {
       // Redo
     }
   });
