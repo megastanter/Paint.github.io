@@ -1,78 +1,40 @@
-/* Общие стили, аналогичные предыдущему, добавьте дополнительные эффекты, анимации */
 body {
   margin: 0;
   font-family: 'Arial', sans-serif;
-  background: #1e1e1e;
-  color: #fff;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-}
-header {
-  width: 100%;
-  padding: 20px;
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-h1 {
-  margin: 0;
-  font-size: 2.5em;
-  color: #ffd700;
-}
-.score, .level {
-  font-size: 1.5em;
-  color: #ffd700;
-}
-#restart {
-  padding: 10px 20px;
-  font-size: 1em;
-  border: none;
-  border-radius: 8px;
-  background-color: #f44336;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-#restart:hover {
-  background-color: #da190b;
-}
-#game-container {
-  display: grid;
-  grid-template-columns: repeat(10, 50px);
-  grid-template-rows: repeat(10, 50px);
-  gap: 4px;
-  margin: 20px;
-  position: relative;
-}
-.block {
-  width: 50px;
-  height: 50px;
-  border-radius: 4px;
-  cursor: pointer;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-  transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-weight: bold;
+  align-items: center;
+  height: 100vh;
+  background-color: #222;
+  transition: background-color 10s linear;
+}
+
+.menu {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  transition: background 1s, box-shadow 1s;
+}
+
+h1 {
+  margin-bottom: 20px;
+  font-size: 2em;
+}
+
+button {
+  padding: 15px 30px;
   font-size: 1.2em;
-  user-select: none;
+  border: none;
+  border-radius: 10px;
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
-.hidden {
-  display: none;
+
+button:hover {
+  background-color: #45a049;
 }
-/* Цвета блоков как в оригинале */
-.color-1 { background-color: #e74c3c; }
-.color-2 { background-color: #3498db; }
-.color-3 { background-color: #f1c40f; }
-.color-4 { background-color: #2ecc71; }
-.color-5 { background-color: #9b59b6; }
-.color-6 { background-color: #f39c12; }
-.color-7 { background-color: #1abc9c; }
-.color-8 { background-color: #e67e22; }
-.color-9 { background-color: #7f8c8d; }
-.color-10 { background-color: #d35400; }
