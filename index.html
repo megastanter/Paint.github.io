@@ -11,20 +11,23 @@
   <h1>Decision Roulette web</h1>
 </header>
 <main>
-  <section id="input-section">
+  <section id="input-section" class="card">
     <h2>Добавьте варианты</h2>
-    <input type="text" id="option-input" placeholder="Введите вариант" />
-    <button id="add-option">Добавить</button>
+    <div class="input-group">
+      <input type="text" id="option-input" placeholder="Введите вариант" />
+      <button id="add-option">Добавить</button>
+    </div>
     <ul id="options-list"></ul>
   </section>
   
-  <section id="roulette-section" style="display:none;">
-    <canvas id="roulette-canvas" width="500" height="500"></canvas>
-    <div style="margin-top:20px;">
-      <button id="spin-btn">Крутить</button>
+  <section id="roulette-section" class="card" style="display:none;">
+    <h2>Выбор: <span id="current-selection">?</span></h2>
+    <canvas id="roulette-canvas" width="600" height="600"></canvas>
+    <div class="buttons-container">
+      <button id="spin-btn" disabled>Крутить</button>
       <button id="reset-btn" style="display:none;">Сбросить</button>
     </div>
-    <div id="result" style="font-size:24px; margin-top:20px;"></div>
+    <div id="notification"></div>
   </section>
 </main>
 <script src="script.js"></script>
